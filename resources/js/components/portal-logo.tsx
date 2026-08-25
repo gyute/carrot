@@ -13,9 +13,14 @@ export default function PortalLogo({ className, tone = 'light' }: Props) {
     return (
         <div className={cn('flex items-center gap-3', className)}>
             <PortalLogoMark className="size-9 shrink-0" />
+            {/*
+             * Nudged down so the cap height centres on the carrot's body
+             * rather than on the whole glyph: the leaves sit above the body
+             * and pull the optical centre up.
+             */}
             <span
                 className={cn(
-                    'text-2xl font-extrabold tracking-[0.14em]',
+                    'translate-y-[2px] text-2xl font-extrabold tracking-[0.14em]',
                     tone === 'light' ? 'text-white' : 'text-slate-800',
                 )}
             >
