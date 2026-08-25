@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
-use RuntimeException;
 
 /**
  * @property int $id
@@ -84,16 +83,18 @@ class ExportJob extends Model
     }
 
     /**
-     * The reviewed query this batch runs.
+     * The reviewed query this batch runs, or null once it has been retired
+     * from config/exports.php. Batches outlive definitions, so every caller
+     * has to cope with it being gone.
      *
-     * @return array{label: string, description: string, connection: string, sql: string}
+     * @return array{label: string, description: string, connection: string, sql: string}|null
      */
-    public function definition(): array
+    public function definition(): ?array
     {
         $definition = config("exports.definitions.{$this->definition}");
 
         if (! is_array($definition)) {
-            throw new RuntimeException("Unknown export definition [{$this->definition}].");
+            return null;
         }
 
         /** @var array{label: string, description: string, connection: string, sql: string} $definition */
@@ -102,7 +103,7 @@ class ExportJob extends Model
 
     public function label(): string
     {
-        return $this->definition()['label'];
+        return $this->definition()['label'] ?? $this->definition;
     }
 
     public function hasExpired(): bool

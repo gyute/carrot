@@ -1,10 +1,10 @@
-import { Form, Head, Link } from '@inertiajs/react';
-import { ChevronLeft, Play } from 'lucide-react';
+import { Form, Head } from '@inertiajs/react';
+import { Play } from 'lucide-react';
 import { useState } from 'react';
 import InputError from '@/components/input-error';
+import ToolsNav from '@/components/tools-nav';
 import { Button } from '@/components/ui/button';
-import { index as tools } from '@/routes/tools';
-import { jobs, store } from '@/routes/tools/exports';
+import { store } from '@/routes/tools/exports';
 
 type Definition = {
     key: string;
@@ -21,27 +21,13 @@ export default function ExportCreate({
 
     return (
         <>
-            <Head title="データエクスポート" />
+            <Head title="日次アクセスログ" />
 
-            <Link
-                href={tools()}
-                className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-sky-700"
-            >
-                <ChevronLeft className="size-4" />
-                ツール一覧
-            </Link>
+            <ToolsNav />
 
-            <div className="mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                <h1 className="text-xl font-bold text-slate-800">
-                    データエクスポート
-                </h1>
-                <Link
-                    href={jobs()}
-                    className="ml-auto text-sm font-medium text-sky-700 underline decoration-sky-300 underline-offset-4"
-                >
-                    バッチ一覧へ
-                </Link>
-            </div>
+            <h1 className="mt-6 text-xl font-bold text-slate-800">
+                日次アクセスログ
+            </h1>
             <p className="mt-1 text-sm text-slate-500">
                 出力する内容を選んで実行すると、バックグラウンドで CSV
                 を作成します。完了後はバッチ一覧からダウンロードできます。

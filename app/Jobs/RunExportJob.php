@@ -9,6 +9,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -62,13 +63,18 @@ class RunExportJob implements ShouldQueue
     private function write(): array
     {
         $definition = $this->exportJob->definition();
+
+        if ($definition === null) {
+            throw new RuntimeException("Unknown export definition [{$this->exportJob->definition}].");
+        }
+
         $disk = Storage::disk(config('exports.disk'));
         $path = config('exports.directory').'/'.$this->exportJob->ulid.'.csv';
 
         $handle = fopen('php://temp/maxmemory:'.(4 * 1024 * 1024), 'w+b');
 
         if ($handle === false) {
-            throw new \RuntimeException('Unable to open a buffer for the export.');
+            throw new RuntimeException('Unable to open a buffer for the export.');
         }
 
         // Excel on Windows reads UTF-8 CSV as Shift_JIS without this marker.

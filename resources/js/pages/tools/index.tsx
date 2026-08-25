@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowRight, DatabaseZap } from 'lucide-react';
+import { ArrowRight, ScrollText } from 'lucide-react';
 import type { ComponentType } from 'react';
+import ToolsNav from '@/components/tools-nav';
 import { create as createExport } from '@/routes/tools/exports';
 
 type Tool = {
@@ -14,11 +15,11 @@ type Tool = {
 
 const TOOLS: Tool[] = [
     {
-        name: 'データエクスポート',
-        summary: '社内データベースから条件を選んで CSV を書き出します。',
+        name: '日次アクセスログ',
+        summary: 'ポータルへのアクセス履歴を CSV で書き出します。',
         category: 'データ',
         owner: '情報システム部',
-        icon: DatabaseZap,
+        icon: ScrollText,
         href: createExport().url,
     },
 ];
@@ -28,7 +29,9 @@ export default function ToolsIndex() {
         <>
             <Head title="ツール" />
 
-            <h1 className="text-xl font-bold text-slate-800">ツール</h1>
+            <ToolsNav />
+
+            <h1 className="mt-6 text-xl font-bold text-slate-800">ツール</h1>
             <p className="mt-1 text-sm text-slate-500">
                 社内で使われている業務ツールをここに集約します。
             </p>

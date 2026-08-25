@@ -1,9 +1,9 @@
 import { Form, Head, Link, usePoll } from '@inertiajs/react';
-import { ChevronLeft, Download, KeyRound, RefreshCw } from 'lucide-react';
+import { Download, KeyRound, RefreshCw } from 'lucide-react';
 import InputError from '@/components/input-error';
+import ToolsNav from '@/components/tools-nav';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { index as tools } from '@/routes/tools';
 import { create as createExport } from '@/routes/tools/exports';
 import { download, lookup } from '@/routes/tools/exports/jobs';
 
@@ -51,15 +51,9 @@ export default function ExportJobs({ jobs, unlockedJobs, issuedCode }: Props) {
         <>
             <Head title="バッチ一覧" />
 
-            <Link
-                href={tools()}
-                className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-sky-700"
-            >
-                <ChevronLeft className="size-4" />
-                ツール一覧
-            </Link>
+            <ToolsNav />
 
-            <div className="mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+            <div className="mt-6 flex flex-wrap items-baseline gap-x-4 gap-y-1">
                 <h1 className="text-xl font-bold text-slate-800">バッチ一覧</h1>
                 {running && (
                     <span className="inline-flex items-center gap-1 text-sm text-sky-700">
@@ -85,7 +79,7 @@ export default function ExportJobs({ jobs, unlockedJobs, issuedCode }: Props) {
                         <span className="mx-2 rounded-sm bg-white px-2 py-1 font-mono text-base font-bold tracking-widest text-sky-900">
                             {issuedCode}
                         </span>
-                        完了後、このコードか社員 ID でダウンロードできます。
+                        完了後、このコードでダウンロードできます。
                     </p>
                 </div>
             )}
@@ -98,18 +92,19 @@ export default function ExportJobs({ jobs, unlockedJobs, issuedCode }: Props) {
                 {({ errors, processing }) => (
                     <>
                         <label
-                            htmlFor="key"
+                            htmlFor="code"
                             className="text-sm font-bold text-slate-700"
                         >
-                            社員 ID またはダウンロードコード
+                            ダウンロードコード
                         </label>
                         <div className="mt-2 flex flex-wrap gap-2">
                             <Input
-                                id="key"
-                                name="key"
-                                placeholder="taro / ABCD123456"
+                                id="code"
+                                name="code"
+                                placeholder="ABCD123456"
                                 autoComplete="off"
-                                className="max-w-xs"
+                                maxLength={12}
+                                className="max-w-xs font-mono tracking-widest uppercase"
                             />
                             <Button
                                 type="submit"
@@ -121,10 +116,9 @@ export default function ExportJobs({ jobs, unlockedJobs, issuedCode }: Props) {
                                 照会
                             </Button>
                         </div>
-                        <InputError message={errors.key} className="mt-2" />
+                        <InputError message={errors.code} className="mt-2" />
                         <p className="mt-2 text-xs text-slate-400">
-                            自分の社員 ID
-                            を入力すると自分のバッチが表示されます。ほかの人が実行したバッチは、発行されたコードでのみ取得できます。
+                            自分が実行したバッチは下に表示されます。ほかの人が実行したバッチは、発行されたコードでのみ取得できます。
                         </p>
                     </>
                 )}

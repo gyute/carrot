@@ -139,6 +139,22 @@ test('an employee id is not accepted in place of a download code', function () {
     $this->get(route('tools.exports.jobs.download', $exportJob))->assertForbidden();
 });
 
+test('a batch keeps listing after its definition is retired', function () {
+    $user = User::factory()->create();
+    ExportJob::factory()->for($user)->completed()->create(['definition' => 'retired_report']);
+
+    $this->actingAs($user)->get(route('tools.exports.jobs'))->assertOk();
+});
+
+test('a retired definition fails the batch instead of crashing the worker', function () {
+    $exportJob = ExportJob::factory()->create(['definition' => 'retired_report']);
+
+    (new RunExportJob($exportJob))->handle();
+
+    expect($exportJob->refresh()->status)->toBe(ExportJobStatus::Failed)
+        ->and($exportJob->error_message)->toContain('retired_report');
+});
+
 test('an expired export can no longer be downloaded', function () {
     $user = User::factory()->create();
     $exportJob = ExportJob::factory()->for($user)->expired()->create();
