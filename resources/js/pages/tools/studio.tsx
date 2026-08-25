@@ -65,6 +65,11 @@ export default function Studio({ pages, current }: Props) {
                  * embedded page cannot move the portal out from under the
                  * user, and the URL only ever comes from the allowlist in
                  * config/tools.php.
+                 *
+                 * scheme-light matters: the portal is light only, but a page
+                 * that states no colours of its own (a plain text file, say)
+                 * follows the visitor's OS setting and paints white text,
+                 * which disappears against the frame's white background.
                  */}
                 <iframe
                     key={current.key}
@@ -73,7 +78,7 @@ export default function Studio({ pages, current }: Props) {
                     sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"
                     referrerPolicy="no-referrer"
                     loading="lazy"
-                    className="h-[calc(100svh-22rem)] min-h-96 w-full bg-white"
+                    className="h-[calc(100svh-22rem)] min-h-96 w-full bg-white scheme-light"
                 />
             </div>
 
