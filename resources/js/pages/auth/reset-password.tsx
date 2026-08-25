@@ -16,7 +16,7 @@ type Props = {
 export default function ResetPassword({ token, email, passwordRules }: Props) {
     return (
         <>
-            <Head title="Reset password" />
+            <Head title="パスワード再設定" />
 
             <Form
                 {...update.form()}
@@ -26,14 +26,19 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                 {({ processing, errors }) => (
                     <div className="grid gap-6">
                         <div className="grid gap-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label
+                                htmlFor="email"
+                                className="text-xs font-bold tracking-wide text-slate-500"
+                            >
+                                メールアドレス
+                            </Label>
                             <Input
                                 id="email"
                                 type="email"
                                 name="email"
                                 autoComplete="email"
                                 value={email}
-                                className="mt-1 block w-full"
+                                className="h-12 rounded-none border-0 bg-slate-100 px-4 text-base text-slate-800 shadow-none placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-sky-500"
                                 readOnly
                             />
                             <InputError
@@ -43,29 +48,37 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="password">Password</Label>
+                            <Label
+                                htmlFor="password"
+                                className="text-xs font-bold tracking-wide text-slate-500"
+                            >
+                                新しいパスワード
+                            </Label>
                             <PasswordInput
                                 id="password"
                                 name="password"
                                 autoComplete="new-password"
-                                className="mt-1 block w-full"
+                                className="h-12 rounded-none border-0 bg-slate-100 px-4 text-base text-slate-800 shadow-none placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-sky-500"
                                 autoFocus
-                                placeholder="Password"
+                                placeholder="新しいパスワード"
                                 passwordrules={passwordRules}
                             />
                             <InputError message={errors.password} />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="password_confirmation">
-                                Confirm password
+                            <Label
+                                htmlFor="password_confirmation"
+                                className="text-xs font-bold tracking-wide text-slate-500"
+                            >
+                                新しいパスワード（確認）
                             </Label>
                             <PasswordInput
                                 id="password_confirmation"
                                 name="password_confirmation"
                                 autoComplete="new-password"
-                                className="mt-1 block w-full"
-                                placeholder="Confirm password"
+                                className="h-12 rounded-none border-0 bg-slate-100 px-4 text-base text-slate-800 shadow-none placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-sky-500"
+                                placeholder="新しいパスワード（確認）"
                                 passwordrules={passwordRules}
                             />
                             <InputError
@@ -76,12 +89,12 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
 
                         <Button
                             type="submit"
-                            className="mt-4 w-full"
+                            className="mt-4 h-12 w-full rounded-none bg-sky-600 text-base font-bold text-white shadow-none hover:bg-sky-700"
                             disabled={processing}
                             data-test="reset-password-button"
                         >
                             {processing && <Spinner />}
-                            Reset password
+                            パスワードを再設定
                         </Button>
                     </div>
                 )}
@@ -91,6 +104,6 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
 }
 
 ResetPassword.layout = {
-    title: 'Reset password',
-    description: 'Please enter your new password below',
+    title: 'パスワード再設定',
+    description: '新しく使用するパスワードを入力してください。',
 };

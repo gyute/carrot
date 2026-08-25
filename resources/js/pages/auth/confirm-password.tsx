@@ -14,27 +14,33 @@ import { store } from '@/routes/password/confirm';
 export default function ConfirmPassword() {
     return (
         <>
-            <Head title="Confirm password" />
+            <Head title="パスワードの確認" />
 
             <PasskeyVerify
                 routes={{
                     options: confirmOptions(),
                     submit: confirmStore(),
                 }}
-                label="Confirm with passkey"
-                loadingLabel="Confirming..."
-                separator="Or confirm with password"
+                label="パスキーで確認"
+                loadingLabel="確認中..."
+                separator="またはパスワードで確認"
             />
 
             <Form {...store.form()} resetOnSuccess={['password']}>
                 {({ processing, errors }) => (
                     <div className="space-y-6">
                         <div className="grid gap-2">
-                            <Label htmlFor="password">Password</Label>
+                            <Label
+                                htmlFor="password"
+                                className="text-xs font-bold tracking-wide text-slate-500"
+                            >
+                                パスワード
+                            </Label>
                             <PasswordInput
                                 id="password"
                                 name="password"
-                                placeholder="Password"
+                                placeholder="パスワード"
+                                className="h-12 rounded-none border-0 bg-slate-100 px-4 text-base text-slate-800 shadow-none placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-sky-500"
                                 autoComplete="current-password"
                                 autoFocus
                             />
@@ -44,12 +50,12 @@ export default function ConfirmPassword() {
 
                         <div className="flex items-center">
                             <Button
-                                className="w-full"
+                                className="h-12 w-full rounded-none bg-sky-600 text-base font-bold text-white shadow-none hover:bg-sky-700"
                                 disabled={processing}
                                 data-test="confirm-password-button"
                             >
                                 {processing && <Spinner />}
-                                Confirm password
+                                確認
                             </Button>
                         </div>
                     </div>
@@ -60,7 +66,7 @@ export default function ConfirmPassword() {
 }
 
 ConfirmPassword.layout = {
-    title: 'Confirm password',
+    title: 'パスワードの確認',
     description:
-        'This is a secure area of the application. Please confirm your password before continuing.',
+        'セキュリティ保護された領域です。続けるにはパスワードをもう一度入力してください。',
 };

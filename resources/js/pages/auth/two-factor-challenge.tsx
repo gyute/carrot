@@ -23,18 +23,18 @@ export default function TwoFactorChallenge() {
     }>(() => {
         if (showRecoveryInput) {
             return {
-                title: 'Recovery code',
+                title: 'リカバリーコード',
                 description:
-                    'Please confirm access to your account by entering one of your emergency recovery codes.',
-                toggleText: 'login using an authentication code',
+                    'お手元のリカバリーコードのいずれかを入力してください。',
+                toggleText: '認証コードでログインする',
             };
         }
 
         return {
-            title: 'Authentication code',
+            title: '認証コード',
             description:
-                'Enter the authentication code provided by your authenticator application.',
-            toggleText: 'login using a recovery code',
+                '認証アプリに表示されている認証コードを入力してください。',
+            toggleText: 'リカバリーコードでログインする',
         };
     }, [showRecoveryInput]);
 
@@ -51,7 +51,7 @@ export default function TwoFactorChallenge() {
 
     return (
         <>
-            <Head title="Two-factor authentication" />
+            <Head title="2段階認証" />
 
             <div className="space-y-6">
                 <Form
@@ -67,7 +67,8 @@ export default function TwoFactorChallenge() {
                                     <Input
                                         name="recovery_code"
                                         type="text"
-                                        placeholder="Enter recovery code"
+                                        placeholder="リカバリーコードを入力"
+                                        className="h-12 rounded-none border-0 bg-slate-100 px-4 text-base text-slate-800 shadow-none placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-sky-500"
                                         autoFocus={showRecoveryInput}
                                         required
                                     />
@@ -106,17 +107,17 @@ export default function TwoFactorChallenge() {
 
                             <Button
                                 type="submit"
-                                className="w-full"
+                                className="h-12 w-full rounded-none bg-sky-600 text-base font-bold text-white shadow-none hover:bg-sky-700"
                                 disabled={processing}
                             >
-                                Continue
+                                続ける
                             </Button>
 
-                            <div className="text-center text-sm text-muted-foreground">
-                                <span>or you can </span>
+                            <div className="text-center text-sm text-slate-500">
+                                <span>または </span>
                                 <button
                                     type="button"
-                                    className="cursor-pointer text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                                    className="cursor-pointer font-medium text-sky-700 underline decoration-sky-300 underline-offset-4 transition-colors hover:text-sky-900 hover:decoration-sky-600"
                                     onClick={() =>
                                         toggleRecoveryMode(clearErrors)
                                     }
