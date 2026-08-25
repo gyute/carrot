@@ -17,8 +17,6 @@ class AccessLogSeeder extends Seeder
     public function run(): void
     {
         if (AccessLog::query()->exists()) {
-            $this->command?->info('access_logs already seeded, skipping.');
-
             return;
         }
 
