@@ -3,10 +3,13 @@
 use App\Http\Controllers\ToolController;
 use App\Http\Controllers\Tools\ExportController;
 use App\Http\Controllers\Tools\ExportJobController;
+use App\Http\Controllers\Tools\StudioController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('tools', [ToolController::class, 'index'])->name('tools.index');
+
+    Route::get('tools/studio/{page?}', [StudioController::class, 'show'])->name('tools.studio');
 
     Route::get('tools/exports', [ExportController::class, 'create'])->name('tools.exports.create');
     Route::post('tools/exports', [ExportController::class, 'store'])->name('tools.exports.store');

@@ -1,7 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowRight, ScrollText } from 'lucide-react';
+import { AppWindow, ArrowRight, ScrollText } from 'lucide-react';
 import type { ComponentType } from 'react';
 import ToolsNav from '@/components/tools-nav';
+import { studio } from '@/routes/tools';
 import { create as createExport } from '@/routes/tools/exports';
 
 type Tool = {
@@ -21,6 +22,14 @@ const TOOLS: Tool[] = [
         owner: '情報システム部',
         icon: ScrollText,
         href: createExport().url,
+    },
+    {
+        name: 'スタジオ',
+        summary: '許可された外部ページをポータル内にそのまま表示します。',
+        category: '外部連携',
+        owner: '情報システム部',
+        icon: AppWindow,
+        href: studio().url,
     },
 ];
 
