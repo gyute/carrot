@@ -32,6 +32,21 @@ return [
 
     'connections' => [
 
+        'warehouse' => [
+            'driver' => 'pgsql',
+            'url' => env('WAREHOUSE_DB_URL'),
+            'host' => env('WAREHOUSE_DB_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('WAREHOUSE_DB_PORT', env('DB_PORT', '5432')),
+            'database' => env('WAREHOUSE_DB_DATABASE', env('DB_DATABASE', 'carrot')),
+            'username' => env('WAREHOUSE_DB_USERNAME', env('DB_USERNAME', 'carrot')),
+            'password' => env('WAREHOUSE_DB_PASSWORD', env('DB_PASSWORD', '')),
+            'charset' => env('WAREHOUSE_DB_CHARSET', 'utf8'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => env('WAREHOUSE_DB_SCHEMA', 'public'),
+            'sslmode' => env('WAREHOUSE_DB_SSLMODE', 'prefer'),
+        ],
+
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
