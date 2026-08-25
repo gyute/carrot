@@ -1,6 +1,7 @@
-import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { Form, Head, usePage } from '@inertiajs/react';
 import {
     BarChart3,
+    Bell,
     CalendarDays,
     ClipboardList,
     FileSignature,
@@ -8,14 +9,17 @@ import {
     LogOut,
     Mail,
     MessageSquareText,
+    MessagesSquare,
+    Settings,
     UserRound,
     Users,
+    Video,
+    Wrench,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 import PortalLogo from '@/components/portal-logo';
 import { Button } from '@/components/ui/button';
 import { logout } from '@/routes';
-import { edit as editProfile } from '@/routes/profile';
 
 type Module = {
     label: string;
@@ -60,7 +64,33 @@ const MODULES: Module[] = [
         icon: Users,
         className: 'from-teal-400 to-cyan-600',
     },
+    {
+        label: 'メッセージ',
+        icon: MessagesSquare,
+        className: 'from-emerald-400 to-green-600',
+    },
+    {
+        label: 'ツール',
+        icon: Wrench,
+        className: 'from-amber-400 to-orange-500',
+    },
+    {
+        label: 'Web会議',
+        icon: Video,
+        className: 'from-rose-400 to-rose-600',
+    },
+    {
+        label: '設定',
+        icon: Settings,
+        className: 'from-slate-400 to-slate-600',
+    },
 ];
+
+/**
+ * No notification source exists yet, so the bell shows no badge. Once one
+ * lands, feed its unread count in here and the badge renders itself.
+ */
+const UNREAD_NOTIFICATIONS: number = 0;
 
 export default function Home() {
     const { auth } = usePage().props;
@@ -74,6 +104,22 @@ export default function Home() {
                     <PortalLogo />
 
                     <div className="ml-auto flex items-center gap-3 text-sm text-white">
+                        <button
+                            type="button"
+                            className="relative flex size-9 items-center justify-center rounded-full text-white transition hover:bg-white/15"
+                            aria-label="お知らせ"
+                            data-test="notification-bell"
+                        >
+                            <Bell className="size-5" />
+                            {UNREAD_NOTIFICATIONS > 0 && (
+                                <span className="absolute -top-0.5 -right-0.5 flex min-w-4.5 items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] leading-4.5 font-bold">
+                                    {UNREAD_NOTIFICATIONS > 99
+                                        ? '99+'
+                                        : UNREAD_NOTIFICATIONS}
+                                </span>
+                            )}
+                        </button>
+
                         <span className="flex items-center gap-2">
                             <span className="flex size-8 items-center justify-center rounded-full bg-white/20">
                                 <UserRound className="size-4" />
@@ -107,7 +153,7 @@ export default function Home() {
                     CARROT にログインしました。
                 </p>
 
-                <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-8">
+                <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
                     {MODULES.map(({ label, icon: Icon, className }) => (
                         <div
                             key={label}
@@ -117,22 +163,6 @@ export default function Home() {
                             <span className="text-sm font-bold">{label}</span>
                         </div>
                     ))}
-                </div>
-
-                <div className="mt-8 rounded-md border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
-                    <p className="text-sm font-medium text-slate-600">
-                        業務モジュールは準備中です。
-                    </p>
-                    <p className="mt-2 text-sm text-slate-400">
-                        現在はログイン・新規登録と{' '}
-                        <Link
-                            href={editProfile()}
-                            className="font-medium text-sky-700 underline decoration-sky-300 underline-offset-4"
-                        >
-                            アカウント設定
-                        </Link>
-                        のみ利用できます。
-                    </p>
                 </div>
             </main>
         </div>
