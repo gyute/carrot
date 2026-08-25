@@ -137,6 +137,16 @@
         @apply border-border;
     }
 
+    /*
+     * Reserve the scrollbar gutter on every page. Without it a page that
+     * happens to be a few pixels taller than the viewport gains a scrollbar,
+     * narrows the viewport, and shifts every centred layout sideways as the
+     * visitor moves between screens.
+     */
+    html {
+        scrollbar-gutter: stable;
+    }
+
     body {
         @apply bg-background text-foreground;
     }

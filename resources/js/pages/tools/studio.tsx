@@ -78,7 +78,7 @@ export default function Studio({ pages, current }: Props) {
                     sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"
                     referrerPolicy="no-referrer"
                     loading="lazy"
-                    className="h-[calc(100svh-22rem)] min-h-96 w-full bg-white scheme-light"
+                    className="h-[calc(100svh-24rem)] min-h-96 w-full bg-white scheme-light"
                 />
             </div>
 
