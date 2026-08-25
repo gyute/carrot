@@ -8,9 +8,14 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
+    /*
+     * Plus Jakarta Sans carries the Latin text and the wordmark; Noto Sans JP
+     * follows it so the Japanese UI reads the same on every OS instead of
+     * falling back to Hiragino or Yu Gothic.
+     */
     --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
-        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Plus Jakarta Sans', 'Noto Sans JP', ui-sans-serif, system-ui,
+        sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
 
     --radius-lg: var(--radius);

@@ -14,13 +14,13 @@ export default function PortalLogo({ className, tone = 'light' }: Props) {
         <div className={cn('flex items-center gap-3', className)}>
             <PortalLogoMark className="size-9 shrink-0" />
             {/*
-             * Nudged down so the cap height centres on the carrot's body
-             * rather than on the whole glyph: the leaves sit above the body
-             * and pull the optical centre up.
+             * Plus Jakarta Sans sits its caps low enough that the wordmark
+             * already centres on the carrot's body, so no nudge is needed
+             * here. Re-measure if the font ever changes.
              */}
             <span
                 className={cn(
-                    'translate-y-[2px] text-2xl font-extrabold tracking-[0.14em]',
+                    'text-2xl font-extrabold tracking-[0.14em]',
                     tone === 'light' ? 'text-white' : 'text-slate-800',
                 )}
             >
