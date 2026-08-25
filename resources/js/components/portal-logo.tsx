@@ -1,3 +1,4 @@
+import type { SVGAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
 type Props = {
@@ -11,12 +12,7 @@ type Props = {
 export default function PortalLogo({ className, tone = 'light' }: Props) {
     return (
         <div className={cn('flex items-center gap-3', className)}>
-            <PortalLogoMark
-                className={cn(
-                    'size-9 shrink-0',
-                    tone === 'light' ? 'text-white' : 'text-sky-700',
-                )}
-            />
+            <PortalLogoMark className="size-9 shrink-0" />
             <span
                 className={cn(
                     'text-2xl font-extrabold tracking-[0.14em]',
@@ -30,34 +26,42 @@ export default function PortalLogo({ className, tone = 'light' }: Props) {
 }
 
 /**
- * An original mark drawn for this project: a carrot in a rounded tile.
+ * The carrot glyph, drawn to fit a 32x32 box around its optical center.
  */
-export function PortalLogoMark({ className }: { className?: string }) {
+function PortalCarrot() {
+    return (
+        <g transform="translate(16 16) scale(1.789) translate(-16 -17.72)">
+            <path
+                d="M16 14.6C19.9 12.7 22.84 13.95 22.3 15.67L16.48 26.12A0.55 0.55 0 0 1 15.52 26.12L9.7 15.67C9.16 13.95 12.1 12.7 16 14.6Z"
+                fill="#fb923c"
+            />
+            <path
+                d="M16 14.6C19.9 12.7 22.84 13.95 22.3 15.67L16.48 26.12A0.55 0.55 0 0 1 16 26.4Z"
+                fill="#f97316"
+            />
+            <path
+                d="M16 14.6 12.6 10.4M16 14.6l3.4-4.2"
+                stroke="#4ade80"
+                strokeWidth="2.7"
+                strokeLinecap="round"
+            />
+        </g>
+    );
+}
+
+/**
+ * An original mark drawn for this project, shared with public/favicon.svg.
+ */
+export function PortalLogoMark(props: SVGAttributes<SVGElement>) {
     return (
         <svg
+            {...props}
             viewBox="0 0 32 32"
             fill="none"
             aria-hidden="true"
-            className={className}
+            xmlns="http://www.w3.org/2000/svg"
         >
-            <rect
-                x="2"
-                y="2"
-                width="28"
-                height="28"
-                rx="7"
-                className="fill-current opacity-20"
-            />
-            <path
-                d="M10.6 13.4h10.8l-4.3 12.1a1.2 1.2 0 0 1-2.2 0l-4.3-12.1Z"
-                className="fill-current"
-            />
-            <path
-                d="M16 13.4 12.6 9.2M16 13.4l3.4-4.2"
-                className="stroke-current"
-                strokeWidth="2"
-                strokeLinecap="round"
-            />
+            <PortalCarrot />
         </svg>
     );
 }
