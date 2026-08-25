@@ -87,7 +87,7 @@ export default function ExportCreate({
                         <Button
                             type="submit"
                             disabled={processing || definitions.length === 0}
-                            className="mt-6"
+                            className="mt-6 bg-sky-700 text-white hover:bg-sky-800"
                             data-test="run-export-button"
                         >
                             <Play className="size-4" />
