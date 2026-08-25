@@ -19,7 +19,7 @@ class ExportJobFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'definition' => 'users',
+            'definition' => 'daily_access_log',
             'status' => ExportJobStatus::Queued,
             'download_code' => ExportJob::newDownloadCode(),
         ];

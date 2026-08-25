@@ -12,7 +12,7 @@ class ExportJobLookupRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'key' => ['required', 'string', 'max:64'],
+            'code' => ['required', 'string', 'max:12'],
         ];
     }
 
@@ -22,7 +22,7 @@ class ExportJobLookupRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'key' => '社員 ID またはダウンロードコード',
+            'code' => 'ダウンロードコード',
         ];
     }
 }

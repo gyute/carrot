@@ -48,24 +48,17 @@ class ExportJobController extends Controller
     }
 
     /**
-     * Unlock a batch with the requester's own employee ID or a download code.
+     * Unlock a batch with the download code issued when it was requested.
      */
     public function lookup(ExportJobLookupRequest $request): RedirectResponse
     {
-        $key = $request->string('key')->trim()->value();
-        $user = $request->user();
-
-        if (mb_strtolower($key) === $user->username) {
-            return to_route('tools.exports.jobs');
-        }
-
         $exportJob = ExportJob::query()
-            ->where('download_code', mb_strtoupper($key))
+            ->where('download_code', $request->string('code')->trim()->upper()->value())
             ->first();
 
         if ($exportJob === null) {
             throw ValidationException::withMessages([
-                'key' => '該当するバッチが見つかりません。社員 ID またはダウンロードコードを確認してください。',
+                'code' => '該当するバッチが見つかりません。ダウンロードコードを確認してください。',
             ]);
         }
 

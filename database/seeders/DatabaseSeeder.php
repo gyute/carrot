@@ -22,5 +22,7 @@ class DatabaseSeeder extends Seeder
             'username' => 'test',
             'email' => 'test@example.com',
         ]);
+
+        $this->call(AccessLogSeeder::class);
     }
 }

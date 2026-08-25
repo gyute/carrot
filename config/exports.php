@@ -33,18 +33,18 @@ return [
 
     'definitions' => [
 
-        'users' => [
-            'label' => '利用者一覧',
-            'description' => 'CARROT に登録されている利用者を出力します。',
+        'daily_access_log' => [
+            'label' => '日次アクセスログ',
+            'description' => 'ポータルへのアクセス履歴を 1 件ずつ出力します。',
             'connection' => env('EXPORT_CONNECTION', 'warehouse'),
-            'sql' => 'select id, username, name, email, created_at from users order by id',
+            'sql' => 'select accessed_at, username, path, status_code, duration_ms, ip_address from access_logs order by accessed_at desc',
         ],
 
-        'user_registrations' => [
-            'label' => '月別登録者数',
-            'description' => '利用者の登録数を月ごとに集計します。',
+        'daily_access_summary' => [
+            'label' => '日次アクセス集計',
+            'description' => 'アクセス数と利用者数を日ごとに集計します。',
             'connection' => env('EXPORT_CONNECTION', 'warehouse'),
-            'sql' => "select to_char(created_at, 'YYYY-MM') as month, count(*) as users from users group by 1 order by 1",
+            'sql' => 'select date(accessed_at) as date, count(*) as accesses, count(distinct username) as users from access_logs group by 1 order by 1 desc',
         ],
 
     ],
