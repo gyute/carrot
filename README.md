@@ -42,15 +42,12 @@ Vite and the log tail.
 | ----------------------------------------------------------- | ---------------------------------------------------------- |
 | `routes/web.php`, `routes/settings.php`, `routes/tools.php` | Routes, split by area                                      |
 | `app/Http/Controllers/Tools/`                               | The tool module                                            |
-| `config/tools.php`                                          | Pages the studio tool is allowed to frame                  |
 | `resources/js/pages/`                                       | Inertia page components                                    |
 | `.ai/rules/`                                                | Decisions and traps worth knowing before editing           |
 
 ## The tool module
 
 `/tools` collects the in-house tools.
-
-- **スタジオ** frames an external page listed in `config/tools.php`.
 
 ## Checks
 
