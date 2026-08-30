@@ -70,6 +70,7 @@ tails all come from configuration.
 | `app/Sandbox/`                                              | The sandbox runners script tools execute in                |
 | `config/sandbox.php`, `docker/sandbox/`                     | Sandbox limits, driver and container images                |
 | `resources/js/pages/`                                       | Inertia page components                                    |
+| `demo/`                                                     | The demo catalog, published by `php artisan demo:seed`      |
 | `.ai/rules/`                                                | Decisions and traps worth knowing before editing           |
 
 ## The tool module
@@ -107,6 +108,13 @@ row in the `tools` table.
   from the shell with `php artisan carrot:promote <username> --role=manager
   --department=開発`, `--role=admin`, `--revoke`. The seeder creates `manager` / `admin` (password
   `password`) for trying this locally.
+
+## Showing it working
+
+`/tools` starts empty. `php artisan demo:seed` publishes a small, obviously
+fake catalog - a couple of link tools, two embeds and two sandbox scripts -
+by filing them as requests and walking them through both approval stages, so
+the versions, the history and the inbox are all real. See `demo/README.md`.
 
 ## The sandbox
 
@@ -164,8 +172,8 @@ screens simply poll.
 `tests/Feature/ScenarioTest.php` walks the whole platform from an empty
 database - one member registers a link, an embed and a script tool, their
 manager endorses, an admin publishes, the catalog fills up and the script
-runs - so what a seeded demo used to ship is covered as a flow instead. Every
-URL in it is a documentation domain or a portal path.
+runs. It builds its own fixtures, so it stays a regression test for the flow
+rather than a check on any particular catalog.
 
 ```bash
 composer test        # Pint, PHPStan, Pest
