@@ -1,6 +1,5 @@
 #!/bin/sh
-# Shows what a shell tool actually runs in: no network, a read-only root and
-# an unprivileged uid. `jq` is in the image, so the inputs file is readable.
+# What a shell tool runs in: no network, read-only root, unprivileged uid.
 set -eu
 
 echo "requested lines: $(jq -r '.lines // "10"' "$TOOL_INPUTS")"

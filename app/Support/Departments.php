@@ -4,14 +4,6 @@ namespace App\Support;
 
 use Illuminate\Validation\Rule;
 
-/**
- * The departments a tool or a user may belong to. The list is deployment
- * data, not code: it comes from CATALOG_DEPARTMENTS so no real org chart
- * ever lands in the repository.
- *
- * An empty list means "not configured here" and the field falls back to free
- * text, so a fresh install is usable before anyone fills the list in.
- */
 class Departments
 {
     /**
@@ -19,14 +11,12 @@ class Departments
      */
     public static function all(): array
     {
-        return array_values(array_filter(
-            array_map('strval', (array) config('catalog.departments', [])),
-            fn (string $department): bool => $department !== '',
-        ));
+        return array_map('strval', (array) config('catalog.departments', []));
     }
 
     /**
-     * Validation rules for a department field.
+     * An unconfigured list means free text, so a fresh install is usable
+     * before anyone fills it in.
      *
      * @return array<int, mixed>
      */

@@ -12,4 +12,4 @@ Registration rules live in ProfileValidationRules::usernameRules() and are appli
 ## Roles live on the user row, and a manager is scoped to one department
 users.role is member / manager / admin (App\Enums\UserRole, cast on the model). Gate 'admin' and Gate 'reviewer' are defined in AppServiceProvider; a reviewer is an admin or a manager.
 User::isManagerOf(?string $department) is the department-stage check and is false for a null department, so a tool with no department never falls to a manager. Scopes: User::query()->admins(), User::query()->managersOf($department).
-Roles are not editable from the UI: `php artisan carrot:promote <username> --role=manager --department=<name>`, `--role=admin`, `--revoke`.
+Two ways in, one pair of columns: Admin\UserController (/admin/users, admins only) and `php artisan carrot:promote <username> --role=manager --department=<name>` (`--role=admin`, `--revoke`) for a box with no browser. Both refuse a manager without a department.

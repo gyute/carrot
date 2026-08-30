@@ -9,17 +9,16 @@ php artisan demo:seed            # publish what demo/tools.php describes
 php artisan demo:seed --fresh    # delete the demo tools and publish again
 ```
 
-It refuses to run in production unless you pass `--force`.
+It refuses to run in production without `--force`.
 
 ## What it does
 
 Nothing is written into `tools` directly. The command files a submission as
 the demo requester, has the demo department manager endorse it and a demo
-admin publish it - the same three steps a real tool goes through. So the demo
-also demonstrates: every tool ends up with a real version stamp, a real
-approval history and real inbox messages.
+admin publish it - the three steps a real tool goes through - so every demo
+tool ends up with a genuine version stamp, approval history and inbox message.
 
-It creates three accounts if they are missing (password `password`):
+Three accounts are created or reset each run, all with password `password`:
 
 | Login          | Role                           | Why                                |
 | -------------- | ------------------------------ | ---------------------------------- |
@@ -37,36 +36,27 @@ submission payload plus a `state`:
 
 ```php
 [
-    'kind' => 'link',              // link | embed | script
-    'name' => 'デモ: 何か',         // also how the command recognises it later
+    'kind' => 'link',                // link | embed | script
+    'name' => 'デモ: 何か',           // how the command recognises it later
     'summary' => '一行の説明。',
-    'description' => null,          // optional, shown on the tool's page
-    'icon' => 'file-text',          // Tool::ICONS
-    'accent' => 'amber',            // Tool::ACCENTS
+    'description' => null,           // optional, shown on the tool's page
+    'icon' => 'file-text',           // Tool::ICONS
+    'accent' => 'amber',             // Tool::ACCENTS
     'categories' => ['ポータル'],
     'config' => ['url' => '/tools'],
-    'source' => 'scripts/hello.php', // script tools only, path under demo/
-    'state' => 'published',         // or 'pending' to leave it for review
+    'source' => 'scripts/hello.php', // script only; a real file under demo/
+    'state' => 'published',          // 'pending' leaves it for review instead
 ],
 ```
 
-A `state` of `pending` stops after the submission, which is how the approval
-screens get something to show.
-
-Script sources live in `demo/scripts/` as real files, so they can be edited
-and linted like any other script.
-
 ## Rules the demo has to respect
 
-- **An embed tool cannot frame this portal.** `Tool::frameableUrl()` only
-  accepts an external `https` origin and refuses our own host, because an
-  embedded page on our origin would get our DOM. So a page served from this
-  app can be a `link` target, never an `embed` one - the embed entries use
-  documentation domains (`example.com`, `rfc-editor.org`).
-- **No real host, ever.** Everything here is a documentation domain or a path
-  inside the portal. This directory is the first place someone will copy from,
-  so it must not contain anything a real deployment uses.
-- If `CATALOG_DEPARTMENTS` is set, the forms only offer those departments.
-  The demo writes its own department straight onto the submission, so it works
-  either way - but add it to the list if you want to edit a demo tool from
-  the screens.
+- **An embed tool cannot frame this portal.** `Tool::frameableUrl()` takes an
+  external `https` origin only and refuses our own host, because an embedded
+  page on our origin would get our DOM. A page served from this app can be a
+  `link` target, never an `embed` one.
+- **No real host, ever.** This directory is the first place someone will copy
+  from, so every URL here is a documentation domain or a portal path.
+- With `CATALOG_DEPARTMENTS` set, the forms only offer those departments. The
+  demo writes its own onto the submission either way, but add it to the list
+  to edit a demo tool from the screens.

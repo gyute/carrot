@@ -14,8 +14,12 @@ The UI is Japanese throughout.
 ```bash
 docker compose up -d          # PostgreSQL on 127.0.0.1:5432
 composer setup                # install, .env, app key, migrate, seed, npm install, build
-composer run dev              # serve + queue worker + vite + logs
+composer run dev              # serve + queue worker + vite + reverb + logs
 ```
+
+`composer run dev` runs a worker on the `sandbox,default` queues. **It
+matters**: script runs and notifications are queued jobs, so without it they
+stay in `待機中` forever.
 
 If 5432 is already in use on your machine, copy `.env.example` to `.env` first and
 set `DB_PORT` to a free port (5433, say) - compose publishes the container on
@@ -48,12 +52,6 @@ php artisan migrate
 php artisan db:seed --force
 ```
 
-## Running it
-
-`composer run dev` starts the PHP server, a worker on the `sandbox,default`
-queues, Vite and the log tail. **The worker matters**: script tool runs are
-queued jobs, so without it they stay in `待機中` forever.
-
 ## What has to be set in `.env`
 
 `composer setup` copies `.env.example` and the app runs as it is. These are the
@@ -67,10 +65,6 @@ values worth a second look:
 | `CATALOG_DEPARTMENTS`                                 | The 所属 allowlist, comma separated. Blank means the field is free text                                            |
 | `PASSKEYS_USER_HANDLE_SECRET`                         | Defaults to `APP_KEY`. Set it to its own fixed value if `APP_KEY` will ever be rotated, or passkeys stop resolving |
 | `LOG_CHANNEL`                                         | The system screen tails whichever channel this names, so a `daily` or custom path is followed, not assumed         |
-
-Nothing else in the app hardcodes a deployment value: the departments, the
-sandbox images and limits, the runtime labels and the log the system screen
-tails all come from configuration.
 
 ## Layout
 
@@ -108,33 +102,21 @@ row in the `tools` table.
   bell in the header) with a link to `/admin/approvals/{id}`; the decision
   messages the requester back. Reverb pushes updates live; screens also poll
   every minute as a safety net, so a dev box without `reverb:start` still works.
-- **Roles**: `users.role` is `member`, `manager` or `admin`. Approval has two
-  stages: the requester's department **manager** endorses first, then a system
-  **admin** confirms and publishes (an admin may also approve straight from the
-  first stage; a department with no manager falls through to the admins).
-  Admins may deprecate, restore or delete a tool directly, and `/admin` covers
-  the rest of the data without a database client: `/admin/users` (roles and
-  所属), `/admin/tools` (every row, deleted ones included, restore or purge),
-  `/admin/tags` (rename and merge), `/admin/runs` (browse, delete, prune) and
-  `/admin/system` (queues, workers, sandbox, Reverb, recent runs, log tail).
-  `/admin/users` writes the same two columns as
-  `php artisan carrot:promote <username> --role=manager --department=開発`
-  (`--role=admin`, `--revoke`), for a box with no browser.
+- **Roles**: `users.role` is `member`, `manager` or `admin`. The requester's
+  department **manager** endorses first, then a system **admin** publishes. An
+  admin may approve straight from the first stage, and a department with no
+  manager falls through to the admins.
 
-## The demo catalog
+`/admin` covers every table without a database client:
 
-`php artisan demo:seed` publishes a small, obviously fake catalog - two link
-tools, two embeds, two sandbox scripts and one request left waiting so the
-approval screens have something to show. It writes no `tools` rows directly:
-each one is filed as a request, endorsed by the demo department manager and
-published by a demo admin, so the versions, the approval history and the inbox
-messages are all real.
-
-It is safe to re-run (existing entries are skipped), `--fresh` deletes and
-republishes, and it refuses to run in production without `--force`. The
-catalog itself is [`demo/tools.php`](demo/tools.php) and the script sources
-are files under `demo/scripts/` - see [`demo/README.md`](demo/README.md) to
-add one.
+| Screen             | What it edits                                                     |
+| ------------------ | ----------------------------------------------------------------- |
+| `/admin/approvals` | The two review stages (managers see their own department)         |
+| `/admin/users`     | Roles and 所属 - the same columns as `php artisan carrot:promote` |
+| `/admin/tools`     | Every row, deleted ones included: deprecate, restore, purge       |
+| `/admin/tags`      | Rename and merge category tags                                    |
+| `/admin/runs`      | Browse, delete, prune sandbox runs                                |
+| `/admin/system`    | Queues, workers, sandbox, Reverb, recent runs, log tail           |
 
 ## The sandbox
 

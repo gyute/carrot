@@ -102,8 +102,8 @@ class SeedDemo extends Command
 
     /**
      * The three people a demo needs: someone to ask, someone to endorse and
-     * someone to publish. Created if they are not there yet, left alone if
-     * they are.
+     * someone to publish. Reset on every run, so a demo box is never one
+     * forgotten password away from being unusable.
      *
      * @return array{0: User, 1: User, 2: User}
      */

@@ -14,13 +14,10 @@ type Tab = {
 };
 
 /**
- * The menu shared by every screen in the tool module. A tab is active when
- * the URL starts with its path; the catalog tab is the fallback so tool pages
- * light it up. Longer prefixes are checked first, since every tool path
- * starts with the catalog's.
- *
- * `actions` sits at the right end of the same row, for controls that belong to
- * the tab bar rather than to the page body.
+ * The menu shared by every screen in the tool module. Longer prefixes are
+ * matched first, since every tool path starts with the catalog's; the catalog
+ * is the fallback, so a tool page lights it up. `actions` sits at the right
+ * end of the same row.
  */
 export default function ToolsNav({ actions }: { actions?: ReactNode }) {
     const { url, props } = usePage();

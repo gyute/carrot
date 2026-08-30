@@ -1,19 +1,12 @@
 <?php
 
 /**
- * The demo catalog: what `php artisan demo:seed` publishes into an empty
- * install. It exists so the platform can be shown working without shipping
- * anyone's real tools - every URL here is a documentation domain or a path
- * inside the portal.
- *
- * Add an entry and re-run the command; see demo/README.md.
+ * What `php artisan demo:seed` publishes. Every URL here is a documentation
+ * domain or a portal path - see demo/README.md before adding one.
  */
 return [
 
-    /*
-     * The department the demo requester belongs to and every demo tool is
-     * filed under. It is deliberately not a real department name.
-     */
+    /* Deliberately not a real department name. */
     'department' => 'デモ部',
 
     'tools' => [
@@ -105,10 +98,7 @@ return [
             'state' => 'published',
         ],
 
-        /*
-         * Left waiting on purpose, so the approval screens have something to
-         * show. The demo manager endorses it, or an admin publishes it.
-         */
+        /* Left waiting on purpose, so the approval screens have something to show. */
         [
             'kind' => 'embed',
             'name' => 'デモ: 承認待ちの申請',
