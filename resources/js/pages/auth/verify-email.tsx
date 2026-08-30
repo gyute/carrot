@@ -3,6 +3,7 @@ import { Form, Head } from '@inertiajs/react';
 import PortalLink from '@/components/portal-link';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { portalSubmitClasses } from '@/lib/portal-form';
 import { logout } from '@/routes';
 import { send } from '@/routes/verification';
 
@@ -22,7 +23,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
                     <>
                         <Button
                             disabled={processing}
-                            className="h-12 w-full rounded-none bg-sky-600 text-base font-bold text-white shadow-none hover:bg-sky-700"
+                            className={portalSubmitClasses}
                         >
                             {processing && <Spinner />}
                             確認メールを再送する

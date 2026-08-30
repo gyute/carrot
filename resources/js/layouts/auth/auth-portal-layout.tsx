@@ -32,14 +32,14 @@ export default function AuthPortalLayout({
             >
                 <Link
                     href={home()}
-                    className="mb-4 inline-flex rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                    className="mb-5 inline-flex rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-white/70"
                 >
                     <PortalLogo />
                 </Link>
 
-                <div className="rounded-sm bg-white/85 px-6 py-8 shadow-2xl shadow-blue-950/25 backdrop-blur-sm sm:px-12 sm:py-12">
+                <div className="rounded-2xl bg-white/90 px-6 py-8 shadow-2xl ring-1 shadow-blue-950/25 ring-white/60 backdrop-blur-sm sm:px-12 sm:py-12">
                     <div className="mb-8 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                        <h1 className="text-4xl font-light text-sky-700">
+                        <h1 className="text-4xl font-light tracking-tight text-sky-700">
                             {title}
                         </h1>
                         {description && (

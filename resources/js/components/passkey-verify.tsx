@@ -4,7 +4,6 @@ import { usePasskeyVerify } from '@laravel/passkeys/react';
 import { KeyRound } from 'lucide-react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +15,12 @@ type Props = {
     label?: string;
     loadingLabel?: string;
     separator?: string;
+    /**
+     * Which side of the button the divider falls on. The divider names what is
+     * on the far side of it, so a screen that offers the passkey first wants it
+     * after the button, and one that offers it last wants it before.
+     */
+    separatorPlacement?: 'before' | 'after';
     className?: string;
 };
 
@@ -24,6 +29,7 @@ export default function PasskeyVerify({
     label,
     loadingLabel,
     separator,
+    separatorPlacement = 'after',
     className,
 }: Props = {}) {
     const { verify, isLoading, error, isSupported } = usePasskeyVerify({
@@ -42,8 +48,18 @@ export default function PasskeyVerify({
         return null;
     }
 
+    const divider = (
+        <div className="my-6 flex items-center gap-4 text-xs font-medium text-slate-400">
+            <span className="h-px flex-1 bg-slate-200" />
+            {separator ?? 'Or continue with email'}
+            <span className="h-px flex-1 bg-slate-200" />
+        </div>
+    );
+
     return (
         <>
+            {separatorPlacement === 'before' && divider}
+
             <div className="grid gap-2">
                 <Button
                     type="button"
@@ -62,16 +78,7 @@ export default function PasskeyVerify({
                 )}
             </div>
 
-            <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                    <Separator className="w-full" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                        {separator ?? 'Or continue with email'}
-                    </span>
-                </div>
-            </div>
+            {separatorPlacement === 'after' && divider}
         </>
     );
 }

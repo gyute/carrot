@@ -6,13 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import {
+    portalFieldClasses,
+    portalLabelClasses,
+    portalSubmitClasses,
+} from '@/lib/portal-form';
+import { cn } from '@/lib/utils';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
-
-const fieldClasses =
-    'h-12 rounded-none border-0 bg-slate-100 px-4 text-base text-slate-800 shadow-none placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-sky-500';
-
-const labelClasses = 'text-xs font-bold tracking-wide text-slate-500';
 
 type Props = {
     passwordRules: string;
@@ -33,7 +34,10 @@ export default function Register({ passwordRules }: Props) {
                     <>
                         <div className="grid gap-5 sm:grid-cols-2">
                             <div className="grid content-start gap-2">
-                                <Label htmlFor="name" className={labelClasses}>
+                                <Label
+                                    htmlFor="name"
+                                    className={portalLabelClasses}
+                                >
                                     氏名
                                 </Label>
                                 <Input
@@ -45,7 +49,7 @@ export default function Register({ passwordRules }: Props) {
                                     tabIndex={1}
                                     autoComplete="name"
                                     placeholder="アリスキャロット"
-                                    className={fieldClasses}
+                                    className={portalFieldClasses}
                                 />
                                 <InputError message={errors.name} />
                             </div>
@@ -53,7 +57,7 @@ export default function Register({ passwordRules }: Props) {
                             <div className="grid content-start gap-2">
                                 <Label
                                     htmlFor="username"
-                                    className={labelClasses}
+                                    className={portalLabelClasses}
                                 >
                                     ログインID
                                 </Label>
@@ -65,7 +69,7 @@ export default function Register({ passwordRules }: Props) {
                                     tabIndex={2}
                                     autoComplete="username"
                                     placeholder="carrot"
-                                    className={fieldClasses}
+                                    className={portalFieldClasses}
                                 />
                                 <p className="text-xs text-slate-400">
                                     半角英小文字ではじまる4〜20文字（数字・-・_
@@ -75,7 +79,10 @@ export default function Register({ passwordRules }: Props) {
                             </div>
 
                             <div className="grid content-start gap-2 sm:col-span-2">
-                                <Label htmlFor="email" className={labelClasses}>
+                                <Label
+                                    htmlFor="email"
+                                    className={portalLabelClasses}
+                                >
                                     メールアドレス
                                 </Label>
                                 <Input
@@ -86,7 +93,7 @@ export default function Register({ passwordRules }: Props) {
                                     tabIndex={3}
                                     autoComplete="email"
                                     placeholder="carrot@example.com"
-                                    className={fieldClasses}
+                                    className={portalFieldClasses}
                                 />
                                 <InputError message={errors.email} />
                             </div>
@@ -94,7 +101,7 @@ export default function Register({ passwordRules }: Props) {
                             <div className="grid content-start gap-2">
                                 <Label
                                     htmlFor="password"
-                                    className={labelClasses}
+                                    className={portalLabelClasses}
                                 >
                                     パスワード
                                 </Label>
@@ -106,7 +113,7 @@ export default function Register({ passwordRules }: Props) {
                                     autoComplete="new-password"
                                     placeholder="パスワード"
                                     passwordrules={passwordRules}
-                                    className={fieldClasses}
+                                    className={portalFieldClasses}
                                 />
                                 <InputError message={errors.password} />
                             </div>
@@ -114,7 +121,7 @@ export default function Register({ passwordRules }: Props) {
                             <div className="grid content-start gap-2">
                                 <Label
                                     htmlFor="password_confirmation"
-                                    className={labelClasses}
+                                    className={portalLabelClasses}
                                 >
                                     パスワード（確認）
                                 </Label>
@@ -126,7 +133,7 @@ export default function Register({ passwordRules }: Props) {
                                     autoComplete="new-password"
                                     placeholder="パスワード（確認）"
                                     passwordrules={passwordRules}
-                                    className={fieldClasses}
+                                    className={portalFieldClasses}
                                 />
                                 <InputError
                                     message={errors.password_confirmation}
@@ -138,7 +145,7 @@ export default function Register({ passwordRules }: Props) {
                             type="submit"
                             tabIndex={6}
                             data-test="register-user-button"
-                            className="h-14 w-full rounded-none bg-sky-600 text-lg font-bold text-white shadow-none hover:bg-sky-700"
+                            className={cn(portalSubmitClasses, 'h-14 text-lg')}
                         >
                             {processing && <Spinner />}
                             登録する

@@ -6,6 +6,11 @@ import PortalLink from '@/components/portal-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    portalFieldClasses,
+    portalLabelClasses,
+    portalSubmitClasses,
+} from '@/lib/portal-form';
 import { login } from '@/routes';
 import { email } from '@/routes/password';
 
@@ -27,7 +32,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
                             <div className="grid gap-2">
                                 <Label
                                     htmlFor="email"
-                                    className="text-xs font-bold tracking-wide text-slate-500"
+                                    className={portalLabelClasses}
                                 >
                                     ご登録のメールアドレス
                                 </Label>
@@ -38,7 +43,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
                                     autoComplete="off"
                                     autoFocus
                                     placeholder="yamada@example.com"
-                                    className="h-12 rounded-none border-0 bg-slate-100 px-4 text-base text-slate-800 shadow-none placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-sky-500"
+                                    className={portalFieldClasses}
                                 />
 
                                 <InputError message={errors.email} />
@@ -46,7 +51,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
 
                             <div className="my-6 flex items-center justify-start">
                                 <Button
-                                    className="h-12 w-full rounded-none bg-sky-600 text-base font-bold text-white shadow-none hover:bg-sky-700"
+                                    className={portalSubmitClasses}
                                     disabled={processing}
                                     data-test="email-password-reset-link-button"
                                 >

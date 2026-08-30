@@ -9,6 +9,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import {
+    portalCheckboxClasses,
+    portalFieldClasses,
+    portalOutlineClasses,
+    portalSubmitClasses,
+} from '@/lib/portal-form';
+import { cn } from '@/lib/utils';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
@@ -27,9 +34,6 @@ function readSavedUsername(): string {
         return '';
     }
 }
-
-const fieldClasses =
-    'h-12 rounded-none border-0 bg-slate-100 px-4 text-base text-slate-800 shadow-none placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-sky-500';
 
 type Props = {
     status?: string;
@@ -59,70 +63,74 @@ export default function Login({ status, canResetPassword }: Props) {
             <Head title="ログイン" />
 
             {status && (
-                <div className="mb-6 border-l-4 border-sky-500 bg-sky-50 px-4 py-3 text-sm font-medium text-sky-800">
+                <div className="mb-6 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-medium text-sky-800">
                     {status}
                 </div>
             )}
 
-            <Form
-                {...store.form()}
-                resetOnSuccess={['password']}
-                className="flex flex-col gap-4"
-            >
+            <Form {...store.form()} resetOnSuccess={['password']}>
                 {({ processing, errors }) => (
-                    <>
-                        <div className="grid gap-3 sm:grid-cols-[1fr_9rem]">
-                            <div className="grid content-start gap-2">
-                                <Label htmlFor="username" className="sr-only">
-                                    ログインID
-                                </Label>
-                                <Input
-                                    id="username"
-                                    type="text"
-                                    name="username"
-                                    value={username}
-                                    onChange={(event) =>
-                                        setUsername(event.target.value)
-                                    }
-                                    required
-                                    autoFocus
-                                    tabIndex={1}
-                                    autoComplete="username"
-                                    placeholder="ログインID"
-                                    className={fieldClasses}
-                                />
+                    /*
+                     * One grid holds the whole form so the rows line up on
+                     * their own: the fields and the submit button share row 1,
+                     * and the options row below is placed back in column 1, so
+                     * its left and right edges match the fields above without
+                     * a hand-measured padding.
+                     */
+                    <div className="grid gap-3 sm:grid-cols-[1fr_10rem]">
+                        <div className="grid content-start gap-3">
+                            <Label htmlFor="username" className="sr-only">
+                                ログインID
+                            </Label>
+                            <Input
+                                id="username"
+                                type="text"
+                                name="username"
+                                value={username}
+                                onChange={(event) =>
+                                    setUsername(event.target.value)
+                                }
+                                required
+                                autoFocus
+                                tabIndex={1}
+                                autoComplete="username"
+                                placeholder="ログインID"
+                                className={portalFieldClasses}
+                            />
 
-                                <Label htmlFor="password" className="sr-only">
-                                    パスワード
-                                </Label>
-                                <PasswordInput
-                                    id="password"
-                                    name="password"
-                                    required
-                                    tabIndex={2}
-                                    autoComplete="current-password"
-                                    placeholder="パスワード"
-                                    className={fieldClasses}
-                                />
-                            </div>
+                            <Label htmlFor="password" className="sr-only">
+                                パスワード
+                            </Label>
+                            <PasswordInput
+                                id="password"
+                                name="password"
+                                required
+                                tabIndex={2}
+                                autoComplete="current-password"
+                                placeholder="パスワード"
+                                className={portalFieldClasses}
+                            />
 
-                            <Button
-                                type="submit"
-                                tabIndex={3}
-                                disabled={processing}
-                                data-test="login-button"
-                                className="h-14 w-full rounded-none bg-sky-600 text-lg font-bold text-white shadow-none hover:bg-sky-700 sm:h-auto"
-                            >
-                                {processing && <Spinner />}
-                                ログイン
-                            </Button>
+                            <InputError message={errors.username} />
+                            <InputError message={errors.password} />
                         </div>
 
-                        <InputError message={errors.username} />
-                        <InputError message={errors.password} />
+                        <Button
+                            type="submit"
+                            tabIndex={3}
+                            disabled={processing}
+                            data-test="login-button"
+                            className={cn(
+                                portalSubmitClasses,
+                                'h-14 text-lg sm:h-auto',
+                            )}
+                        >
+                            {processing && <Spinner />}
+                            ログイン
+                        </Button>
 
-                        <div className="flex flex-wrap items-center justify-between gap-3 text-sm sm:pr-[9.75rem]">
-                            <div className="flex items-center gap-4">
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 text-sm sm:col-start-1">
+                            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
                                 <div className="flex items-center gap-2">
                                     <Checkbox
                                         id="save-username"
@@ -131,7 +139,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                             setSaveUsername(checked === true)
                                         }
                                         tabIndex={4}
-                                        className="rounded-none border-slate-400 data-[state=checked]:border-sky-600 data-[state=checked]:bg-sky-600"
+                                        className={portalCheckboxClasses}
                                     />
                                     <Label
                                         htmlFor="save-username"
@@ -146,7 +154,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                         id="remember"
                                         name="remember"
                                         tabIndex={5}
-                                        className="rounded-none border-slate-400 data-[state=checked]:border-sky-600 data-[state=checked]:bg-sky-600"
+                                        className={portalCheckboxClasses}
                                     />
                                     <Label
                                         htmlFor="remember"
@@ -163,19 +171,24 @@ export default function Login({ status, canResetPassword }: Props) {
                                 </PortalLink>
                             )}
                         </div>
-                    </>
+                    </div>
                 )}
             </Form>
 
-            <div className="mt-8 border-t border-slate-200 pt-8">
+            {/*
+             * flex, not plain flow: the divider carries its own margin and
+             * would otherwise collapse into this wrapper's.
+             */}
+            <div className="flex flex-col">
                 <PasskeyVerify
                     label="パスキーでログイン"
                     loadingLabel="認証中..."
                     separator="または"
-                    className="h-11 rounded-none border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    separatorPlacement="before"
+                    className={portalOutlineClasses}
                 />
 
-                <p className="text-center text-sm text-slate-500">
+                <p className="mt-6 text-center text-sm text-slate-500">
                     アカウントをお持ちでない方は{' '}
                     <PortalLink href={register()} tabIndex={7}>
                         新規登録

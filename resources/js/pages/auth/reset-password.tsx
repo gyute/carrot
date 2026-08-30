@@ -5,6 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import {
+    portalFieldClasses,
+    portalLabelClasses,
+    portalSubmitClasses,
+} from '@/lib/portal-form';
+import { cn } from '@/lib/utils';
 import { update } from '@/routes/password';
 
 type Props = {
@@ -28,7 +34,7 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                         <div className="grid gap-2">
                             <Label
                                 htmlFor="email"
-                                className="text-xs font-bold tracking-wide text-slate-500"
+                                className={portalLabelClasses}
                             >
                                 メールアドレス
                             </Label>
@@ -38,7 +44,7 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                                 name="email"
                                 autoComplete="email"
                                 value={email}
-                                className="h-12 rounded-none border-0 bg-slate-100 px-4 text-base text-slate-800 shadow-none placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-sky-500"
+                                className={portalFieldClasses}
                                 readOnly
                             />
                             <InputError
@@ -50,7 +56,7 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                         <div className="grid gap-2">
                             <Label
                                 htmlFor="password"
-                                className="text-xs font-bold tracking-wide text-slate-500"
+                                className={portalLabelClasses}
                             >
                                 新しいパスワード
                             </Label>
@@ -58,7 +64,7 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                                 id="password"
                                 name="password"
                                 autoComplete="new-password"
-                                className="h-12 rounded-none border-0 bg-slate-100 px-4 text-base text-slate-800 shadow-none placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-sky-500"
+                                className={portalFieldClasses}
                                 autoFocus
                                 placeholder="新しいパスワード"
                                 passwordrules={passwordRules}
@@ -69,7 +75,7 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                         <div className="grid gap-2">
                             <Label
                                 htmlFor="password_confirmation"
-                                className="text-xs font-bold tracking-wide text-slate-500"
+                                className={portalLabelClasses}
                             >
                                 新しいパスワード（確認）
                             </Label>
@@ -77,7 +83,7 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
                                 id="password_confirmation"
                                 name="password_confirmation"
                                 autoComplete="new-password"
-                                className="h-12 rounded-none border-0 bg-slate-100 px-4 text-base text-slate-800 shadow-none placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-sky-500"
+                                className={portalFieldClasses}
                                 placeholder="新しいパスワード（確認）"
                                 passwordrules={passwordRules}
                             />
@@ -89,7 +95,7 @@ export default function ResetPassword({ token, email, passwordRules }: Props) {
 
                         <Button
                             type="submit"
-                            className="mt-4 h-12 w-full rounded-none bg-sky-600 text-base font-bold text-white shadow-none hover:bg-sky-700"
+                            className={cn('mt-4', portalSubmitClasses)}
                             disabled={processing}
                             data-test="reset-password-button"
                         >

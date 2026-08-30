@@ -10,6 +10,7 @@ import {
     InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { OTP_MAX_LENGTH } from '@/hooks/use-two-factor-auth';
+import { portalFieldClasses, portalSubmitClasses } from '@/lib/portal-form';
 import { store } from '@/routes/two-factor/login';
 
 export default function TwoFactorChallenge() {
@@ -68,7 +69,7 @@ export default function TwoFactorChallenge() {
                                         name="recovery_code"
                                         type="text"
                                         placeholder="リカバリーコードを入力"
-                                        className="h-12 rounded-none border-0 bg-slate-100 px-4 text-base text-slate-800 shadow-none placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-sky-500"
+                                        className={portalFieldClasses}
                                         autoFocus={showRecoveryInput}
                                         required
                                     />
@@ -107,7 +108,7 @@ export default function TwoFactorChallenge() {
 
                             <Button
                                 type="submit"
-                                className="h-12 w-full rounded-none bg-sky-600 text-base font-bold text-white shadow-none hover:bg-sky-700"
+                                className={portalSubmitClasses}
                                 disabled={processing}
                             >
                                 続ける
