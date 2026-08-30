@@ -98,8 +98,11 @@ row in the `tools` table.
   stages: the requester's department **manager** endorses first, then a system
   **admin** confirms and publishes (an admin may also approve straight from the
   first stage; a department with no manager falls through to the admins).
-  Admins may deprecate, restore or delete a tool directly and see `/admin/system`
-  (queues, workers, sandbox, Reverb, recent runs and the log tail).
+  Admins may deprecate, restore or delete a tool directly, and `/admin` covers
+  the rest of the data without a database client: `/admin/users` (roles and
+  所属), `/admin/tools` (every row, deleted ones included, restore or purge),
+  `/admin/tags` (rename and merge), `/admin/runs` (browse, delete, prune) and
+  `/admin/system` (queues, workers, sandbox, Reverb, recent runs, log tail).
   Roles and 所属 are edited at `/admin/users`; the same two columns can be set
   from the shell with `php artisan carrot:promote <username> --role=manager
   --department=開発`, `--role=admin`, `--revoke`. The seeder creates `manager` / `admin` (password

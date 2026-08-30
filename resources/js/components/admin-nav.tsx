@@ -1,10 +1,20 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Activity, ClipboardCheck, Users } from 'lucide-react';
+import {
+    Activity,
+    ClipboardCheck,
+    LayoutGrid,
+    Play,
+    Tags,
+    Users,
+} from 'lucide-react';
 import type { ComponentType } from 'react';
 import { cn } from '@/lib/utils';
 import { index as approvals } from '@/routes/admin/approvals';
 import { index as system } from '@/routes/admin/system';
+import { index as adminTools } from '@/routes/admin/tools';
 import { index as users } from '@/routes/admin/users';
+import { index as runs } from '@/routes/admin/runs';
+import { index as tags } from '@/routes/admin/tags';
 
 type Tab = {
     label: string;
@@ -30,6 +40,14 @@ export default function AdminNav() {
             adminOnly: false,
         },
         { label: 'ユーザー', href: users().url, icon: Users, adminOnly: true },
+        {
+            label: 'ツール',
+            href: adminTools().url,
+            icon: LayoutGrid,
+            adminOnly: true,
+        },
+        { label: 'タグ', href: tags().url, icon: Tags, adminOnly: true },
+        { label: '実行', href: runs().url, icon: Play, adminOnly: true },
         {
             label: 'システム',
             href: system().url,

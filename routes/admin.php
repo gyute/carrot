@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Admin\ApprovalController;
+use App\Http\Controllers\Admin\RunController;
 use App\Http\Controllers\Admin\SystemController;
+use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\ToolController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
@@ -19,9 +21,22 @@ Route::middleware(['auth', 'can:reviewer'])->prefix('admin')->name('admin.')->gr
 
 // System administration: admins only.
 Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('tools', [ToolController::class, 'index'])->name('tools.index');
     Route::post('tools/{tool}/deprecate', [ToolController::class, 'deprecate'])->name('tools.deprecate');
     Route::post('tools/{tool}/restore', [ToolController::class, 'restore'])->name('tools.restore');
     Route::delete('tools/{tool}', [ToolController::class, 'destroy'])->name('tools.destroy');
+    // Deleted tools are soft-deleted, so route model binding would not find
+    // them; these two take the ULID and look in the trash themselves.
+    Route::post('tools/{ulid}/untrash', [ToolController::class, 'untrash'])->name('tools.untrash');
+    Route::delete('tools/{ulid}/purge', [ToolController::class, 'purge'])->name('tools.purge');
+
+    Route::get('tags', [TagController::class, 'index'])->name('tags.index');
+    Route::patch('tags/{tag}', [TagController::class, 'update'])->name('tags.update');
+    Route::delete('tags/{tag}', [TagController::class, 'destroy'])->name('tags.destroy');
+
+    Route::get('runs', [RunController::class, 'index'])->name('runs.index');
+    Route::delete('runs/{run}', [RunController::class, 'destroy'])->name('runs.destroy');
+    Route::post('runs/prune', [RunController::class, 'prune'])->name('runs.prune');
 
     Route::get('users', [UserController::class, 'index'])->name('users.index');
     Route::patch('users/{user}', [UserController::class, 'update'])->name('users.update');
