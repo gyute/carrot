@@ -76,7 +76,7 @@ class ToolController extends Controller
         $openChange = $tool->submissions()
             ->with(['user', 'reviewer', 'endorser'])
             ->where('user_id', $request->user()->id)
-            ->whereIn('status', [SubmissionStatus::Draft, SubmissionStatus::Pending, SubmissionStatus::Endorsed])
+            ->whereIn('status', SubmissionStatus::open())
             ->latest()
             ->first();
 

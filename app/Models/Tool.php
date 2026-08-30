@@ -154,14 +154,6 @@ class Tool extends Model
         $query->where('status', ToolStatus::Running);
     }
 
-    /**
-     * @param  Builder<Tool>  $query
-     */
-    public function scopeOfKind(Builder $query, ToolKind $kind): void
-    {
-        $query->where('kind', $kind);
-    }
-
     public function isRunning(): bool
     {
         return $this->status === ToolStatus::Running;

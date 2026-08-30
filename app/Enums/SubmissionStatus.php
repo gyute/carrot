@@ -28,6 +28,27 @@ enum SubmissionStatus: string
     }
 
     /**
+     * Not decided yet, at either stage. The one definition every query and
+     * check reads, so a third stage would only be added here.
+     *
+     * @return array<int, self>
+     */
+    public static function awaitingReview(): array
+    {
+        return [self::Pending, self::Endorsed];
+    }
+
+    /**
+     * Still the requester's to withdraw: waiting, or not yet sent.
+     *
+     * @return array<int, self>
+     */
+    public static function open(): array
+    {
+        return [self::Draft, ...self::awaitingReview()];
+    }
+
+    /**
      * Whether the requester may still change or submit it.
      */
     public function isEditable(): bool
@@ -37,14 +58,11 @@ enum SubmissionStatus: string
 
     public function isOpen(): bool
     {
-        return in_array($this, [self::Draft, self::Pending, self::Endorsed], true);
+        return in_array($this, self::open(), true);
     }
 
-    /**
-     * Whether a reviewer still has to act on it.
-     */
     public function isAwaitingReview(): bool
     {
-        return in_array($this, [self::Pending, self::Endorsed], true);
+        return in_array($this, self::awaitingReview(), true);
     }
 }

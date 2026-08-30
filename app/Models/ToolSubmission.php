@@ -112,7 +112,7 @@ class ToolSubmission extends Model
      */
     public function scopePending(Builder $query): void
     {
-        $query->whereIn('status', [SubmissionStatus::Pending, SubmissionStatus::Endorsed]);
+        $query->whereIn('status', SubmissionStatus::awaitingReview());
     }
 
     /**
