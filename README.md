@@ -67,6 +67,8 @@ values worth a second look:
 | `SANDBOX_DRIVER`                                      | `none` only queues script runs. `bubblewrap` locally, `docker` on the runner host, or script tools never finish    |
 | `REVERB_APP_ID` / `_KEY` / `_SECRET`, `VITE_REVERB_*` | Live updates. Leave blank and every screen falls back to polling - nothing breaks, it is just slower               |
 | `CATALOG_DEPARTMENTS`                                 | The 所属 allowlist, comma separated. Blank means the field is free text                                            |
+| `CATALOG_SUBMISSIONS`                                 | Who may register a tool: `all`, `admin` (the development team only) or `none` (nobody, and the screens are gone)   |
+| `CATALOG_REQUESTS`                                    | The ask-the-development-team queue at `/tools/requests`. Off and the screens are gone                              |
 | `PASSKEYS_USER_HANDLE_SECRET`                         | Defaults to `APP_KEY`. Set it to its own fixed value if `APP_KEY` will ever be rotated, or passkeys stop resolving |
 | `LOG_CHANNEL`                                         | The system screen tails whichever channel this names, so a `daily` or custom path is followed, not assumed         |
 
@@ -76,8 +78,8 @@ values worth a second look:
 | ----------------------------------------------------------- | ------------------------------------------------------ |
 | `routes/web.php`, `routes/settings.php`, `routes/tools.php` | Routes, split by area                                  |
 | `app/Http/Controllers/Tools/`                               | The tool module                                        |
-| `database/migrations/`                                      | `tools`, `tags`, `tag_tool` and `tool_submissions`     |
-| `config/catalog.php`                                        | The 所属 list, from `CATALOG_DEPARTMENTS`              |
+| `database/migrations/`                                      | `tools`, `tags`, `tag_tool`, `tool_submissions`, `tool_requests` |
+| `config/catalog.php`                                        | The 所属 list and the two feature switches             |
 | `app/Sandbox/`                                              | The sandbox runners script tools execute in            |
 | `config/sandbox.php`, `docker/sandbox/`                     | Sandbox limits, driver and container images            |
 | `resources/js/pages/`                                       | Inertia page components                                |
@@ -94,6 +96,12 @@ row in the `tools` table.
   script in the sandbox.
 - The catalog filters on status, category and 所属; deprecated tools stay for
   reference but are hidden until their status is ticked.
+- **Asks** (`tool_requests`): somebody who cannot build a tool describes what
+  they need and the development team triages it - open → accepted → in
+  progress → delivered, or declined / duplicate / withdrawn. An ask is visible
+  to its requester's own 所属 and to the team, nobody else. Approving a
+  submission filed against an ask is what delivers it, so the tool going live
+  is what closes the request.
 - **Requests** (`tool_submissions`): registering a tool and changing what it
   does (URL / script / runtime / inputs) or retiring it go through
   draft → pending → endorsed → approved / rejected. Display fields - name, summary,
@@ -110,12 +118,19 @@ row in the `tools` table.
   department **manager** endorses first, then a system **admin** publishes. An
   admin may approve straight from the first stage, and a department with no
   manager falls through to the admins.
+- **Halves you can switch off**: `CATALOG_SUBMISSIONS` and `CATALOG_REQUESTS`
+  decide which of the two flows this deployment runs. A flow that is off is
+  absent, not forbidden - its routes answer 404 and its menu entries are gone.
+  Who may file inside an enabled flow is a separate, 403 question, which is how
+  `CATALOG_SUBMISSIONS=admin` takes asks from everyone while only the
+  development team registers tools.
 
 `/admin` covers every table without a database client:
 
 | Screen             | What it edits                                                     |
 | ------------------ | ----------------------------------------------------------------- |
 | `/admin/approvals` | The two review stages (managers see their own department)         |
+| `/admin/requests`  | The development team's queue: accept, decline, merge, deliver     |
 | `/admin/users`     | Roles and 所属 - the same columns as `php artisan carrot:promote` |
 | `/admin/tools`     | Every row, deleted ones included: deprecate, restore, purge       |
 | `/admin/tags`      | Rename and merge category tags                                    |
@@ -193,8 +208,8 @@ and a page prop are all held down at once.
 
 | Suite                              | What it holds down                                                                                                                                                                                                                                                           |
 | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tests/Feature/Tools/`             | The catalog: what is listed, the tag groups and their counts, and the rule that an embed only ever frames an external https origin. The request flow: drafts, per-kind validation, withdrawal, change and retire requests, and display fields edited in place without review |
-| `tests/Feature/Admin/`             | Two-stage approval, version stamping (including twice in one minute), slug uniqueness, rejection. The admin screens: roles and 所属, the trash and purge, tag rename/merge, run pruning, and the system status snapshot                                                      |
+| `tests/Feature/Tools/`             | The catalog: what is listed, the tag groups and their counts, and the rule that an embed only ever frames an external https origin. The request flow: drafts, per-kind validation, withdrawal, change and retire requests, and display fields edited in place without review. Asks: the 所属 they are stamped with and who may read them, and that a flow switched off answers 404 while a flow someone may not use answers 403 |
+| `tests/Feature/Admin/`             | Two-stage approval, version stamping (including twice in one minute), slug uniqueness, rejection. Ask triage: accept, decline with a reason, merge a duplicate, and that approving a submission filed against an ask delivers it. The admin screens: roles and 所属, the trash and purge, tag rename/merge, run pruning, and the system status snapshot                                                      |
 | `tests/Feature/Sandbox/`           | Every isolation flag of the docker command, the output cap, the network choice, the source-hash check that refuses to run what was not approved, per-user rate limiting, run visibility and pruning                                                                          |
 | `tests/Feature/Inbox/`             | Who gets messaged and notified at each stage, read state, and that a message is only ever visible to its recipient                                                                                                                                                           |
 | `tests/Feature/DemoSeedTest.php`   | That `demo:seed` publishes through the real approval flow, is safe to re-run, and refuses production                                                                                                                                                                         |
