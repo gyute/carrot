@@ -59,9 +59,17 @@ row in the `tools` table.
   reference but are hidden until their status is ticked.
 - **Requests** (`tool_submissions`): registering a tool and changing what it
   does (URL / script / runtime / inputs) or retiring it go through
-  draft → pending → approved / rejected. Display fields - name, summary,
+  draft → pending → endorsed → approved / rejected. Display fields - name, summary,
   description, icon, tags - are edited in place by the owner without review.
-- **Roles**: `users.role` is `member`, `manager` or `admin`. Set roles from the
+- **Versions**: every approval stamps the tool with the approval date to the
+  minute (`202608271037`, then `202608271037.2` for a second approval within
+  the same minute) and records who requested, endorsed and approved it. The
+  approved submissions are the history.
+- **Roles**: `users.role` is `member`, `manager` or `admin`. Approval has two
+  stages: the requester's department **manager** endorses first, then a system
+  **admin** confirms and publishes (an admin may also approve straight from the
+  first stage; a department with no manager falls through to the admins).
+  Admins may deprecate, restore or delete a tool directly. Set roles from the
   shell: `php artisan carrot:promote <username> --role=manager --department=開発`,
   `--role=admin`, `--revoke`. The seeder creates `manager` / `admin` (password
   `password`) for trying this locally.

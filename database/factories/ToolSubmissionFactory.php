@@ -87,6 +87,16 @@ class ToolSubmissionFactory extends Factory
         ]);
     }
 
+    public function endorsed(): static
+    {
+        return $this->state(fn (): array => [
+            'status' => SubmissionStatus::Endorsed,
+            'submitted_at' => now()->subHour(),
+            'endorsed_at' => now(),
+            'endorsed_by' => User::factory()->manager('開発'),
+        ]);
+    }
+
     public function approved(): static
     {
         return $this->state(fn (): array => [

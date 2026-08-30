@@ -30,6 +30,10 @@ test('a member saves a draft and it is not shown to admins yet', function () {
 
     $submission = ToolSubmission::query()->sole();
 
+    $this->actingAs(User::factory()->admin()->create())
+        ->get(route('admin.approvals.index'))
+        ->assertInertia(fn ($page) => $page->has('pending', 0));
+
     expect($submission->status)->toBe(SubmissionStatus::Draft)
         ->and($submission->action)->toBe(SubmissionAction::Create)
         ->and($submission->payload['config'])->toBe(['url' => 'https://tool.example/export'])
@@ -219,6 +223,7 @@ test('the tool page shows version, requester and approver', function () {
             ->where('tool.version', '202608271037')
             ->where('tool.requester', $tool->owner->name)
             ->where('tool.approver', $approved->reviewer->name)
+            ->has('history', 1)
             ->where('can.updateMetadata', false)
         );
 });

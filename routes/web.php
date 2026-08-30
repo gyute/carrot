@@ -8,3 +8,4 @@ Route::middleware(['auth'])->group(function () {
 
 require __DIR__.'/settings.php';
 require __DIR__.'/tools.php';
+require __DIR__.'/admin.php';

@@ -99,9 +99,20 @@ export default function SubmissionShow({ submission, can }: Props) {
                         {formatDateTime(submission.submittedAt)}
                     </span>
                 </div>
+                {submission.endorser && (
+                    <div>
+                        部署承認{' '}
+                        <span className="font-medium text-slate-700">
+                            {submission.endorser}
+                        </span>{' '}
+                        <span className="tabular-nums">
+                            ({formatDateTime(submission.endorsedAt)})
+                        </span>
+                    </div>
+                )}
                 {submission.reviewer && (
                     <div>
-                        承認{' '}
+                        システム承認{' '}
                         <span className="font-medium text-slate-700">
                             {submission.reviewer}
                         </span>{' '}

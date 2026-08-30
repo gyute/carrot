@@ -1,7 +1,8 @@
 import { Link, usePage } from '@inertiajs/react';
-import { FilePen, LayoutGrid } from 'lucide-react';
+import { ClipboardCheck, FilePen, LayoutGrid } from 'lucide-react';
 import type { ComponentType, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { index as approvals } from '@/routes/admin/approvals';
 import { index as tools } from '@/routes/tools';
 import { index as submissions } from '@/routes/tools/submissions';
 
@@ -9,6 +10,7 @@ type Tab = {
     label: string;
     href: string;
     icon: ComponentType<{ className?: string }>;
+    badge?: number;
 };
 
 /**
@@ -21,11 +23,22 @@ type Tab = {
  * the tab bar rather than to the page body.
  */
 export default function ToolsNav({ actions }: { actions?: ReactNode }) {
-    const { url } = usePage();
+    const { url, props } = usePage();
+    const isReviewer = ['admin', 'manager'].includes(props.auth.user.role);
 
     const tabs: Tab[] = [
         { label: 'ツール一覧', href: tools().url, icon: LayoutGrid },
         { label: '申請', href: submissions().url, icon: FilePen },
+        ...(isReviewer
+            ? [
+                  {
+                      label: '承認',
+                      href: approvals().url,
+                      icon: ClipboardCheck,
+                      badge: props.pendingApprovals,
+                  },
+              ]
+            : []),
     ];
 
     const activeHref =
@@ -36,7 +49,7 @@ export default function ToolsNav({ actions }: { actions?: ReactNode }) {
     return (
         <div className="flex flex-wrap items-center gap-3">
             <nav className="inline-flex gap-1 rounded-lg bg-slate-200/60 p-1">
-                {tabs.map(({ label, href, icon: Icon }) => {
+                {tabs.map(({ label, href, icon: Icon, badge }) => {
                     const active = href === activeHref;
 
                     return (
@@ -53,6 +66,11 @@ export default function ToolsNav({ actions }: { actions?: ReactNode }) {
                         >
                             <Icon className="size-4" />
                             {label}
+                            {badge !== undefined && badge > 0 && (
+                                <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-xs font-bold text-white tabular-nums">
+                                    {badge}
+                                </span>
+                            )}
                         </Link>
                     );
                 })}

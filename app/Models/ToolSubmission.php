@@ -25,6 +25,9 @@ use Illuminate\Support\Carbon;
  * @property SubmissionStatus $status
  * @property array<string, mixed> $payload
  * @property string|null $note
+ * @property int|null $endorsed_by
+ * @property string|null $endorse_comment
+ * @property Carbon|null $endorsed_at
  * @property int|null $reviewer_id
  * @property string|null $review_comment
  * @property Carbon|null $submitted_at
@@ -34,8 +37,9 @@ use Illuminate\Support\Carbon;
  * @property-read User $user
  * @property-read Tool|null $tool
  * @property-read User|null $reviewer
+ * @property-read User|null $endorser
  */
-#[Fillable(['user_id', 'tool_id', 'action', 'status', 'payload', 'note', 'reviewer_id', 'review_comment', 'submitted_at', 'reviewed_at'])]
+#[Fillable(['user_id', 'tool_id', 'action', 'status', 'payload', 'note', 'endorsed_by', 'endorse_comment', 'endorsed_at', 'reviewer_id', 'review_comment', 'submitted_at', 'reviewed_at'])]
 class ToolSubmission extends Model
 {
     /** @use HasFactory<ToolSubmissionFactory> */
@@ -64,6 +68,7 @@ class ToolSubmission extends Model
             'status' => SubmissionStatus::class,
             'payload' => 'array',
             'submitted_at' => 'datetime',
+            'endorsed_at' => 'datetime',
             'reviewed_at' => 'datetime',
         ];
     }
@@ -93,18 +98,53 @@ class ToolSubmission extends Model
     }
 
     /**
-     * Requests a reviewer still has to act on.
+     * @return BelongsTo<User, $this>
+     */
+    public function endorser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'endorsed_by');
+    }
+
+    /**
+     * Requests a reviewer still has to act on, at either stage.
      *
      * @param  Builder<ToolSubmission>  $query
      */
     public function scopePending(Builder $query): void
     {
-        $query->where('status', SubmissionStatus::Pending);
+        $query->whereIn('status', [SubmissionStatus::Pending, SubmissionStatus::Endorsed]);
     }
 
     /**
-     * The department the request belongs to: the payload's for a new tool,
-     * the tool's otherwise.
+     * Requests `$user` is the one to act on next: a manager sees their own
+     * department's first-stage requests, an admin sees everything open.
+     *
+     * @param  Builder<ToolSubmission>  $query
+     */
+    public function scopeAwaitingReviewBy(Builder $query, User $user): void
+    {
+        if ($user->isAdmin()) {
+            $query->pending();
+
+            return;
+        }
+
+        if ($user->isManager()) {
+            $query->where('status', SubmissionStatus::Pending)
+                ->where(function (Builder $query) use ($user): void {
+                    $query->where('payload->department', $user->department)
+                        ->orWhereHas('tool', fn (Builder $tool) => $tool->where('department', $user->department));
+                });
+
+            return;
+        }
+
+        $query->whereRaw('1 = 0');
+    }
+
+    /**
+     * The department whose manager gives the first approval: the payload's
+     * for a new tool, the tool's otherwise.
      */
     public function department(): ?string
     {

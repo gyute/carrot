@@ -51,6 +51,9 @@ export type SubmissionSummary = {
     department: string | null;
     tool: { ulid: string; name: string; slug: string } | null;
     note: string | null;
+    endorser: string | null;
+    endorseComment: string | null;
+    endorsedAt: string | null;
     reviewer: string | null;
     reviewComment: string | null;
     submittedAt: string | null;
@@ -96,6 +99,7 @@ export type ToolDetail = {
     version: string | null;
     owner: string | null;
     requester: string | null;
+    endorser: string | null;
     approver: string | null;
     publishedAt: string | null;
     deprecatedAt: string | null;

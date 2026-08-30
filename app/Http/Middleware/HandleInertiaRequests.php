@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\ToolSubmission;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -35,15 +36,21 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
             ],
             'flash' => [
                 'status' => fn (): ?string => $request->session()->get('status'),
             ],
+            // Reviewers see what awaits them on the approvals tab.
+            'pendingApprovals' => fn (): int => $user?->isReviewer()
+                ? ToolSubmission::query()->awaitingReviewBy($user)->count()
+                : 0,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

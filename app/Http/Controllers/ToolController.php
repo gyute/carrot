@@ -65,12 +65,18 @@ class ToolController extends Controller
     {
         Gate::authorize('view', $tool);
 
-        $tool->load(['tags', 'owner', 'requester', 'approver']);
+        $tool->load(['tags', 'owner', 'requester', 'endorser', 'approver']);
+
+        $history = $tool->submissions()
+            ->with(['user', 'reviewer', 'endorser'])
+            ->where('status', SubmissionStatus::Approved)
+            ->latest('reviewed_at')
+            ->get();
 
         $openChange = $tool->submissions()
-            ->with(['user', 'reviewer'])
+            ->with(['user', 'reviewer', 'endorser'])
             ->where('user_id', $request->user()->id)
-            ->whereIn('status', [SubmissionStatus::Draft, SubmissionStatus::Pending])
+            ->whereIn('status', [SubmissionStatus::Draft, SubmissionStatus::Pending, SubmissionStatus::Endorsed])
             ->latest()
             ->first();
 
@@ -85,16 +91,20 @@ class ToolController extends Controller
                 'version' => $tool->version,
                 'owner' => $tool->owner?->name,
                 'requester' => $tool->requester?->name,
+                'endorser' => $tool->endorser?->name,
                 'approver' => $tool->approver?->name,
                 'publishedAt' => $tool->published_at?->toIso8601String(),
                 'deprecatedAt' => $tool->deprecated_at?->toIso8601String(),
                 'pendingChange' => $tool->submissions()->pending()->exists(),
             ],
+            'history' => $history->map($this->presenter->summary(...))->all(),
             'openChange' => $openChange === null ? null : $this->presenter->summary($openChange),
             'limits' => $this->presenter->limits(),
             'can' => [
                 'updateMetadata' => Gate::allows('updateMetadata', $tool),
                 'submitChange' => Gate::allows('submitChange', $tool),
+                'manage' => Gate::allows('manage', $tool),
+                'delete' => Gate::allows('delete', $tool),
             ],
         ]);
     }

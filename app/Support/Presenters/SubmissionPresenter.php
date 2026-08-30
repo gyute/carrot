@@ -13,7 +13,7 @@ use App\Models\ToolSubmission;
 class SubmissionPresenter
 {
     /**
-     * @return array{ulid: string, action: string, actionLabel: string, status: string, statusLabel: string, name: string, kind: string|null, requester: string, department: string|null, tool: array{ulid: string, name: string, slug: string}|null, note: string|null, reviewer: string|null, reviewComment: string|null, submittedAt: string|null, reviewedAt: string|null, createdAt: string}
+     * @return array{ulid: string, action: string, actionLabel: string, status: string, statusLabel: string, name: string, kind: string|null, requester: string, department: string|null, tool: array{ulid: string, name: string, slug: string}|null, note: string|null, endorser: string|null, endorseComment: string|null, endorsedAt: string|null, reviewer: string|null, reviewComment: string|null, submittedAt: string|null, reviewedAt: string|null, createdAt: string}
      */
     public function summary(ToolSubmission $submission): array
     {
@@ -35,6 +35,9 @@ class SubmissionPresenter
                 'slug' => $submission->tool->slug,
             ],
             'note' => $submission->note,
+            'endorser' => $submission->endorser?->name,
+            'endorseComment' => $submission->endorse_comment,
+            'endorsedAt' => $submission->endorsed_at?->toIso8601String(),
             'reviewer' => $submission->reviewer?->name,
             'reviewComment' => $submission->review_comment,
             'submittedAt' => $submission->submitted_at?->toIso8601String(),

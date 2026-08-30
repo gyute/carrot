@@ -1,5 +1,13 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ArrowLeft, ArrowUpRight, Ban, Pencil, Save } from 'lucide-react';
+import {
+    ArrowLeft,
+    ArrowUpRight,
+    Ban,
+    Pencil,
+    RotateCcw,
+    Save,
+    Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import EmbedFrame from '@/components/embed-frame';
 import InputError from '@/components/input-error';
@@ -17,6 +25,11 @@ import {
     toolAccent,
 } from '@/lib/tool-presets';
 import { cn } from '@/lib/utils';
+import {
+    deprecate as adminDeprecate,
+    destroy as adminDestroy,
+    restore as adminRestore,
+} from '@/routes/admin/tools';
 import { deprecate, index, update } from '@/routes/tools';
 import { create as createChange } from '@/routes/tools/change';
 import { show as showSubmission } from '@/routes/tools/submissions';
@@ -24,11 +37,14 @@ import type { FormLimits, SubmissionSummary, ToolDetail } from '@/types/tools';
 
 type Props = {
     tool: ToolDetail;
+    history: SubmissionSummary[];
     openChange: SubmissionSummary | null;
     limits: FormLimits;
     can: {
         updateMetadata: boolean;
         submitChange: boolean;
+        manage: boolean;
+        delete: boolean;
     };
 };
 
@@ -193,7 +209,13 @@ function MetadataForm({
     );
 }
 
-export default function ToolShow({ tool, openChange, limits, can }: Props) {
+export default function ToolShow({
+    tool,
+    history,
+    openChange,
+    limits,
+    can,
+}: Props) {
     const [editing, setEditing] = useState(false);
     const isDeprecated = tool.status === 'deprecated';
     const opensElsewhere = tool.kind === 'link' && tool.href;
@@ -206,6 +228,12 @@ export default function ToolShow({ tool, openChange, limits, can }: Props) {
 
         if (note !== null) {
             router.post(deprecate(tool.ulid).url, { note });
+        }
+    };
+
+    const confirmThen = (message: string, run: () => void) => () => {
+        if (window.confirm(message)) {
+            run();
         }
     };
 
@@ -265,7 +293,13 @@ export default function ToolShow({ tool, openChange, limits, can }: Props) {
                             </span>
                         </div>
                         <div>
-                            承認{' '}
+                            部署承認{' '}
+                            <span className="font-medium text-slate-700">
+                                {tool.endorser ?? '—'}
+                            </span>
+                        </div>
+                        <div>
+                            システム承認{' '}
                             <span className="font-medium text-slate-700">
                                 {tool.approver ?? '—'}
                             </span>
@@ -357,7 +391,7 @@ export default function ToolShow({ tool, openChange, limits, can }: Props) {
                 </div>
             )}
 
-            {can.submitChange && (
+            {(can.submitChange || can.manage) && (
                 <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 className="text-sm font-bold text-slate-700">管理</h2>
 
@@ -402,9 +436,99 @@ export default function ToolShow({ tool, openChange, limits, can }: Props) {
                                 )}
                             </>
                         )}
+                        {can.manage && (
+                            <>
+                                {isDeprecated ? (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={confirmThen(
+                                            '稼働中に戻しますか？',
+                                            () =>
+                                                router.post(
+                                                    adminRestore(tool.ulid).url,
+                                                ),
+                                        )}
+                                    >
+                                        <RotateCcw className="size-4" />
+                                        稼働中に戻す（管理者）
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={confirmThen(
+                                            '申請なしで直ちに非推奨にします。よろしいですか？',
+                                            () =>
+                                                router.post(
+                                                    adminDeprecate(tool.ulid)
+                                                        .url,
+                                                ),
+                                        )}
+                                    >
+                                        <Ban className="size-4" />
+                                        非推奨にする（管理者）
+                                    </Button>
+                                )}
+                            </>
+                        )}
+                        {can.delete && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                                onClick={confirmThen(
+                                    `「${tool.name}」を削除します。カタログから消え、元に戻せません。`,
+                                    () =>
+                                        router.delete(
+                                            adminDestroy(tool.ulid).url,
+                                        ),
+                                )}
+                            >
+                                <Trash2 className="size-4" />
+                                削除（管理者）
+                            </Button>
+                        )}
                     </div>
                 </section>
             )}
+
+            <section className="mt-6">
+                <h2 className="text-sm font-bold text-slate-700">履歴</h2>
+                {history.length === 0 ? (
+                    <p className="mt-2 text-xs text-slate-400">
+                        承認済みの申請はありません。
+                    </p>
+                ) : (
+                    <ol className="mt-2 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white text-sm">
+                        {history.map((entry) => (
+                            <li
+                                key={entry.ulid}
+                                className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3"
+                            >
+                                <span className="text-slate-500 tabular-nums">
+                                    {formatDateTime(entry.reviewedAt)}
+                                </span>
+                                <Link
+                                    href={showSubmission(entry.ulid)}
+                                    className="font-medium text-sky-700 hover:underline"
+                                >
+                                    {entry.actionLabel}
+                                </Link>
+                                <span className="text-xs text-slate-500">
+                                    申請 {entry.requester} · 承認{' '}
+                                    {entry.reviewer ?? '—'}
+                                </span>
+                                {entry.reviewComment && (
+                                    <span className="text-xs text-slate-400">
+                                        「{entry.reviewComment}」
+                                    </span>
+                                )}
+                            </li>
+                        ))}
+                    </ol>
+                )}
+            </section>
         </>
     );
 }

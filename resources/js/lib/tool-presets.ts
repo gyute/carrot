@@ -69,6 +69,7 @@ export type SubmissionStatus =
 export const SUBMISSION_STATUS_STYLES: Record<SubmissionStatus, string> = {
     draft: 'bg-slate-100 text-slate-600 ring-slate-200',
     pending: 'bg-amber-50 text-amber-700 ring-amber-200',
+    endorsed: 'bg-sky-50 text-sky-700 ring-sky-200',
     approved: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
     rejected: 'bg-rose-50 text-rose-700 ring-rose-200',
     withdrawn: 'bg-slate-100 text-slate-500 ring-slate-200',

@@ -6,8 +6,11 @@ enum SubmissionStatus: string
 {
     case Draft = 'draft';
 
-    /** Submitted and waiting for a reviewer. */
+    /** Waiting for the requester's department manager. */
     case Pending = 'pending';
+
+    /** Endorsed by the department; waiting for a system administrator. */
+    case Endorsed = 'endorsed';
     case Approved = 'approved';
     case Rejected = 'rejected';
     case Withdrawn = 'withdrawn';
@@ -16,7 +19,8 @@ enum SubmissionStatus: string
     {
         return match ($this) {
             self::Draft => '下書き',
-            self::Pending => '承認待ち',
+            self::Pending => '部署承認待ち',
+            self::Endorsed => 'システム確認待ち',
             self::Approved => '承認済み',
             self::Rejected => '差し戻し',
             self::Withdrawn => '取り下げ',
@@ -33,7 +37,7 @@ enum SubmissionStatus: string
 
     public function isOpen(): bool
     {
-        return in_array($this, [self::Draft, self::Pending], true);
+        return in_array($this, [self::Draft, self::Pending, self::Endorsed], true);
     }
 
     /**
@@ -41,6 +45,6 @@ enum SubmissionStatus: string
      */
     public function isAwaitingReview(): bool
     {
-        return $this === self::Pending;
+        return in_array($this, [self::Pending, self::Endorsed], true);
     }
 }

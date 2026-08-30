@@ -38,7 +38,9 @@ use Illuminate\Support\Carbon;
  * @property string|null $source_hash
  * @property string|null $version
  * @property int|null $requested_by
+ * @property int|null $endorsed_by
  * @property int|null $approved_by
+ * @property int|null $approved_submission_id
  * @property Carbon|null $published_at
  * @property Carbon|null $deprecated_at
  * @property Carbon|null $created_at
@@ -46,13 +48,14 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $deleted_at
  * @property-read User|null $owner
  * @property-read User|null $requester
+ * @property-read User|null $endorser
  * @property-read User|null $approver
  * @property-read Collection<int, Tag> $tags
  */
 #[Fillable([
     'slug', 'kind', 'name', 'summary', 'description', 'icon', 'accent', 'status',
     'owner_id', 'department', 'config', 'source', 'source_hash', 'version',
-    'requested_by', 'approved_by', 'published_at', 'deprecated_at',
+    'requested_by', 'endorsed_by', 'approved_by', 'approved_submission_id', 'published_at', 'deprecated_at',
 ])]
 class Tool extends Model
 {
@@ -109,6 +112,14 @@ class Tool extends Model
     public function requester(): BelongsTo
     {
         return $this->belongsTo(User::class, 'requested_by');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function endorser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'endorsed_by');
     }
 
     /**
