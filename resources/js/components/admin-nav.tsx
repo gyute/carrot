@@ -10,11 +10,11 @@ import {
 import type { ComponentType } from 'react';
 import { cn } from '@/lib/utils';
 import { index as approvals } from '@/routes/admin/approvals';
+import { index as runs } from '@/routes/admin/runs';
 import { index as system } from '@/routes/admin/system';
+import { index as tags } from '@/routes/admin/tags';
 import { index as adminTools } from '@/routes/admin/tools';
 import { index as users } from '@/routes/admin/users';
-import { index as runs } from '@/routes/admin/runs';
-import { index as tags } from '@/routes/admin/tags';
 
 type Tab = {
     label: string;

@@ -7,9 +7,9 @@ import { formatTimestamp } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { RUN_STATUS_STYLES } from '@/pages/tools/runs/show';
 import { show as showApproval } from '@/routes/admin/approvals';
+import { destroy, index, prune } from '@/routes/admin/runs';
 import { show as showTool } from '@/routes/tools';
 import type { ToolRunSummary } from '@/types/tools';
-import { destroy, index, prune } from '@/routes/admin/runs';
 
 type AdminRun = ToolRunSummary & {
     tool: { ulid: string; name: string } | null;

@@ -64,7 +64,7 @@ export const STATUS_STYLES: Record<ToolStatus, string> = {
 };
 
 export type SubmissionStatus =
-    'draft' | 'pending' | 'approved' | 'rejected' | 'withdrawn';
+    'draft' | 'pending' | 'endorsed' | 'approved' | 'rejected' | 'withdrawn';
 
 export const SUBMISSION_STATUS_STYLES: Record<SubmissionStatus, string> = {
     draft: 'bg-slate-100 text-slate-600 ring-slate-200',
