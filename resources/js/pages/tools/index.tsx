@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowUpRight, Plus, SearchX, X } from 'lucide-react';
 import { useState } from 'react';
 import ToolIcon from '@/components/tool-icon';
@@ -40,6 +40,7 @@ function isShownByDefault(tool: CatalogTool): boolean {
 }
 
 export default function ToolsIndex({ tools, tagGroups }: Props) {
+    const { features } = usePage().props;
     const GROUP_LABELS = new Map(
         tagGroups.map(({ key, label }) => [key, label] as const),
     );
@@ -95,16 +96,18 @@ export default function ToolsIndex({ tools, tagGroups }: Props) {
                             onToggle={toggleTag}
                             onClear={clearTags}
                         />
-                        <Button
-                            asChild
-                            size="sm"
-                            className="bg-sky-700 text-white hover:bg-sky-800"
-                        >
-                            <Link href={createSubmission()}>
-                                <Plus className="size-4" />
-                                ツールを登録
-                            </Link>
-                        </Button>
+                        {features.maySubmit && (
+                            <Button
+                                asChild
+                                size="sm"
+                                className="bg-sky-700 text-white hover:bg-sky-800"
+                            >
+                                <Link href={createSubmission()}>
+                                    <Plus className="size-4" />
+                                    ツールを登録
+                                </Link>
+                            </Button>
+                        )}
                     </div>
                 }
             />
