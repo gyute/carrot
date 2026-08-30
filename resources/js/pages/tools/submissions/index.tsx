@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { FilePen, Plus } from 'lucide-react';
 import StatusPill from '@/components/status-pill';
 import ToolsNav from '@/components/tools-nav';
@@ -13,6 +13,8 @@ export default function SubmissionsIndex({
 }: {
     submissions: SubmissionSummary[];
 }) {
+    const { features } = usePage().props;
+
     return (
         <>
             <Head title="申請" />
@@ -24,16 +26,18 @@ export default function SubmissionsIndex({
                 <p className="text-sm text-slate-500">
                     ツールの登録・変更・非推奨化の申請と、その結果です。
                 </p>
-                <Button
-                    asChild
-                    size="sm"
-                    className="ml-auto bg-sky-700 text-white hover:bg-sky-800"
-                >
-                    <Link href={create()}>
-                        <Plus className="size-4" />
-                        ツールを登録
-                    </Link>
-                </Button>
+                {features.maySubmit && (
+                    <Button
+                        asChild
+                        size="sm"
+                        className="ml-auto bg-sky-700 text-white hover:bg-sky-800"
+                    >
+                        <Link href={create()}>
+                            <Plus className="size-4" />
+                            ツールを登録
+                        </Link>
+                    </Button>
+                )}
             </div>
 
             {submissions.length === 0 ? (

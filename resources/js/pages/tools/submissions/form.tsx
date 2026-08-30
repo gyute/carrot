@@ -27,6 +27,8 @@ type Props = {
     tool: { ulid: string; name: string; kind: ToolKind } | null;
     initial: SubmissionPayload | null;
     limits: FormLimits;
+    /** Set when the form was opened from a request, which approving closes. */
+    answers?: { ulid: string; title: string } | null;
 };
 
 type FormData = {
@@ -48,6 +50,7 @@ type FormData = {
     };
     source: string;
     note: string;
+    tool_request: string;
     submit: boolean;
 };
 
@@ -82,6 +85,7 @@ export default function SubmissionForm({
     tool,
     initial,
     limits,
+    answers = null,
 }: Props) {
     const changeRequest = tool !== null;
     const form = useForm<FormData>({
@@ -103,6 +107,7 @@ export default function SubmissionForm({
         },
         source: initial?.source ?? '',
         note: '',
+        tool_request: answers?.ulid ?? '',
         submit: false,
     });
     const { data, setData, errors, processing } = form;
@@ -155,6 +160,13 @@ export default function SubmissionForm({
             </Link>
 
             <h1 className="mt-2 text-xl font-bold text-slate-800">{title}</h1>
+
+            {answers && (
+                <p className="mt-2 rounded-lg border border-sky-200 bg-sky-50 px-4 py-2 text-sm text-sky-900">
+                    リクエスト「{answers.title}
+                    」への回答として登録します。承認されるとそのリクエストは公開済みになります。
+                </p>
+            )}
             <p className="mt-1 text-sm text-slate-500">
                 {changeRequest
                     ? '動作に関わる設定（URL・スクリプト）の変更は承認が必要です。承認されるまでは現在の内容のまま稼働します。'

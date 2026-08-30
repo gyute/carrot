@@ -1,6 +1,8 @@
 import type {
     SubmissionStatus,
     ToolKind,
+    ToolRequestPriority,
+    ToolRequestStatus,
     ToolStatus,
 } from '@/lib/tool-presets';
 
@@ -124,4 +126,37 @@ export type ToolRunSummary = {
     createdAt: string;
     startedAt: string | null;
     finishedAt: string | null;
+};
+
+export type ToolRequestSummary = {
+    ulid: string;
+    status: ToolRequestStatus;
+    statusLabel: string;
+    title: string;
+    requester: string;
+    department: string | null;
+    categories: string[];
+    desiredKind: ToolKind | null;
+    desiredKindLabel: string | null;
+    neededBy: string | null;
+    priority: ToolRequestPriority | null;
+    priorityLabel: string | null;
+    assignee: string | null;
+    decider: string | null;
+    decisionComment: string | null;
+    decidedAt: string | null;
+    createdAt: string;
+    tool: { ulid: string; name: string } | null;
+    duplicateOf: { ulid: string; title: string } | null;
+};
+
+export type ToolRequestDetail = ToolRequestSummary & {
+    body: string;
+};
+
+export type ToolRequestLimits = {
+    /** The requester's own department, which the request is stamped with. */
+    department: string | null;
+    departments: string[];
+    kinds: { value: ToolKind; label: string }[];
 };

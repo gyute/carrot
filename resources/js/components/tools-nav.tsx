@@ -1,9 +1,15 @@
 import { Link, usePage } from '@inertiajs/react';
-import { ClipboardCheck, FilePen, LayoutGrid } from 'lucide-react';
+import {
+    ClipboardCheck,
+    FilePen,
+    LayoutGrid,
+    MessageSquarePlus,
+} from 'lucide-react';
 import type { ComponentType, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { index as approvals } from '@/routes/admin/approvals';
 import { index as tools } from '@/routes/tools';
+import { index as requests } from '@/routes/tools/requests';
 import { index as submissions } from '@/routes/tools/submissions';
 
 type Tab = {
@@ -18,15 +24,32 @@ type Tab = {
  * matched first, since every tool path starts with the catalog's; the catalog
  * is the fallback, so a tool page lights it up. `actions` sits at the right
  * end of the same row.
+ *
+ * A tab this deployment does not run is not shown: its routes answer 404.
+ * The submission tab stays up for everyone the screens exist for, even when
+ * only the development team may file - people keep reaching their history.
  */
 export default function ToolsNav({ actions }: { actions?: ReactNode }) {
     const { url, props } = usePage();
     const isReviewer = ['admin', 'manager'].includes(props.auth.user.role);
 
+    const { features } = props;
+
     const tabs: Tab[] = [
         { label: 'ツール一覧', href: tools().url, icon: LayoutGrid },
-        { label: '申請', href: submissions().url, icon: FilePen },
-        ...(isReviewer
+        ...(features.requests
+            ? [
+                  {
+                      label: 'リクエスト',
+                      href: requests().url,
+                      icon: MessageSquarePlus,
+                  },
+              ]
+            : []),
+        ...(features.submissions
+            ? [{ label: '申請', href: submissions().url, icon: FilePen }]
+            : []),
+        ...(features.submissions && isReviewer
             ? [
                   {
                       label: '承認',

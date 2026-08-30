@@ -3,6 +3,7 @@
 use App\Enums\ToolRequestStatus;
 use App\Events\ToolRequestSubmitted;
 use App\Models\Message;
+use App\Models\Tool;
 use App\Models\ToolRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Event;
@@ -119,4 +120,13 @@ test('submitting dispatches the event the notifications hang off', function () {
         ->assertRedirect();
 
     Event::assertDispatched(ToolRequestSubmitted::class);
+});
+
+test('tools/requests is not read as a tool ULID', function () {
+    Tool::factory()->create();
+
+    $this->actingAs(User::factory()->create())
+        ->get('/tools/requests')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->component('tools/requests/index'));
 });

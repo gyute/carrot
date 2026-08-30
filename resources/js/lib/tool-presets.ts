@@ -79,3 +79,30 @@ export const NETWORK_LABELS: Record<'none' | 'internet', string> = {
     none: 'なし（完全遮断）',
     internet: 'インターネットあり',
 };
+
+export type ToolRequestStatus =
+    | 'open'
+    | 'accepted'
+    | 'in_progress'
+    | 'delivered'
+    | 'declined'
+    | 'duplicate'
+    | 'withdrawn';
+
+export const REQUEST_STATUS_STYLES: Record<ToolRequestStatus, string> = {
+    open: 'bg-amber-50 text-amber-700 ring-amber-200',
+    accepted: 'bg-sky-50 text-sky-700 ring-sky-200',
+    in_progress: 'bg-violet-50 text-violet-700 ring-violet-200',
+    delivered: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+    declined: 'bg-rose-50 text-rose-700 ring-rose-200',
+    duplicate: 'bg-slate-100 text-slate-500 ring-slate-200',
+    withdrawn: 'bg-slate-100 text-slate-500 ring-slate-200',
+};
+
+export type ToolRequestPriority = 'low' | 'normal' | 'high';
+
+export const REQUEST_PRIORITY_STYLES: Record<ToolRequestPriority, string> = {
+    low: 'bg-slate-100 text-slate-600 ring-slate-200',
+    normal: 'bg-sky-50 text-sky-700 ring-sky-200',
+    high: 'bg-rose-50 text-rose-700 ring-rose-200',
+};

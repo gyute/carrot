@@ -3,6 +3,7 @@ import {
     Activity,
     ClipboardCheck,
     LayoutGrid,
+    MessageSquarePlus,
     Play,
     Tags,
     Users,
@@ -10,6 +11,7 @@ import {
 import type { ComponentType } from 'react';
 import { cn } from '@/lib/utils';
 import { index as approvals } from '@/routes/admin/approvals';
+import { index as adminRequests } from '@/routes/admin/requests';
 import { index as runs } from '@/routes/admin/runs';
 import { index as system } from '@/routes/admin/system';
 import { index as tags } from '@/routes/admin/tags';
@@ -21,6 +23,7 @@ type Tab = {
     href: string;
     icon: ComponentType<{ className?: string }>;
     adminOnly: boolean;
+    badge?: number;
 };
 
 /**
@@ -32,13 +35,31 @@ export default function AdminNav() {
     const { url, props } = usePage();
     const isAdmin = props.auth.user.role === 'admin';
 
+    const { features } = props;
+
     const tabs: Tab[] = [
-        {
-            label: '承認',
-            href: approvals().url,
-            icon: ClipboardCheck,
-            adminOnly: false,
-        },
+        ...(features.submissions
+            ? [
+                  {
+                      label: '承認',
+                      href: approvals().url,
+                      icon: ClipboardCheck,
+                      adminOnly: false,
+                      badge: props.pendingApprovals,
+                  },
+              ]
+            : []),
+        ...(features.requests
+            ? [
+                  {
+                      label: 'リクエスト',
+                      href: adminRequests().url,
+                      icon: MessageSquarePlus,
+                      adminOnly: true,
+                      badge: props.openRequests,
+                  },
+              ]
+            : []),
         { label: 'ユーザー', href: users().url, icon: Users, adminOnly: true },
         {
             label: 'ツール',
@@ -58,7 +79,7 @@ export default function AdminNav() {
 
     return (
         <nav className="inline-flex gap-1 rounded-lg bg-slate-200/60 p-1">
-            {tabs.map(({ label, href, icon: Icon }) => {
+            {tabs.map(({ label, href, icon: Icon, badge }) => {
                 const active = url.startsWith(href);
 
                 return (
@@ -75,6 +96,11 @@ export default function AdminNav() {
                     >
                         <Icon className="size-4" />
                         {label}
+                        {badge !== undefined && badge > 0 && (
+                            <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-xs font-bold text-white tabular-nums">
+                                {badge}
+                            </span>
+                        )}
                     </Link>
                 );
             })}

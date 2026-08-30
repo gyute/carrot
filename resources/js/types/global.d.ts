@@ -15,7 +15,13 @@ declare module '@inertiajs/core' {
             auth: Auth;
             sidebarOpen: boolean;
             flash: { status: string | null };
+            features: {
+                submissions: boolean;
+                maySubmit: boolean;
+                requests: boolean;
+            };
             pendingApprovals: number;
+            openRequests: number;
             notifications: { unread: number; recent: NotificationItem[] };
             [key: string]: unknown;
         };
