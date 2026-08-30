@@ -42,12 +42,20 @@ Vite and the log tail.
 | ----------------------------------------------------------- | ---------------------------------------------------------- |
 | `routes/web.php`, `routes/settings.php`, `routes/tools.php` | Routes, split by area                                      |
 | `app/Http/Controllers/Tools/`                               | The tool module                                            |
+| `database/migrations/`                                      | `tools`, `tags` and the `tag_tool` pivot                    |
 | `resources/js/pages/`                                       | Inertia page components                                    |
 | `.ai/rules/`                                                | Decisions and traps worth knowing before editing           |
 
 ## The tool module
 
-`/tools` collects the in-house tools.
+`/tools` collects the in-house tools. Nothing is pushed as code - a tool is a
+row in the `tools` table.
+
+- **Kinds**: `link` opens a URL (external https or a portal path), `embed`
+  frames an external https page inside the tool's own screen, `script` runs a
+  script in the sandbox.
+- The catalog filters on status, category and 所属; deprecated tools stay for
+  reference but are hidden until their status is ticked.
 
 ## Checks
 
