@@ -1,5 +1,9 @@
 # CARROT
 
+[![tests](https://github.com/gyute/carrot/actions/workflows/tests.yml/badge.svg)](https://github.com/gyute/carrot/actions/workflows/tests.yml)
+
+**English** · [日本語](README.ja.md) · [한국어](README.ko.md)
+
 A copyright-free sample groupware portal: Laravel 13 + Inertia v3 (React) + PostgreSQL.
 The UI is Japanese throughout.
 
@@ -177,3 +181,26 @@ composer test        # Pint, PHPStan, Pest
 npm run types:check  # tsc
 npm run lint         # eslint
 ```
+
+CI runs all of it on every push and pull request - `composer setup` then
+`composer ci:check`, on PHP 8.4 and Node 22.
+
+### What the tests cover
+
+Pest, feature tests throughout, a few seconds end to end. They exercise HTTP
+and Inertia props rather than calling classes directly, so a route, a policy
+and a page prop are all held down at once.
+
+| Suite                              | What it holds down                                                                                                                                                                                                                                                           |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tests/Feature/Tools/`             | The catalog: what is listed, the tag groups and their counts, and the rule that an embed only ever frames an external https origin. The request flow: drafts, per-kind validation, withdrawal, change and retire requests, and display fields edited in place without review |
+| `tests/Feature/Admin/`             | Two-stage approval, version stamping (including twice in one minute), slug uniqueness, rejection. The admin screens: roles and 所属, the trash and purge, tag rename/merge, run pruning, and the system status snapshot                                                      |
+| `tests/Feature/Sandbox/`           | Every isolation flag of the docker command, the output cap, the network choice, the source-hash check that refuses to run what was not approved, per-user rate limiting, run visibility and pruning                                                                          |
+| `tests/Feature/Inbox/`             | Who gets messaged and notified at each stage, read state, and that a message is only ever visible to its recipient                                                                                                                                                           |
+| `tests/Feature/DemoSeedTest.php`   | That `demo:seed` publishes through the real approval flow, is safe to re-run, and refuses production                                                                                                                                                                         |
+| `tests/Feature/Auth/`, `Settings/` | Login by username, registration rules, password reset, two-factor and passkeys - inherited from the starter kit                                                                                                                                                              |
+
+Two suites are opt-in and skip unless the tooling is there:
+`BubblewrapRunnerTest` needs `bwrap` installed, and `DockerRunnerTest` needs
+`SANDBOX_DOCKER_TESTS=1` and a working Docker. Everything else runs anywhere,
+against an in-memory SQLite database.
