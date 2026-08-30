@@ -47,6 +47,23 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'status' => fn (): ?string => $request->session()->get('status'),
             ],
+            // The bell: unread count and the latest few, on every page.
+            'notifications' => fn (): array => $user === null ? ['unread' => 0, 'recent' => []] : [
+                'unread' => $user->unreadNotifications()->count(),
+                'recent' => $user->notifications()
+                    ->latest()
+                    ->limit(10)
+                    ->get()
+                    ->map(fn ($notification): array => [
+                        'id' => $notification->id,
+                        'title' => $notification->data['title'] ?? '',
+                        'body' => $notification->data['body'] ?? '',
+                        'url' => $notification->data['url'] ?? null,
+                        'read' => $notification->read_at !== null,
+                        'createdAt' => $notification->created_at?->toIso8601String(),
+                    ])
+                    ->all(),
+            ],
             // Reviewers see what awaits them on the approvals tab.
             'pendingApprovals' => fn (): int => $user?->isReviewer()
                 ? ToolSubmission::query()->awaitingReviewBy($user)->count()

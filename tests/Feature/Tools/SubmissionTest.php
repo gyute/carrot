@@ -2,9 +2,11 @@
 
 use App\Enums\SubmissionAction;
 use App\Enums\SubmissionStatus;
+use App\Events\ToolSubmissionSubmitted;
 use App\Models\Tool;
 use App\Models\ToolSubmission;
 use App\Models\User;
+use Illuminate\Support\Facades\Event;
 
 function linkPayload(array $overrides = []): array
 {
@@ -40,7 +42,9 @@ test('a member saves a draft and it is not shown to admins yet', function () {
         ->and($submission->payload['categories'])->toBe(['データ']);
 });
 
-test('submitting a request moves it to pending', function () {
+test('submitting a request notifies reviewers through the event', function () {
+    Event::fake([ToolSubmissionSubmitted::class]);
+
     $this->actingAs(User::factory()->create())
         ->post(route('tools.submissions.store'), linkPayload(['submit' => true]))
         ->assertRedirect();
@@ -49,6 +53,8 @@ test('submitting a request moves it to pending', function () {
 
     expect($submission->status)->toBe(SubmissionStatus::Pending)
         ->and($submission->submitted_at)->not->toBeNull();
+
+    Event::assertDispatched(ToolSubmissionSubmitted::class, fn ($event) => $event->submission->is($submission));
 });
 
 test('a pending new tool shows in the catalog for its requester and admins only', function () {
@@ -160,6 +166,8 @@ test('withdrawing a pending request keeps it as withdrawn', function () {
 });
 
 test('an owner requests a behaviour change and a deprecation on their tool', function () {
+    Event::fake([ToolSubmissionSubmitted::class]);
+
     $tool = Tool::factory()->link('https://old.example')->create();
     $owner = $tool->owner;
 
@@ -182,6 +190,8 @@ test('an owner requests a behaviour change and a deprecation on their tool', fun
     $retire = ToolSubmission::query()->where('action', SubmissionAction::Deprecate)->sole();
 
     expect($retire->status)->toBe(SubmissionStatus::Pending)->and($retire->note)->toBe('後継に移行');
+
+    Event::assertDispatchedTimes(ToolSubmissionSubmitted::class, 2);
 });
 
 test('an owner edits display fields in place without review', function () {

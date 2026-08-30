@@ -2,9 +2,12 @@
 
 use App\Enums\SubmissionStatus;
 use App\Enums\ToolStatus;
+use App\Events\ToolSubmissionReviewed;
+use App\Models\Message;
 use App\Models\Tool;
 use App\Models\ToolSubmission;
 use App\Models\User;
+use Illuminate\Support\Facades\Event;
 
 test('members cannot open the approval screens', function () {
     $submission = ToolSubmission::factory()->pending()->create();
@@ -29,6 +32,7 @@ test('the approval list puts pending requests first and counts them in shared pr
 });
 
 test('approving a new tool publishes it with a version and the reviewers recorded', function () {
+    Event::fake([ToolSubmissionReviewed::class]);
     $this->travelTo('2026-08-27 10:37');
 
     $submission = ToolSubmission::factory()->script()->pending()->create();
@@ -54,6 +58,8 @@ test('approving a new tool publishes it with a version and the reviewers recorde
         ->and($submission->status)->toBe(SubmissionStatus::Approved)
         ->and($submission->tool_id)->toBe($tool->id)
         ->and($submission->review_comment)->toBe('OK');
+
+    Event::assertDispatched(ToolSubmissionReviewed::class);
 
     // A second approval within the same minute bumps the counter instead of repeating the stamp.
     $change = ToolSubmission::factory()->for($submission->user)->updating($tool)->pending()->create();
@@ -139,8 +145,10 @@ test('a department manager endorses first, then a system admin publishes', funct
         ->and($submission->endorse_comment)->toBe('部署として問題なし')
         ->and(Tool::query()->count())->toBe(0);
 
-    // Endorsed: the manager is done and it is the admins' turn.
+    // Endorsed: the manager is done, the admins are told, the requester too.
     $this->actingAs($manager)->post(route('admin.approvals.approve', $submission))->assertForbidden();
+    expect($admin->unreadNotifications()->count())->toBe(1)
+        ->and(Message::query()->where('recipient_id', $submission->user_id)->count())->toBe(1);
 
     $this->actingAs($admin)->get(route('admin.approvals.index'))
         ->assertInertia(fn ($page) => $page->has('pending', 1)->where('stage', 'admin'));
@@ -165,4 +173,20 @@ test('a manager can reject at the first stage and members still cannot review', 
         ->assertRedirect();
 
     expect($submission->fresh()?->status)->toBe(SubmissionStatus::Rejected);
+});
+
+test('a submission goes to the department managers, or to admins when there are none', function () {
+    $manager = User::factory()->manager('開発')->create();
+    $admin = User::factory()->admin()->create();
+
+    $withManager = ToolSubmission::factory()->create();
+    $this->actingAs($withManager->user)->post(route('tools.submissions.submit', $withManager));
+
+    expect($manager->unreadNotifications()->count())->toBe(1)
+        ->and($admin->unreadNotifications()->count())->toBe(0);
+
+    $orphan = ToolSubmission::factory()->create(['payload' => ['kind' => 'link', 'name' => 'x', 'summary' => 'y', 'icon' => 'link', 'accent' => 'sky', 'department' => '総務', 'categories' => [], 'config' => ['url' => 'https://a.example/'], 'source' => null]]);
+    $this->actingAs($orphan->user)->post(route('tools.submissions.submit', $orphan));
+
+    expect($admin->unreadNotifications()->count())->toBe(1);
 });

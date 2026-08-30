@@ -62,7 +62,8 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * `php artisan dev` runs one worker for every queue this box uses -
-     * sandbox runs would otherwise sit in 待機中 forever.
+     * sandbox runs would otherwise sit in 待機中 forever - and Reverb for
+     * live updates.
      */
     protected function configureDevProcesses(): void
     {
@@ -72,6 +73,7 @@ class AppServiceProvider extends ServiceProvider
 
         DevCommands::except('queue');
         DevCommands::artisan('queue:listen --queue=sandbox,default --tries=1 --timeout=0', 'worker');
+        DevCommands::artisan('reverb:start', 'reverb');
     }
 
     /**

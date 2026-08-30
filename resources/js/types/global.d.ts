@@ -1,4 +1,5 @@
 import type { Auth } from '@/types/auth';
+import type { NotificationItem } from '@/types/inbox';
 
 declare module 'react' {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -15,6 +16,7 @@ declare module '@inertiajs/core' {
             sidebarOpen: boolean;
             flash: { status: string | null };
             pendingApprovals: number;
+            notifications: { unread: number; recent: NotificationItem[] };
             [key: string]: unknown;
         };
     }

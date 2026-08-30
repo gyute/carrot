@@ -14,6 +14,7 @@ import {
     Wrench,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
+import { index as inbox } from '@/routes/inbox';
 import { index as tools } from '@/routes/tools';
 
 type Module = {
@@ -65,6 +66,7 @@ const MODULES: Module[] = [
         label: 'メッセージ',
         icon: MessagesSquare,
         className: 'from-emerald-400 to-green-600',
+        href: inbox().url,
     },
     {
         label: 'ツール',

@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\ToolRunStatus;
+use App\Events\ToolRunUpdated;
 use App\Jobs\RunToolJob;
 use App\Models\Tool;
 use App\Models\ToolRun;
@@ -9,6 +10,7 @@ use App\Models\User;
 use App\Sandbox\FakeSandboxRunner;
 use App\Sandbox\RunResult;
 use App\Sandbox\SandboxRunner;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {
@@ -17,6 +19,7 @@ beforeEach(function () {
 });
 
 test('a script tool runs through the sandbox and records its output', function () {
+    Event::fake([ToolRunUpdated::class]);
 
     $tool = Tool::factory()->script()->create();
     $user = User::factory()->create();
@@ -32,6 +35,8 @@ test('a script tool runs through the sandbox and records its output', function (
         ->and($run->source_hash)->toBe($tool->source_hash)
         ->and($this->runner->lastSpec()?->source)->toBe($tool->source)
         ->and($this->runner->lastSpec()?->timeoutSec)->toBe(30);
+
+    Event::assertDispatchedTimes(ToolRunUpdated::class, 2);
 
     $this->actingAs($user)
         ->get(route('tools.runs.show', [$tool, $run]))

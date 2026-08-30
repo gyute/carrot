@@ -5,6 +5,7 @@ namespace App\Actions\Tools;
 use App\Enums\SubmissionAction;
 use App\Enums\SubmissionStatus;
 use App\Enums\ToolStatus;
+use App\Events\ToolSubmissionReviewed;
 use App\Models\Tool;
 use App\Models\ToolSubmission;
 use App\Models\User;
@@ -53,6 +54,8 @@ class ApproveSubmission
 
             return $tool;
         });
+
+        ToolSubmissionReviewed::dispatch($submission);
 
         return $tool;
     }

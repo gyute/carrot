@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tools;
 
 use App\Enums\SubmissionAction;
 use App\Enums\SubmissionStatus;
+use App\Events\ToolSubmissionSubmitted;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tools\ToolSubmissionRequest;
 use App\Models\Tool;
@@ -29,7 +30,7 @@ class SubmissionController extends Controller
     public function index(Request $request): Response
     {
         $submissions = ToolSubmission::query()
-            ->with(['tool', 'reviewer'])
+            ->with(['tool', 'reviewer', 'endorser'])
             ->where('user_id', $request->user()->id)
             ->latest()
             ->limit(100)
@@ -101,6 +102,8 @@ class SubmissionController extends Controller
             'submitted_at' => now(),
         ]);
 
+        ToolSubmissionSubmitted::dispatch($submission);
+
         return to_route('tools.submissions.show', $submission)->with('status', '非推奨化を申請しました。');
     }
 
@@ -108,7 +111,7 @@ class SubmissionController extends Controller
     {
         Gate::authorize('view', $submission);
 
-        $submission->load(['tool.tags', 'user', 'reviewer']);
+        $submission->load(['tool.tags', 'user', 'reviewer', 'endorser']);
 
         return Inertia::render('tools/submissions/show', [
             'submission' => $this->presenter->detail($submission),
@@ -154,7 +157,7 @@ class SubmissionController extends Controller
     }
 
     /**
-     * Draft → pending. From here it waits for a reviewer.
+     * Draft → pending. From here the admins are told.
      */
     public function submit(Request $request, ToolSubmission $submission): RedirectResponse
     {
@@ -164,6 +167,8 @@ class SubmissionController extends Controller
             'status' => SubmissionStatus::Pending,
             'submitted_at' => now(),
         ])->save();
+
+        ToolSubmissionSubmitted::dispatch($submission);
 
         return to_route('tools.submissions.show', $submission)->with('status', '申請しました。承認をお待ちください。');
     }

@@ -1,5 +1,6 @@
 import { Head, Link, usePoll } from '@inertiajs/react';
 import { ArrowLeft, Loader2 } from 'lucide-react';
+import LiveUpdates from '@/components/live-updates';
 import StatusPill from '@/components/status-pill';
 import ToolIcon from '@/components/tool-icon';
 import ToolsNav from '@/components/tools-nav';
@@ -68,6 +69,8 @@ export default function ToolRunShow({ tool, run }: Props) {
             <Head title={`${tool.name} の実行`} />
 
             <ToolsNav />
+
+            <LiveUpdates only={['run']} pollMs={30_000} />
 
             <Link
                 href={showTool(tool.ulid)}

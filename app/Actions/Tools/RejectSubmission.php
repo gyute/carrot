@@ -3,6 +3,7 @@
 namespace App\Actions\Tools;
 
 use App\Enums\SubmissionStatus;
+use App\Events\ToolSubmissionReviewed;
 use App\Models\ToolSubmission;
 use App\Models\User;
 
@@ -16,5 +17,7 @@ class RejectSubmission
             'review_comment' => $comment,
             'reviewed_at' => now(),
         ])->save();
+
+        ToolSubmissionReviewed::dispatch($submission);
     }
 }

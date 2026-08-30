@@ -72,6 +72,10 @@ row in the `tools` table.
   minute (`202608271037`, then `202608271037.2` for a second approval within
   the same minute) and records who requested, endorsed and approved it. The
   approved submissions are the history.
+- **Notifications**: a submission messages every reviewer (inbox at `/inbox`,
+  bell in the header) with a link to `/admin/approvals/{id}`; the decision
+  messages the requester back. Reverb pushes updates live; screens also poll
+  every minute as a safety net, so a dev box without `reverb:start` still works.
 - **Roles**: `users.role` is `member`, `manager` or `admin`. Approval has two
   stages: the requester's department **manager** endorses first, then a system
   **admin** confirms and publishes (an admin may also approve straight from the
@@ -127,9 +131,10 @@ queue and storage credentials and nothing else.
 5. Set `SANDBOX_DRIVER=docker` and `DOCKER_HOST=unix:///run/user/<uid>/docker.sock`
    in the runner's `.env`; the web host keeps `SANDBOX_DRIVER=none`.
 
-Locally, `composer run dev` runs a worker on `sandbox,default` next to the web
-server, so `SANDBOX_DRIVER=bubblewrap` (or `docker` with a rootless daemon)
-makes script tools work end to end on one machine.
+Locally, `composer run dev` runs a worker on `sandbox,default` and Reverb next to
+the web server, so `SANDBOX_DRIVER=bubblewrap` (or `docker` with a rootless
+daemon) makes script tools work end to end on one machine. Without Reverb the
+screens simply poll.
 
 ## Checks
 

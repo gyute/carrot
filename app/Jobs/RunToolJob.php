@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Enums\ToolRunStatus;
+use App\Events\ToolRunUpdated;
 use App\Models\ToolRun;
 use App\Sandbox\RunSpec;
 use App\Sandbox\SandboxRunner;
@@ -34,6 +35,7 @@ class RunToolJob implements ShouldQueue
         $run = $this->run;
 
         $run->forceFill(['status' => ToolRunStatus::Running, 'started_at' => now()])->save();
+        ToolRunUpdated::dispatch($run);
 
         try {
             $spec = $this->spec($run);
@@ -47,6 +49,7 @@ class RunToolJob implements ShouldQueue
                 'error_message' => $e->getMessage(),
                 'finished_at' => now(),
             ])->save();
+            ToolRunUpdated::dispatch($run);
 
             return;
         }
@@ -62,6 +65,7 @@ class RunToolJob implements ShouldQueue
             'duration_ms' => $result->durationMs,
             'finished_at' => now(),
         ])->save();
+        ToolRunUpdated::dispatch($run);
     }
 
     public function failed(?Throwable $e): void
@@ -71,6 +75,7 @@ class RunToolJob implements ShouldQueue
             'error_message' => $e?->getMessage() ?? 'The job failed.',
             'finished_at' => now(),
         ])->save();
+        ToolRunUpdated::dispatch($this->run);
     }
 
     private function spec(ToolRun $run): RunSpec

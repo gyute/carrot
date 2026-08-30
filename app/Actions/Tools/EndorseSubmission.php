@@ -3,6 +3,7 @@
 namespace App\Actions\Tools;
 
 use App\Enums\SubmissionStatus;
+use App\Events\ToolSubmissionEndorsed;
 use App\Models\ToolSubmission;
 use App\Models\User;
 
@@ -20,5 +21,7 @@ class EndorseSubmission
             'endorse_comment' => $comment,
             'endorsed_at' => now(),
         ])->save();
+
+        ToolSubmissionEndorsed::dispatch($submission);
     }
 }

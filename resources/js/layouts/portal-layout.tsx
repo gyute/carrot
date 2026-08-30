@@ -1,17 +1,12 @@
 import { Form, Link, usePage } from '@inertiajs/react';
-import { Bell, LogOut, UserRound } from 'lucide-react';
+import { LogOut, UserRound } from 'lucide-react';
 import { useEffect } from 'react';
 import type { PropsWithChildren } from 'react';
 import { toast } from 'sonner';
+import NotificationBell from '@/components/notification-bell';
 import PortalLogo from '@/components/portal-logo';
 import { Button } from '@/components/ui/button';
 import { home, logout } from '@/routes';
-
-/**
- * No notification source exists yet, so the bell shows no badge. Once one
- * lands, feed its unread count in here and the badge renders itself.
- */
-const UNREAD_NOTIFICATIONS: number = 0;
 
 /**
  * The signed in portal: the blue bar with the wordmark on every module screen.
@@ -38,21 +33,7 @@ export default function PortalLayout({ children }: PropsWithChildren) {
                     </Link>
 
                     <div className="ml-auto flex items-center gap-3 text-sm text-white">
-                        <button
-                            type="button"
-                            className="relative flex size-9 items-center justify-center rounded-full text-white transition hover:bg-white/15"
-                            aria-label="お知らせ"
-                            data-test="notification-bell"
-                        >
-                            <Bell className="size-5" />
-                            {UNREAD_NOTIFICATIONS > 0 && (
-                                <span className="absolute -top-0.5 -right-0.5 flex min-w-4.5 items-center justify-center rounded-full bg-rose-500 px-1 text-[11px] leading-4.5 font-bold">
-                                    {UNREAD_NOTIFICATIONS > 99
-                                        ? '99+'
-                                        : UNREAD_NOTIFICATIONS}
-                                </span>
-                            )}
-                        </button>
+                        <NotificationBell />
 
                         <span className="flex items-center gap-2">
                             <span className="flex size-8 items-center justify-center rounded-full bg-white/20">
