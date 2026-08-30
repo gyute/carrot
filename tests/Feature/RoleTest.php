@@ -15,18 +15,6 @@ test('users are members by default and admins pass the admin gate', function () 
         ->and(User::query()->admins()->pluck('id')->all())->toBe([$admin->id]);
 });
 
-test('the promote command grants and revokes the admin role', function () {
-    $user = User::factory()->create(['username' => 'paku']);
-
-    $this->artisan('carrot:promote', ['username' => 'PAKU'])->assertSuccessful();
-    expect($user->fresh()?->role)->toBe(UserRole::Admin);
-
-    $this->artisan('carrot:promote', ['username' => 'paku', '--revoke' => true])->assertSuccessful();
-    expect($user->fresh()?->role)->toBe(UserRole::Member);
-
-    $this->artisan('carrot:promote', ['username' => 'nobody'])->assertFailed();
-});
-
 test('a manager only endorses for their own department', function () {
     $manager = User::factory()->manager('開発')->create();
     $admin = User::factory()->admin()->create();
@@ -41,14 +29,22 @@ test('a manager only endorses for their own department', function () {
         ->and(User::query()->managersOf('開発')->pluck('id')->all())->toBe([$manager->id]);
 });
 
-test('the promote command sets a manager with a department', function () {
+test('the promote command sets, changes and revokes a role', function () {
     $user = User::factory()->create(['username' => 'mori']);
 
+    $this->artisan('carrot:promote', ['username' => 'MORI'])->assertSuccessful();
+    expect($user->fresh()?->role)->toBe(UserRole::Admin);
+
+    // A manager is nothing without a department to review for.
     $this->artisan('carrot:promote', ['username' => 'mori', '--role' => 'manager'])->assertFailed();
 
     $this->artisan('carrot:promote', ['username' => 'mori', '--role' => 'manager', '--department' => '開発'])
         ->assertSuccessful();
-
     expect($user->fresh()?->role)->toBe(UserRole::Manager)
         ->and($user->fresh()?->department)->toBe('開発');
+
+    $this->artisan('carrot:promote', ['username' => 'mori', '--revoke' => true])->assertSuccessful();
+    expect($user->fresh()?->role)->toBe(UserRole::Member);
+
+    $this->artisan('carrot:promote', ['username' => 'nobody'])->assertFailed();
 });

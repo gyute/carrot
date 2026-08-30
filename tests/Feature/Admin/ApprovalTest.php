@@ -52,6 +52,8 @@ test('approving a new tool publishes it with a version and the reviewers recorde
         ->and($tool->owner_id)->toBe($submission->user_id)
         ->and($tool->requested_by)->toBe($submission->user_id)
         ->and($tool->approved_by)->toBe($admin->id)
+        // An admin approving from the first stage stands in for the department.
+        ->and($tool->endorsed_by)->toBe($admin->id)
         ->and($tool->approved_submission_id)->toBe($submission->id)
         ->and($tool->source_hash)->toBe(hash('sha256', (string) $tool->source))
         ->and($tool->categories())->toBe(['データ'])

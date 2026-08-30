@@ -190,12 +190,6 @@ screens simply poll.
 
 ## Checks
 
-`tests/Feature/ScenarioTest.php` walks the whole platform from an empty
-database - one member registers a link, an embed and a script tool, their
-manager endorses, an admin publishes, the catalog fills up and the script
-runs. It builds its own fixtures, so it stays a regression test for the flow
-rather than a check on any particular catalog.
-
 ```bash
 composer test        # Pint, PHPStan, Pest
 npm run types:check  # tsc

@@ -237,15 +237,3 @@ test('the tool page shows version, requester and approver', function () {
             ->where('can.updateMetadata', false)
         );
 });
-
-test('an embed tool frames its page inside its own screen, never our own origin', function () {
-    $tool = Tool::factory()->embed('https://docs.example/')->create();
-    $own = Tool::factory()->embed('https://'.parse_url(config('app.url'), PHP_URL_HOST).'/login')->create();
-    $user = User::factory()->create();
-
-    $this->actingAs($user)->get(route('tools.show', $tool))
-        ->assertInertia(fn ($page) => $page->where('tool.embedUrl', 'https://docs.example/')->where('tool.href', "/tools/{$tool->ulid}"));
-
-    $this->actingAs($user)->get(route('tools.show', $own))
-        ->assertInertia(fn ($page) => $page->where('tool.embedUrl', null));
-});

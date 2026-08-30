@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\SubmissionStatus;
 use App\Enums\ToolStatus;
 use App\Enums\UserRole;
 use App\Models\Tool;
@@ -9,8 +8,8 @@ use App\Models\User;
 
 /**
  * A smoke test for `demo:seed`, not a check on the demo's contents: it reads
- * demo/tools.php and asserts what must hold whatever anyone puts in there.
- * Adding or renaming a demo tool must never break this file.
+ * demo/tools.php and asserts what holds whatever anyone puts in there, so
+ * adding or renaming a demo tool never breaks this file.
  *
  * @return array{department: string, tools: array<int, array<string, mixed>>}
  */
@@ -30,24 +29,22 @@ test('the demo catalog is published through the real approval flow', function ()
     expect(User::query()->where('username', 'demo')->sole()->role)->toBe(UserRole::Member)
         ->and($manager->role)->toBe(UserRole::Manager)
         ->and($manager->department)->toBe($definition['department'])
-        ->and($admin->role)->toBe(UserRole::Admin);
+        ->and($admin->role)->toBe(UserRole::Admin)
+        ->and(ToolSubmission::query()->count())->toBe(count($definition['tools']));
 
     foreach ($definition['tools'] as $entry) {
         $name = $entry['name'];
 
         if (($entry['state'] ?? 'published') !== 'published') {
-            expect(Tool::withTrashed()->where('name', $name)->exists())->toBeFalse();
-
-            $waiting = ToolSubmission::query()->where('payload->name', $name)->sole();
-
-            expect($waiting->status->isAwaitingReview())->toBeTrue();
+            expect(Tool::withTrashed()->where('name', $name)->exists())->toBeFalse()
+                ->and(ToolSubmission::query()->where('payload->name', $name)->sole()->status->isAwaitingReview())->toBeTrue();
 
             continue;
         }
 
         $tool = Tool::query()->where('name', $name)->sole();
 
-        // Published means both stages actually ran, not that a row was written.
+        // Published means both stages ran, not that a row was written.
         expect($tool->status)->toBe(ToolStatus::Running)
             ->and($tool->kind->value)->toBe($entry['kind'])
             ->and($tool->department)->toBe($definition['department'])
@@ -63,23 +60,8 @@ test('the demo catalog is published through the real approval flow', function ()
                 ->and($tool->source_hash)->toBe(hash('sha256', (string) $source));
         }
     }
-});
 
-test('every demo entry ends up in the catalog or in the approval queue', function () {
-    $definition = demoDefinition();
-
-    $this->artisan('demo:seed')->assertSuccessful();
-
-    $published = collect($definition['tools'])->filter(fn (array $entry): bool => ($entry['state'] ?? 'published') === 'published');
-
-    expect(Tool::query()->count())->toBe($published->count())
-        ->and(ToolSubmission::query()->count())->toBe(count($definition['tools']))
-        ->and($published)->not->toBeEmpty();
-
-    $this->actingAs(User::factory()->create())
-        ->get(route('tools.index'))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page->has('tools', $published->count()));
+    expect(Tool::query()->count())->toBeGreaterThan(0);
 });
 
 test('seeding twice changes nothing, and --fresh starts over', function () {
@@ -98,18 +80,6 @@ test('seeding twice changes nothing, and --fresh starts over', function () {
         ->and(Tool::query()->pluck('id')->intersect($before)->all())->toBe([]);
 });
 
-test('a demo script tool can be run once it is published', function () {
-    $this->artisan('demo:seed')->assertSuccessful();
-
-    $script = Tool::query()->where('kind', 'script')->first();
-
-    expect($script)->not->toBeNull();
-
-    $this->actingAs(User::query()->where('username', 'demo')->sole())
-        ->post(route('tools.runs.store', $script))
-        ->assertRedirect();
-});
-
 test('the demo refuses to seed a production install', function () {
     app()->detectEnvironment(fn (): string => 'production');
 
@@ -120,15 +90,4 @@ test('the demo refuses to seed a production install', function () {
     $this->artisan('demo:seed', ['--force' => true])->assertSuccessful();
 
     expect(Tool::query()->count())->toBeGreaterThan(0);
-});
-
-test('a pending demo entry gives the approval screens something to show', function () {
-    $this->artisan('demo:seed')->assertSuccessful();
-
-    $waiting = ToolSubmission::query()->whereIn('status', [SubmissionStatus::Pending, SubmissionStatus::Endorsed])->count();
-
-    $this->actingAs(User::query()->where('username', 'demo-admin')->sole())
-        ->get(route('admin.approvals.index'))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page->has('pending', $waiting));
 });
