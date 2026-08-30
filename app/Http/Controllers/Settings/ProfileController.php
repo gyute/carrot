@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Settings;
 
+use App\Actions\Users\RetireUser;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Models\User;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,15 +46,25 @@ class ProfileController extends Controller
     }
 
     /**
-     * Delete the user's profile.
+     * Close the user's account. The row is retired rather than deleted: what
+     * they registered and approved stays readable, under nobody's name. Tools
+     * they owned pass to their department manager, or to an administrator.
      */
-    public function destroy(ProfileDeleteRequest $request): RedirectResponse
+    public function destroy(ProfileDeleteRequest $request, RetireUser $retire): RedirectResponse
     {
         $user = $request->user();
 
+        // Nobody could approve anything afterwards, and nobody could hand the
+        // role back out either.
+        abort_if(
+            $user->isAdmin() && User::query()->admins()->count() === 1,
+            422,
+            '最後のシステム管理者はアカウントを閉じられません。先に別の管理者を任命してください。',
+        );
+
         Auth::logout();
 
-        $user->delete();
+        $retire->handle($user);
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

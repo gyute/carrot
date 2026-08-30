@@ -80,7 +80,7 @@ class ToolSubmission extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     /**
@@ -107,7 +107,7 @@ class ToolSubmission extends Model
      */
     public function reviewer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'reviewer_id');
+        return $this->belongsTo(User::class, 'reviewer_id')->withTrashed();
     }
 
     /**
@@ -115,7 +115,7 @@ class ToolSubmission extends Model
      */
     public function endorser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'endorsed_by');
+        return $this->belongsTo(User::class, 'endorsed_by')->withTrashed();
     }
 
     /**

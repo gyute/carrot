@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Users\RetireUser;
 use App\Models\User;
 
 test('profile page is displayed', function () {
@@ -64,7 +65,14 @@ test('user can delete their account', function () {
         ->assertRedirect(route('home'));
 
     $this->assertGuest();
-    expect($user->fresh())->toBeNull();
+
+    // Closing an account retires the row rather than deleting it, so what the
+    // person registered and approved stays readable under nobody's name.
+    $retired = User::withTrashed()->find($user->id);
+
+    expect(User::query()->find($user->id))->toBeNull()
+        ->and($retired->trashed())->toBeTrue()
+        ->and($retired->name)->toBe(RetireUser::NAME);
 });
 
 test('correct password must be provided to delete account', function () {

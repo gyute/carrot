@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { Check, Pencil, Search, Users, X } from 'lucide-react';
+import { Check, LogOut, Pencil, Search, Users, X } from 'lucide-react';
 import { useState } from 'react';
 import AdminNav from '@/components/admin-nav';
 import InputError from '@/components/input-error';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatTimestamp } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { index, update } from '@/routes/admin/users';
+import { index, retire, update } from '@/routes/admin/users';
 
 type AdminUser = {
     ulid: string;
@@ -17,6 +17,7 @@ type AdminUser = {
     role: string;
     roleLabel: string;
     department: string | null;
+    retired: boolean;
     createdAt: string;
 };
 
@@ -30,6 +31,7 @@ type Props = {
     filters: { q: string; role: string | null };
     roles: { value: string; label: string }[];
     departments: string[];
+    successors: { ulid: string; name: string }[];
 };
 
 const ROLE_STYLES: Record<string, string> = {
@@ -109,14 +111,71 @@ function RoleRow({
     );
 }
 
+function RetireRow({
+    user,
+    successors,
+    onDone,
+}: {
+    user: AdminUser;
+    successors: { ulid: string; name: string }[];
+    onDone: () => void;
+}) {
+    const form = useForm({ successor: '' });
+
+    return (
+        <form
+            onSubmit={(event) => {
+                event.preventDefault();
+                form.delete(retire(user.ulid).url, { onSuccess: onDone });
+            }}
+            className="flex flex-wrap items-start justify-end gap-2"
+        >
+            <div>
+                <select
+                    value={form.data.successor}
+                    onChange={(event) =>
+                        form.setData('successor', event.target.value)
+                    }
+                    aria-label="引き継ぎ先"
+                    className="h-9 rounded-md border border-slate-200 bg-white px-2 text-sm shadow-xs"
+                >
+                    <option value="">引き継ぎ先：所属の部署管理者</option>
+                    {successors
+                        .filter((person) => person.ulid !== user.ulid)
+                        .map((person) => (
+                            <option key={person.ulid} value={person.ulid}>
+                                引き継ぎ先：{person.name}
+                            </option>
+                        ))}
+                </select>
+                <InputError message={form.errors.successor} />
+            </div>
+            <Button
+                type="submit"
+                size="sm"
+                disabled={form.processing}
+                className="bg-rose-600 text-white hover:bg-rose-700"
+            >
+                <Check className="size-4" />
+                退職処理
+            </Button>
+            <Button type="button" size="sm" variant="ghost" onClick={onDone}>
+                <X className="size-4" />
+            </Button>
+        </form>
+    );
+}
+
 export default function AdminUsers({
     users,
     filters,
     roles,
     departments,
+    successors,
 }: Props) {
     const [search, setSearch] = useState(filters.q);
     const [editing, setEditing] = useState<string | null>(null);
+    const [retiring, setRetiring] = useState<string | null>(null);
 
     const go = (params: { q?: string; role?: string | null; page?: number }) =>
         router.get(
@@ -202,11 +261,30 @@ export default function AdminUsers({
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {users.data.map((user) => (
-                            <tr key={user.ulid} className="align-top">
+                            <tr
+                                key={user.ulid}
+                                className={cn(
+                                    'align-top',
+                                    user.retired &&
+                                        'bg-slate-50/60 text-slate-400',
+                                )}
+                            >
                                 <td className="px-4 py-3">
-                                    <span className="font-medium text-slate-800">
+                                    <span
+                                        className={cn(
+                                            'font-medium',
+                                            user.retired
+                                                ? 'text-slate-500'
+                                                : 'text-slate-800',
+                                        )}
+                                    >
                                         {user.name}
                                     </span>
+                                    {user.retired && (
+                                        <span className="ml-2 inline-flex items-center rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                                            退職
+                                        </span>
+                                    )}
                                     <span className="ml-2 font-mono text-xs text-slate-500">
                                         {user.username}
                                     </span>
@@ -222,6 +300,14 @@ export default function AdminUsers({
                                             roles={roles}
                                             departments={departments}
                                             onDone={() => setEditing(null)}
+                                        />
+                                    </td>
+                                ) : retiring === user.ulid ? (
+                                    <td className="px-4 py-3" colSpan={4}>
+                                        <RetireRow
+                                            user={user}
+                                            successors={successors}
+                                            onDone={() => setRetiring(null)}
                                         />
                                     </td>
                                 ) : (
@@ -243,16 +329,35 @@ export default function AdminUsers({
                                             {formatTimestamp(user.createdAt)}
                                         </td>
                                         <td className="px-4 py-3 text-right">
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() =>
-                                                    setEditing(user.ulid)
-                                                }
-                                            >
-                                                <Pencil className="size-4" />
-                                                変更
-                                            </Button>
+                                            {!user.retired && (
+                                                <div className="flex justify-end gap-2">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            setEditing(
+                                                                user.ulid,
+                                                            )
+                                                        }
+                                                    >
+                                                        <Pencil className="size-4" />
+                                                        変更
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() =>
+                                                            setRetiring(
+                                                                user.ulid,
+                                                            )
+                                                        }
+                                                        className="text-rose-700 hover:bg-rose-50 hover:text-rose-800"
+                                                    >
+                                                        <LogOut className="size-4" />
+                                                        退職
+                                                    </Button>
+                                                </div>
+                                            )}
                                         </td>
                                     </>
                                 )}

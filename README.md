@@ -118,6 +118,13 @@ row in the `tools` table.
   department **manager** endorses first, then a system **admin** publishes. An
   admin may approve straight from the first stage, and a department with no
   manager falls through to the admins.
+- **Leaving**: a person is retired, never deleted. Their inbox, bell and
+  passkeys go, they can no longer sign in, and the row stays - scrubbed of
+  name and address - so every approval still says who made it, now as
+  `退職したユーザー`. Tools they owned pass to a successor, since a tool nobody
+  owns can only be touched by an administrator. Closing your own account from
+  `/settings/profile` does the same and hands the tools to your department's
+  manager; the last administrator is refused.
 - **Halves you can switch off**: `CATALOG_SUBMISSIONS` and `CATALOG_REQUESTS`
   decide which of the two flows this deployment runs. A flow that is off is
   absent, not forbidden - its routes answer 404 and its menu entries are gone.
@@ -127,15 +134,15 @@ row in the `tools` table.
 
 `/admin` covers every table without a database client:
 
-| Screen             | What it edits                                                     |
-| ------------------ | ----------------------------------------------------------------- |
-| `/admin/approvals` | The two review stages (managers see their own department)         |
-| `/admin/requests`  | The development team's queue: accept, decline, merge, deliver     |
-| `/admin/users`     | Roles and 所属 - the same columns as `php artisan carrot:promote` |
-| `/admin/tools`     | Every row, deleted ones included: deprecate, restore, purge       |
-| `/admin/tags`      | Rename and merge category tags                                    |
-| `/admin/runs`      | Browse, delete, prune sandbox runs                                |
-| `/admin/system`    | Queues, workers, sandbox, Reverb, recent runs, log tail           |
+| Screen             | What it edits                                                 |
+| ------------------ | ------------------------------------------------------------- |
+| `/admin/approvals` | The two review stages (managers see their own department)     |
+| `/admin/requests`  | The development team's queue: accept, decline, merge, deliver |
+| `/admin/users`     | Roles and 所属, and retiring someone who has left             |
+| `/admin/tools`     | Every row, deleted ones included: deprecate, restore, purge   |
+| `/admin/tags`      | Rename and merge category tags                                |
+| `/admin/runs`      | Browse, delete, prune sandbox runs                            |
+| `/admin/system`    | Queues, workers, sandbox, Reverb, recent runs, log tail       |
 
 ## The sandbox
 
@@ -206,14 +213,14 @@ Pest, feature tests throughout, a few seconds end to end. They exercise HTTP
 and Inertia props rather than calling classes directly, so a route, a policy
 and a page prop are all held down at once.
 
-| Suite                              | What it holds down                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tests/Feature/Tools/`             | The catalog: what is listed, the tag groups and their counts, and the rule that an embed only ever frames an external https origin. The request flow: drafts, per-kind validation, withdrawal, change and retire requests, and display fields edited in place without review. Requests: the 所属 they are stamped with and who may read them, and that a flow switched off answers 404 while a flow someone may not use answers 403 |
-| `tests/Feature/Admin/`             | Two-stage approval, version stamping (including twice in one minute), slug uniqueness, rejection. Request triage: accept, decline with a reason, merge a duplicate, and that approving a submission filed against a request delivers it. The admin screens: roles and 所属, the trash and purge, tag rename/merge, run pruning, and the system status snapshot                                                                      |
-| `tests/Feature/Sandbox/`           | Every isolation flag of the docker command, the output cap, the network choice, the source-hash check that refuses to run what was not approved, per-user rate limiting, run visibility and pruning                                                                                                                                                                                                                                 |
-| `tests/Feature/Inbox/`             | Who gets messaged and notified at each stage, read state, and that a message is only ever visible to its recipient                                                                                                                                                                                                                                                                                                                  |
-| `tests/Feature/DemoSeedTest.php`   | That `demo:seed` publishes through the real approval flow, files its requests the same way and lets the tool that answers one close it, is safe to re-run, and refuses production                                                                                                                                                                                                                                                   |
-| `tests/Feature/Auth/`, `Settings/` | Login by username, registration rules, password reset, two-factor and passkeys - inherited from the starter kit                                                                                                                                                                                                                                                                                                                     |
+| Suite                              | What it holds down                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tests/Feature/Tools/`             | The catalog: what is listed, the tag groups and their counts, and the rule that an embed only ever frames an external https origin. The request flow: drafts, per-kind validation, withdrawal, change and retire requests, and display fields edited in place without review. Requests: the 所属 they are stamped with and who may read them, and that a flow switched off answers 404 while a flow someone may not use answers 403                                                                                             |
+| `tests/Feature/Admin/`             | Retiring a person: the history keeps naming them anonymously, their inbox and passkeys go, their tools reach a successor, and the last administrator is refused. Two-stage approval, version stamping (including twice in one minute), slug uniqueness, rejection. Request triage: accept, decline with a reason, merge a duplicate, and that approving a submission filed against a request delivers it. The admin screens: roles and 所属, the trash and purge, tag rename/merge, run pruning, and the system status snapshot |
+| `tests/Feature/Sandbox/`           | Every isolation flag of the docker command, the output cap, the network choice, the source-hash check that refuses to run what was not approved, per-user rate limiting, run visibility and pruning                                                                                                                                                                                                                                                                                                                             |
+| `tests/Feature/Inbox/`             | Who gets messaged and notified at each stage, read state, and that a message is only ever visible to its recipient                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `tests/Feature/DemoSeedTest.php`   | That `demo:seed` publishes through the real approval flow, files its requests the same way and lets the tool that answers one close it, is safe to re-run, and refuses production                                                                                                                                                                                                                                                                                                                                               |
+| `tests/Feature/Auth/`, `Settings/` | Login by username, registration rules, password reset, two-factor and passkeys - inherited from the starter kit                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 Two suites are opt-in and skip unless the tooling is there:
 `BubblewrapRunnerTest` needs `bwrap` installed, and `DockerRunnerTest` needs

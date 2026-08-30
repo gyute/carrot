@@ -41,6 +41,7 @@ Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group
 
     Route::get('users', [UserController::class, 'index'])->name('users.index');
     Route::patch('users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('users/{user}', [UserController::class, 'retire'])->name('users.retire');
 
     Route::get('system', [SystemController::class, 'index'])->name('system.index');
 });

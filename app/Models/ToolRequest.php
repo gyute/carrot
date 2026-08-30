@@ -87,7 +87,7 @@ class ToolRequest extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     /**
@@ -95,7 +95,7 @@ class ToolRequest extends Model
      */
     public function assignee(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assignee_id');
+        return $this->belongsTo(User::class, 'assignee_id')->withTrashed();
     }
 
     /**
@@ -103,7 +103,7 @@ class ToolRequest extends Model
      */
     public function decider(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'decided_by');
+        return $this->belongsTo(User::class, 'decided_by')->withTrashed();
     }
 
     /**

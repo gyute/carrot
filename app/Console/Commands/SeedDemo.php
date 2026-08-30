@@ -297,6 +297,13 @@ class SeedDemo extends Command
     {
         $accounts = User::query()->whereIn('username', ['demo', 'demo-manager', 'demo-admin'])->pluck('id');
 
+        // A tool still pointing at one of their submissions blocks the
+        // delete: the cascade empties tool_submissions while the tools row is
+        // being updated, and the reference is re-checked mid-flight.
+        Tool::withTrashed()
+            ->whereIn('approved_submission_id', ToolSubmission::query()->whereIn('user_id', $accounts)->select('id'))
+            ->update(['approved_submission_id' => null]);
+
         // Everything else the accounts touched is reached by a foreign key and
         // goes with them; the bell is not, so it would keep rows pointing at
         // messages that no longer exist.
@@ -305,7 +312,9 @@ class SeedDemo extends Command
             ->whereIn('notifiable_id', $accounts)
             ->delete();
 
-        $removed = User::query()->whereIn('id', $accounts)->delete();
+        // Force, because users are retired rather than deleted now, and a
+        // retired row would hold the login IDs the next seed wants back.
+        $removed = User::query()->whereIn('id', $accounts)->forceDelete();
 
         $this->components->twoColumnDetail('--clear', "<fg=gray>デモ用アカウント {$removed} 件を削除しました</>");
     }

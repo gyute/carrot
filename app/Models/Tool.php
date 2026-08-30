@@ -103,7 +103,7 @@ class Tool extends Model
      */
     public function owner(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'owner_id');
+        return $this->belongsTo(User::class, 'owner_id')->withTrashed();
     }
 
     /**
@@ -111,7 +111,7 @@ class Tool extends Model
      */
     public function requester(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'requested_by');
+        return $this->belongsTo(User::class, 'requested_by')->withTrashed();
     }
 
     /**
@@ -119,7 +119,7 @@ class Tool extends Model
      */
     public function endorser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'endorsed_by');
+        return $this->belongsTo(User::class, 'endorsed_by')->withTrashed();
     }
 
     /**
@@ -127,7 +127,7 @@ class Tool extends Model
      */
     public function approver(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'approved_by');
+        return $this->belongsTo(User::class, 'approved_by')->withTrashed();
     }
 
     /**
