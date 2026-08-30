@@ -1,6 +1,8 @@
 import { Form, Link, usePage } from '@inertiajs/react';
 import { Bell, LogOut, UserRound } from 'lucide-react';
+import { useEffect } from 'react';
 import type { PropsWithChildren } from 'react';
+import { toast } from 'sonner';
 import PortalLogo from '@/components/portal-logo';
 import { Button } from '@/components/ui/button';
 import { home, logout } from '@/routes';
@@ -15,7 +17,14 @@ const UNREAD_NOTIFICATIONS: number = 0;
  * The signed in portal: the blue bar with the wordmark on every module screen.
  */
 export default function PortalLayout({ children }: PropsWithChildren) {
-    const { auth } = usePage().props;
+    const { auth, flash } = usePage().props;
+
+    // Redirect-with-status messages surface as a toast, once per response.
+    useEffect(() => {
+        if (flash?.status) {
+            toast.success(flash.status);
+        }
+    }, [flash]);
 
     return (
         <div className="portal-surface min-h-svh bg-slate-100">

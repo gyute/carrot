@@ -1,13 +1,15 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowUpRight, SearchX, X } from 'lucide-react';
+import { ArrowUpRight, Plus, SearchX, X } from 'lucide-react';
 import { useState } from 'react';
 import ToolIcon from '@/components/tool-icon';
 import type { TagGroup } from '@/components/tool-tag-filter';
 import ToolTagFilter from '@/components/tool-tag-filter';
 import ToolsNav from '@/components/tools-nav';
+import { Button } from '@/components/ui/button';
 import { STATUS_STYLES, toolAccent } from '@/lib/tool-presets';
 import type { ToolStatus } from '@/lib/tool-presets';
 import { cn } from '@/lib/utils';
+import { create as createSubmission } from '@/routes/tools/submissions';
 
 type CatalogTool = {
     ulid: string;
@@ -86,12 +88,24 @@ export default function ToolsIndex({ tools, tagGroups }: Props) {
 
             <ToolsNav
                 actions={
-                    <ToolTagFilter
-                        groups={tagGroups}
-                        selected={selected}
-                        onToggle={toggleTag}
-                        onClear={clearTags}
-                    />
+                    <div className="flex items-center gap-2">
+                        <ToolTagFilter
+                            groups={tagGroups}
+                            selected={selected}
+                            onToggle={toggleTag}
+                            onClear={clearTags}
+                        />
+                        <Button
+                            asChild
+                            size="sm"
+                            className="bg-sky-700 text-white hover:bg-sky-800"
+                        >
+                            <Link href={createSubmission()}>
+                                <Plus className="size-4" />
+                                ツールを登録
+                            </Link>
+                        </Button>
+                    </div>
                 }
             />
 

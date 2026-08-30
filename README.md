@@ -42,7 +42,8 @@ Vite and the log tail.
 | ----------------------------------------------------------- | ---------------------------------------------------------- |
 | `routes/web.php`, `routes/settings.php`, `routes/tools.php` | Routes, split by area                                      |
 | `app/Http/Controllers/Tools/`                               | The tool module                                            |
-| `database/migrations/`                                      | `tools`, `tags` and the `tag_tool` pivot                    |
+| `database/migrations/`                                      | `tools`, `tags`, `tag_tool` and `tool_submissions`          |
+| `config/catalog.php`                                        | The 所属 list, from `CATALOG_DEPARTMENTS`                   |
 | `resources/js/pages/`                                       | Inertia page components                                    |
 | `.ai/rules/`                                                | Decisions and traps worth knowing before editing           |
 
@@ -56,6 +57,10 @@ row in the `tools` table.
   script in the sandbox.
 - The catalog filters on status, category and 所属; deprecated tools stay for
   reference but are hidden until their status is ticked.
+- **Requests** (`tool_submissions`): registering a tool and changing what it
+  does (URL / script / runtime / inputs) or retiring it go through
+  draft → pending → approved / rejected. Display fields - name, summary,
+  description, icon, tags - are edited in place by the owner without review.
 - **Roles**: `users.role` is `member`, `manager` or `admin`. Set roles from the
   shell: `php artisan carrot:promote <username> --role=manager --department=開発`,
   `--role=admin`, `--revoke`. The seeder creates `manager` / `admin` (password

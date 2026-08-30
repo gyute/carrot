@@ -1,26 +1,213 @@
-import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, ArrowUpRight } from 'lucide-react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { ArrowLeft, ArrowUpRight, Ban, Pencil, Save } from 'lucide-react';
+import { useState } from 'react';
 import EmbedFrame from '@/components/embed-frame';
+import InputError from '@/components/input-error';
 import StatusPill from '@/components/status-pill';
 import ToolIcon from '@/components/tool-icon';
 import ToolsNav from '@/components/tools-nav';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { formatDateTime } from '@/lib/format';
-import { KIND_LABELS, STATUS_STYLES, toolAccent } from '@/lib/tool-presets';
-import { index } from '@/routes/tools';
-import type { ToolDetail } from '@/types/tools';
+import {
+    KIND_LABELS,
+    STATUS_STYLES,
+    SUBMISSION_STATUS_STYLES,
+    toolAccent,
+} from '@/lib/tool-presets';
+import { cn } from '@/lib/utils';
+import { deprecate, index, update } from '@/routes/tools';
+import { create as createChange } from '@/routes/tools/change';
+import { show as showSubmission } from '@/routes/tools/submissions';
+import type { FormLimits, SubmissionSummary, ToolDetail } from '@/types/tools';
 
 type Props = {
     tool: ToolDetail;
+    openChange: SubmissionSummary | null;
+    limits: FormLimits;
+    can: {
+        updateMetadata: boolean;
+        submitChange: boolean;
+    };
 };
 
-/**
- * A tool's own page. A link tool is opened from here; an embed tool is framed
- * here, so an external page never gets a screen of its own.
- */
-export default function ToolShow({ tool }: Props) {
+function MetadataForm({
+    tool,
+    limits,
+    onDone,
+}: {
+    tool: ToolDetail;
+    limits: FormLimits;
+    onDone: () => void;
+}) {
+    const form = useForm({
+        name: tool.name,
+        summary: tool.summary,
+        description: tool.description ?? '',
+        icon: tool.icon,
+        accent: tool.accent,
+        department: tool.department ?? '',
+        categories: tool.categories,
+    });
+    const { data, setData, errors, processing } = form;
+
+    return (
+        <form
+            onSubmit={(event) => {
+                event.preventDefault();
+                form.patch(update(tool.ulid).url, { onSuccess: onDone });
+            }}
+            className="mt-4 grid gap-4 rounded-xl border border-sky-200 bg-sky-50/40 p-5"
+        >
+            <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-1.5">
+                    <Label htmlFor="name">ツール名</Label>
+                    <Input
+                        id="name"
+                        value={data.name}
+                        maxLength={60}
+                        onChange={(e) => setData('name', e.target.value)}
+                        className="bg-white"
+                    />
+                    <InputError message={errors.name} />
+                </div>
+                <div className="grid gap-1.5">
+                    <Label htmlFor="summary">概要</Label>
+                    <Input
+                        id="summary"
+                        value={data.summary}
+                        maxLength={120}
+                        onChange={(e) => setData('summary', e.target.value)}
+                        className="bg-white"
+                    />
+                    <InputError message={errors.summary} />
+                </div>
+            </div>
+            <div className="grid gap-1.5">
+                <Label htmlFor="description">説明</Label>
+                <textarea
+                    id="description"
+                    rows={4}
+                    value={data.description}
+                    onChange={(e) => setData('description', e.target.value)}
+                    className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-xs"
+                />
+                <InputError message={errors.description} />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-1.5">
+                    <Label>アイコン</Label>
+                    <div className="flex flex-wrap gap-1.5">
+                        {limits.icons.map((name) => (
+                            <button
+                                key={name}
+                                type="button"
+                                title={name}
+                                aria-pressed={data.icon === name}
+                                onClick={() => setData('icon', name)}
+                                className={cn(
+                                    'flex size-9 items-center justify-center rounded-lg border bg-white transition',
+                                    data.icon === name
+                                        ? 'border-sky-500 text-sky-700'
+                                        : 'border-slate-200 text-slate-500',
+                                )}
+                            >
+                                <ToolIcon name={name} className="size-4" />
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                <div className="grid gap-1.5">
+                    <Label>カラー</Label>
+                    <div className="flex flex-wrap gap-1.5">
+                        {limits.accents.map((name) => (
+                            <button
+                                key={name}
+                                type="button"
+                                title={name}
+                                aria-pressed={data.accent === name}
+                                onClick={() => setData('accent', name)}
+                                className={cn(
+                                    `size-9 rounded-lg bg-linear-to-br ${toolAccent(name)} ring-offset-2`,
+                                    data.accent === name &&
+                                        'ring-2 ring-sky-500',
+                                )}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-1.5">
+                    <Label htmlFor="department">所属</Label>
+                    <select
+                        id="department"
+                        value={data.department}
+                        onChange={(e) => setData('department', e.target.value)}
+                        className="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm shadow-xs"
+                    >
+                        <option value="">未設定</option>
+                        {limits.departments.map((department) => (
+                            <option key={department} value={department}>
+                                {department}
+                            </option>
+                        ))}
+                    </select>
+                    <InputError message={errors.department} />
+                </div>
+                <div className="grid gap-1.5">
+                    <Label htmlFor="categories">カテゴリ（カンマ区切り）</Label>
+                    <Input
+                        id="categories"
+                        defaultValue={data.categories.join(', ')}
+                        onBlur={(e) =>
+                            setData(
+                                'categories',
+                                e.target.value
+                                    .split(/[,、]/)
+                                    .map((v) => v.trim())
+                                    .filter(Boolean)
+                                    .slice(0, 5),
+                            )
+                        }
+                        className="bg-white"
+                    />
+                    <InputError message={errors.categories} />
+                </div>
+            </div>
+            <div className="flex justify-end gap-2">
+                <Button type="button" variant="ghost" onClick={onDone}>
+                    キャンセル
+                </Button>
+                <Button
+                    type="submit"
+                    disabled={processing}
+                    className="bg-sky-700 text-white hover:bg-sky-800"
+                >
+                    <Save className="size-4" />
+                    保存
+                </Button>
+            </div>
+        </form>
+    );
+}
+
+export default function ToolShow({ tool, openChange, limits, can }: Props) {
+    const [editing, setEditing] = useState(false);
     const isDeprecated = tool.status === 'deprecated';
     const opensElsewhere = tool.kind === 'link' && tool.href;
+
+    const requestDeprecation = () => {
+        const note = window.prompt(
+            '非推奨化を申請します。理由があれば入力してください。',
+            '',
+        );
+
+        if (note !== null) {
+            router.post(deprecate(tool.ulid).url, { note });
+        }
+    };
 
     return (
         <>
@@ -55,6 +242,11 @@ export default function ToolShow({ tool }: Props) {
                         <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
                             {KIND_LABELS[tool.kind]}
                         </span>
+                        {tool.pendingChange && (
+                            <span className="rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
+                                変更申請中
+                            </span>
+                        )}
                     </div>
                     <p className="mt-1 text-sm text-slate-600">
                         {tool.summary}
@@ -64,6 +256,18 @@ export default function ToolShow({ tool }: Props) {
                             バージョン{' '}
                             <span className="font-mono font-medium text-slate-700">
                                 {tool.version ? `v${tool.version}` : '—'}
+                            </span>
+                        </div>
+                        <div>
+                            申請{' '}
+                            <span className="font-medium text-slate-700">
+                                {tool.requester ?? '—'}
+                            </span>
+                        </div>
+                        <div>
+                            承認{' '}
+                            <span className="font-medium text-slate-700">
+                                {tool.approver ?? '—'}
                             </span>
                         </div>
                         <div>
@@ -79,17 +283,28 @@ export default function ToolShow({ tool }: Props) {
                     </dl>
                 </div>
 
-                {opensElsewhere && !isDeprecated && (
-                    <Button
-                        asChild
-                        className="bg-sky-700 text-white hover:bg-sky-800"
-                    >
-                        <Link href={tool.href as string}>
-                            開く
-                            <ArrowUpRight className="size-4" />
-                        </Link>
-                    </Button>
-                )}
+                <div className="flex flex-wrap items-center gap-2">
+                    {opensElsewhere && !isDeprecated && (
+                        <Button
+                            asChild
+                            className="bg-sky-700 text-white hover:bg-sky-800"
+                        >
+                            <Link href={tool.href as string}>
+                                開く
+                                <ArrowUpRight className="size-4" />
+                            </Link>
+                        </Button>
+                    )}
+                    {can.updateMetadata && !editing && (
+                        <Button
+                            variant="outline"
+                            onClick={() => setEditing(true)}
+                        >
+                            <Pencil className="size-4" />
+                            表示内容を編集
+                        </Button>
+                    )}
+                </div>
             </div>
 
             {isDeprecated && (
@@ -97,6 +312,14 @@ export default function ToolShow({ tool }: Props) {
                     このツールは {formatDateTime(tool.deprecatedAt)}{' '}
                     に非推奨になりました。新しい利用は推奨されません。
                 </div>
+            )}
+
+            {editing && (
+                <MetadataForm
+                    tool={tool}
+                    limits={limits}
+                    onDone={() => setEditing(false)}
+                />
             )}
 
             {tool.description && (
@@ -132,6 +355,55 @@ export default function ToolShow({ tool }: Props) {
                         </p>
                     )}
                 </div>
+            )}
+
+            {can.submitChange && (
+                <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <h2 className="text-sm font-bold text-slate-700">管理</h2>
+
+                    {openChange && (
+                        <p className="mt-2 text-sm text-slate-600">
+                            あなたの
+                            <Link
+                                href={showSubmission(openChange.ulid)}
+                                className="mx-1 font-medium text-sky-700 hover:underline"
+                            >
+                                {openChange.actionLabel}申請
+                            </Link>
+                            が
+                            <StatusPill
+                                value={openChange.status}
+                                label={openChange.statusLabel}
+                                styles={SUBMISSION_STATUS_STYLES}
+                                className="mx-1"
+                            />
+                            です。
+                        </p>
+                    )}
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                        {can.submitChange && !openChange && (
+                            <>
+                                <Button asChild variant="outline" size="sm">
+                                    <Link href={createChange(tool.ulid)}>
+                                        <Pencil className="size-4" />
+                                        動作の変更を申請
+                                    </Link>
+                                </Button>
+                                {!isDeprecated && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={requestDeprecation}
+                                    >
+                                        <Ban className="size-4" />
+                                        非推奨化を申請
+                                    </Button>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </section>
             )}
         </>
     );

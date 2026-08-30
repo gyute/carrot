@@ -1,8 +1,9 @@
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutGrid } from 'lucide-react';
+import { FilePen, LayoutGrid } from 'lucide-react';
 import type { ComponentType, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { index as tools } from '@/routes/tools';
+import { index as submissions } from '@/routes/tools/submissions';
 
 type Tab = {
     label: string;
@@ -24,6 +25,7 @@ export default function ToolsNav({ actions }: { actions?: ReactNode }) {
 
     const tabs: Tab[] = [
         { label: 'ツール一覧', href: tools().url, icon: LayoutGrid },
+        { label: '申請', href: submissions().url, icon: FilePen },
     ];
 
     const activeHref =

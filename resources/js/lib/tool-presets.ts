@@ -46,7 +46,7 @@ export function toolAccent(name: string): string {
     return TOOL_ACCENTS[name] ?? TOOL_ACCENTS.slate;
 }
 
-export type ToolStatus = 'running' | 'deprecated';
+export type ToolStatus = 'running' | 'pending' | 'deprecated';
 
 export type ToolKind = 'link' | 'embed' | 'script';
 
@@ -59,5 +59,22 @@ export const KIND_LABELS: Record<ToolKind, string> = {
 /** Status pill styling. Values are shown in English, as stored. */
 export const STATUS_STYLES: Record<ToolStatus, string> = {
     running: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+    pending: 'bg-amber-50 text-amber-700 ring-amber-200',
     deprecated: 'bg-slate-100 text-slate-500 ring-slate-200',
+};
+
+export type SubmissionStatus =
+    'draft' | 'pending' | 'approved' | 'rejected' | 'withdrawn';
+
+export const SUBMISSION_STATUS_STYLES: Record<SubmissionStatus, string> = {
+    draft: 'bg-slate-100 text-slate-600 ring-slate-200',
+    pending: 'bg-amber-50 text-amber-700 ring-amber-200',
+    approved: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+    rejected: 'bg-rose-50 text-rose-700 ring-rose-200',
+    withdrawn: 'bg-slate-100 text-slate-500 ring-slate-200',
+};
+
+export const NETWORK_LABELS: Record<'none' | 'internet', string> = {
+    none: 'なし（完全遮断）',
+    internet: 'インターネットあり',
 };
