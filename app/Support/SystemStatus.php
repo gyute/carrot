@@ -43,6 +43,7 @@ class SystemStatus
     {
         return [
             'features' => $this->features(),
+            'mirror' => $this->mirror(),
             'queues' => $this->queues(),
             'failedJobs' => $this->failedJobs(),
             'sandbox' => $this->sandbox(),
@@ -64,6 +65,32 @@ class SystemStatus
         return [
             'submissions' => Features::submissionMode(),
             'requests' => Features::requests(),
+        ];
+    }
+
+    /**
+     * Whether the catalog is being mirrored to a repository, and whether the
+     * token can actually reach it. The reachability check is a round trip to
+     * GitHub, so it is held for a minute rather than made on every load of
+     * this screen.
+     *
+     * @return array{enabled: bool, repository: string|null, branch: string|null, ok: bool, message: string|null}
+     */
+    private function mirror(): array
+    {
+        if (! Github\GitHub::enabled()) {
+            return ['enabled' => false, 'repository' => null, 'branch' => null, 'ok' => false, 'message' => null];
+        }
+
+        /** @var array{ok: bool, message: string|null} $check */
+        $check = Cache::remember('github:check', 60, fn (): array => app(Github\GitHub::class)->check());
+
+        return [
+            'enabled' => true,
+            'repository' => (string) config('github.repository'),
+            'branch' => (string) config('github.branch'),
+            'ok' => $check['ok'],
+            'message' => $check['message'],
         ];
     }
 

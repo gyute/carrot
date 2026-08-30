@@ -37,7 +37,13 @@ class RetireUser
         DB::transaction(function () use ($user, $successor): void {
             // A tool nobody owns can only be touched by an administrator, so
             // every departure would otherwise leave one more behind.
-            Tool::query()->where('owner_id', $user->id)->update(['owner_id' => $successor?->id]);
+            //
+            // Saved one at a time on purpose: a query-builder update writes
+            // the rows without raising a model event, and the mirror listens
+            // for those. A departure moves a handful of tools at most.
+            Tool::query()->where('owner_id', $user->id)->each(
+                fn (Tool $tool) => $tool->forceFill(['owner_id' => $successor?->id])->save()
+            );
 
             $this->forget($user);
 

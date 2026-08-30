@@ -23,6 +23,14 @@ type Queue = {
 };
 
 type Status = {
+    features: { submissions: string; requests: boolean };
+    mirror: {
+        enabled: boolean;
+        repository: string | null;
+        branch: string | null;
+        ok: boolean;
+        message: string | null;
+    };
     queues: Queue[];
     failedJobs: {
         count: number;
@@ -172,6 +180,49 @@ export default function SystemIndex({ status }: { status: Status }) {
                     ok={status.failedJobs.count === 0}
                     label={`失敗ジョブ ${status.failedJobs.count}`}
                 />
+                {status.mirror.enabled && (
+                    <Light
+                        ok={status.mirror.ok}
+                        label={`ミラー: ${status.mirror.repository}`}
+                    />
+                )}
+            </div>
+
+            {/* What this deployment runs, so a missing menu entry is not a mystery. */}
+            <div className="mt-4 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
+                <dl className="flex flex-wrap gap-x-8 gap-y-1 text-xs text-slate-500">
+                    <div>
+                        ツール登録{' '}
+                        <span className="font-medium text-slate-700">
+                            {
+                                {
+                                    all: '全員',
+                                    admin: '開発チームのみ',
+                                    none: '停止',
+                                }[status.features.submissions]
+                            }
+                        </span>
+                    </div>
+                    <div>
+                        依頼{' '}
+                        <span className="font-medium text-slate-700">
+                            {status.features.requests ? '受付中' : '停止'}
+                        </span>
+                    </div>
+                    <div>
+                        リポジトリへのミラー{' '}
+                        <span className="font-medium text-slate-700">
+                            {status.mirror.enabled
+                                ? `${status.mirror.repository} (${status.mirror.branch})`
+                                : '停止'}
+                        </span>
+                    </div>
+                </dl>
+                {status.mirror.message && (
+                    <p className="mt-2 text-xs text-rose-700">
+                        {status.mirror.message}
+                    </p>
+                )}
             </div>
 
             <div className="mt-6 grid gap-6 lg:grid-cols-2">

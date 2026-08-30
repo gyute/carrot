@@ -1,0 +1,186 @@
+<?php
+
+use App\Actions\Users\RetireUser;
+use App\Jobs\MirrorToolToRepo;
+use App\Models\Tool;
+use App\Models\User;
+use App\Support\Github\GitHub;
+use App\Support\Github\ToolDocument;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Http;
+
+/**
+ * Turns the mirror on for a test and answers the Git Data API with the shapes
+ * the client reads, so the assertions are about what we send.
+ */
+function mirrorOn(string $newTree = 'tree-new'): void
+{
+    config([
+        'github.repository' => 'acme/carrot-tools',
+        'github.token' => 'ghp_test',
+        'github.branch' => 'main',
+        'github.path' => 'tools',
+    ]);
+
+    Http::fake([
+        '*/git/ref/heads/main' => Http::response(['object' => ['sha' => 'head-sha']]),
+        '*/git/commits/head-sha' => Http::response(['tree' => ['sha' => 'tree-base']]),
+        '*/git/blobs' => Http::response(['sha' => 'blob-sha']),
+        '*/git/trees' => Http::response(['sha' => $newTree]),
+        '*/git/commits' => Http::response(['sha' => 'commit-sha']),
+        '*/git/refs/heads/main' => Http::response(['object' => ['sha' => 'commit-sha']]),
+    ]);
+}
+
+test('the mirror is off until a repository and a token are both set', function () {
+    Bus::fake();
+
+    Tool::factory()->create();
+
+    Bus::assertNothingDispatched();
+
+    config(['github.repository' => 'acme/carrot-tools', 'github.token' => null]);
+    Tool::factory()->create();
+
+    Bus::assertNothingDispatched();
+});
+
+test('every way a tool changes reaches the mirror', function () {
+    $saved = Tool::factory()->create();
+    $deleted = Tool::factory()->create();
+    $restored = Tool::factory()->create();
+    $purged = Tool::factory()->create();
+    $restored->delete();
+
+    Bus::fake();
+    config(['github.repository' => 'acme/carrot-tools', 'github.token' => 'ghp_test']);
+
+    $saved->forceFill(['summary' => '変えました'])->save();
+    $deleted->delete();
+    $restored->restore();
+    $purged->forceDelete();
+
+    foreach ([$saved, $deleted, $restored, $purged] as $tool) {
+        Bus::assertDispatched(
+            MirrorToolToRepo::class,
+            fn (MirrorToolToRepo $job): bool => $job->ulid === $tool->ulid,
+        );
+    }
+});
+
+test('handing a departing owner\'s tools on reaches the mirror too', function () {
+    $leaver = User::factory()->create(['department' => '営業']);
+    $successor = User::factory()->manager('営業')->create();
+    $tool = Tool::factory()->create(['owner_id' => $leaver->id]);
+
+    Bus::fake();
+    config(['github.repository' => 'acme/carrot-tools', 'github.token' => 'ghp_test']);
+
+    app(RetireUser::class)->handle($leaver, $successor);
+
+    // A query-builder update would have written the row without an event.
+    Bus::assertDispatched(
+        MirrorToolToRepo::class,
+        fn (MirrorToolToRepo $job): bool => $job->ulid === $tool->ulid,
+    );
+});
+
+test('a change lands as one commit carrying ULIDs, never names or a department', function () {
+    $owner = User::factory()->create(['name' => '森', 'department' => '経理']);
+    $tool = Tool::factory()->create([
+        'slug' => 'tax',
+        'owner_id' => $owner->id,
+        'requested_by' => $owner->id,
+        'department' => '経理',
+        'source' => "<?php\necho 'hi';\n",
+        'config' => ['runtime' => 'php', 'timeout_sec' => 10, 'memory_mb' => 64],
+    ]);
+
+    // Only from here on, so the fixtures above are not counted: the test
+    // queue runs jobs inline, so creating the tool would mirror it already.
+    mirrorOn();
+
+    (new MirrorToolToRepo($tool->ulid, $tool->slug))->handle(app(GitHub::class));
+
+    $blobs = collect(Http::recorded())
+        ->filter(fn (array $pair): bool => str_contains($pair[0]->url(), '/git/blobs'))
+        ->map(fn (array $pair): string => base64_decode($pair[0]->data()['content']));
+
+    expect($blobs)->toHaveCount(2);
+
+    $written = $blobs->implode("\n");
+
+    expect($written)->toContain($owner->ulid)
+        ->not->toContain('森')
+        ->not->toContain('経理');
+
+    // One round trip each: read the ref, read its commit, a blob per file,
+    // build the tree, write the commit, move the branch.
+    Http::assertSentCount(7);
+    Http::assertSent(fn ($request) => str_contains($request->url(), '/git/commits')
+        && $request->method() === 'POST'
+        && str_contains($request->data()['message'], 'Publish tax')
+        && str_contains($request->data()['message'], "Requested-by: {$owner->ulid}"));
+});
+
+test('nothing is committed when the repository already matches', function () {
+    $tool = Tool::factory()->create();
+
+    // The tree the API builds comes back identical to the one we started from.
+    mirrorOn(newTree: 'tree-base');
+
+    (new MirrorToolToRepo($tool->ulid, $tool->slug))->handle(app(GitHub::class));
+
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), '/git/refs/heads/'));
+});
+
+test('a purged tool takes its directory with it', function () {
+    mirrorOn();
+
+    (new MirrorToolToRepo('01gone', 'retired-tool'))->handle(app(GitHub::class));
+
+    Http::assertSent(function ($request) {
+        if (! str_contains($request->url(), '/git/trees')) {
+            return false;
+        }
+
+        $entry = $request->data()['tree'][0];
+
+        return $entry['path'] === 'tools/retired-tool'
+            && $entry['type'] === 'tree'
+            && $entry['sha'] === null;
+    });
+});
+
+test('the document reads the tool as it is now, not as it was saved', function () {
+    config(['github.path' => 'tools']);
+
+    $tool = Tool::factory()->create(['slug' => 'shell-one', 'config' => ['runtime' => 'shell'], 'source' => "echo hi\n"]);
+
+    expect(array_keys((new ToolDocument($tool))->files()))
+        ->toBe(['tools/shell-one/tool.json', 'tools/shell-one/source.sh']);
+});
+
+test('the system screen says whether the mirror is on and reachable', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->get(route('admin.system.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('status.mirror.enabled', false)
+            ->where('status.features.requests', true));
+
+    config(['github.repository' => 'acme/carrot-tools', 'github.token' => 'ghp_test']);
+    cache()->forget('github:check');
+
+    // A public repository would publish the organisation's internal tooling.
+    Http::fake(['*/repos/acme/carrot-tools' => Http::response(['private' => false, 'permissions' => ['push' => true]])]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.system.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('status.mirror.enabled', true)
+            ->where('status.mirror.ok', false)
+            ->where('status.mirror.repository', 'acme/carrot-tools'));
+});
