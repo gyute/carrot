@@ -161,6 +161,12 @@ screens simply poll.
 
 ## Checks
 
+`tests/Feature/ScenarioTest.php` walks the whole platform from an empty
+database - one member registers a link, an embed and a script tool, their
+manager endorses, an admin publishes, the catalog fills up and the script
+runs - so what a seeded demo used to ship is covered as a flow instead. Every
+URL in it is a documentation domain or a portal path.
+
 ```bash
 composer test        # Pint, PHPStan, Pest
 npm run types:check  # tsc
