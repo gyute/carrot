@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\ToolRequest;
 use App\Models\ToolSubmission;
+use App\Support\Features;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -64,9 +66,20 @@ class HandleInertiaRequests extends Middleware
                     ])
                     ->all(),
             ],
+            // Which halves of the tool module this deployment runs, so the
+            // menu never offers a screen that answers 404.
+            'features' => [
+                'submissions' => Features::submissions(),
+                'maySubmit' => Features::maySubmit($user),
+                'requests' => Features::requests(),
+            ],
             // Reviewers see what awaits them on the approvals tab.
-            'pendingApprovals' => fn (): int => $user?->isReviewer()
+            'pendingApprovals' => fn (): int => Features::submissions() && $user?->isReviewer()
                 ? ToolSubmission::query()->awaitingReviewBy($user)->count()
+                : 0,
+            // The development team sees what has not been triaged yet.
+            'openRequests' => fn (): int => Features::requests() && $user?->isAdmin()
+                ? ToolRequest::query()->awaitingTriage()->count()
                 : 0,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

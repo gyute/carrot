@@ -11,6 +11,7 @@ use App\Http\Requests\Tools\ToolMetadataRequest;
 use App\Models\Tool;
 use App\Models\ToolSubmission;
 use App\Models\User;
+use App\Support\Features;
 use App\Support\Presenters\SubmissionPresenter;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
@@ -73,12 +74,16 @@ class ToolController extends Controller
             ->latest('reviewed_at')
             ->get();
 
-        $openChange = $tool->submissions()
-            ->with(['user', 'reviewer', 'endorser'])
-            ->where('user_id', $request->user()->id)
-            ->whereIn('status', SubmissionStatus::open())
-            ->latest()
-            ->first();
+        // Without the submission screens there is nowhere for this link to
+        // go, so the page must not offer one.
+        $openChange = Features::submissions()
+            ? $tool->submissions()
+                ->with(['user', 'reviewer', 'endorser'])
+                ->where('user_id', $request->user()->id)
+                ->whereIn('status', SubmissionStatus::open())
+                ->latest()
+                ->first()
+            : null;
 
         return Inertia::render('tools/show', [
             'tool' => [

@@ -8,6 +8,7 @@ use App\Events\ToolSubmissionSubmitted;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tools\ToolSubmissionRequest;
 use App\Models\Tool;
+use App\Models\ToolRequest;
 use App\Models\ToolSubmission;
 use App\Support\Presenters\SubmissionPresenter;
 use Illuminate\Http\RedirectResponse;
@@ -48,13 +49,21 @@ class SubmissionController extends Controller
     {
         if ($tool !== null) {
             Gate::authorize('submitChange', $tool);
+        } else {
+            Gate::authorize('create', ToolSubmission::class);
         }
+
+        $answers = $this->answers($request);
 
         return Inertia::render('tools/submissions/form', [
             'submission' => null,
             'tool' => $tool === null ? null : $this->presenter->toolSummary($tool),
             'initial' => $tool === null ? null : $this->presenter->payloadFromTool($tool),
             'limits' => $this->presenter->limits(),
+            'answers' => $answers === null ? null : [
+                'ulid' => $answers->ulid,
+                'title' => $answers->title,
+            ],
         ]);
     }
 
@@ -65,11 +74,14 @@ class SubmissionController extends Controller
     {
         if ($tool !== null) {
             Gate::authorize('submitChange', $tool);
+        } else {
+            Gate::authorize('create', ToolSubmission::class);
         }
 
         $submission = ToolSubmission::query()->create([
             'user_id' => $request->user()->id,
             'tool_id' => $tool?->id,
+            'tool_request_id' => $this->answers($request)?->id,
             'action' => $tool === null ? SubmissionAction::Create : SubmissionAction::Update,
             'status' => SubmissionStatus::Draft,
             'payload' => $tool === null ? $request->payload() : $request->behaviourPayload(),
@@ -81,6 +93,18 @@ class SubmissionController extends Controller
         }
 
         return to_route('tools.submissions.show', $submission)->with('status', '下書きを保存しました。');
+    }
+
+    /**
+     * The request this submission was opened from, if any.
+     */
+    private function answers(Request $request): ?ToolRequest
+    {
+        $ulid = $request->input('tool_request', $request->query('request'));
+
+        return is_string($ulid) && $ulid !== ''
+            ? ToolRequest::query()->where('ulid', $ulid)->first()
+            : null;
     }
 
     /**

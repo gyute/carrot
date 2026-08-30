@@ -5,9 +5,19 @@ namespace App\Policies;
 use App\Enums\SubmissionStatus;
 use App\Models\ToolSubmission;
 use App\Models\User;
+use App\Support\Features;
 
 class ToolSubmissionPolicy
 {
+    /**
+     * Whether this deployment lets this person register a tool at all. In
+     * `admin` submission mode only the development team may.
+     */
+    public function create(User $user): bool
+    {
+        return Features::maySubmit($user);
+    }
+
     public function view(User $user, ToolSubmission $submission): bool
     {
         return $user->isAdmin()

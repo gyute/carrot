@@ -108,4 +108,16 @@ class User extends Authenticatable implements PasskeyUser
     {
         $query->where('role', UserRole::Admin);
     }
+
+    /**
+     * Who triages tool requests and may be assigned one. Today that is the
+     * administrators; when a `developer` role arrives this scope and
+     * ToolRequestPolicy::triage() are the pair that changes.
+     *
+     * @param  Builder<User>  $query
+     */
+    public function scopeDevelopmentTeam(Builder $query): void
+    {
+        $query->admins();
+    }
 }

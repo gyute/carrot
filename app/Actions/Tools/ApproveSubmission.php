@@ -19,7 +19,7 @@ use Illuminate\Support\Str;
  */
 class ApproveSubmission
 {
-    public function __construct(private SyncToolTags $syncTags) {}
+    public function __construct(private SyncToolTags $syncTags, private DeliverToolRequest $deliver) {}
 
     public function handle(ToolSubmission $submission, User $reviewer, ?string $comment = null): Tool
     {
@@ -54,6 +54,14 @@ class ApproveSubmission
 
             return $tool;
         });
+
+        // Publishing the tool is what answers the ask, so the request
+        // closes itself rather than waiting for someone to remember.
+        $toolRequest = $submission->toolRequest;
+
+        if ($toolRequest !== null && $submission->action !== SubmissionAction::Deprecate) {
+            $this->deliver->handle($toolRequest, $tool, $reviewer);
+        }
 
         ToolSubmissionReviewed::dispatch($submission);
 

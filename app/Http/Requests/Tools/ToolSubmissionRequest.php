@@ -4,6 +4,7 @@ namespace App\Http\Requests\Tools;
 
 use App\Enums\ToolKind;
 use App\Models\Tool;
+use App\Models\ToolRequest;
 use App\Support\Departments;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
@@ -42,6 +43,9 @@ class ToolSubmissionRequest extends FormRequest
             'categories' => ['array', 'max:5'],
             'categories.*' => ['string', 'max:30', 'distinct'],
             'note' => ['nullable', 'string', 'max:2000'],
+            // Set when the form was opened from a request, so approving
+            // this submission closes that ask.
+            'tool_request' => ['nullable', 'string', Rule::exists(ToolRequest::class, 'ulid')],
 
             'config' => ['required', 'array'],
             'config.url' => [
@@ -194,6 +198,7 @@ class ToolSubmissionRequest extends FormRequest
             'categories' => 'カテゴリ',
             'categories.*' => 'カテゴリ',
             'note' => '申請メモ',
+            'tool_request' => 'リクエスト',
             'config.url' => 'URL',
             'config.runtime' => 'ランタイム',
             'config.timeout_sec' => 'タイムアウト',

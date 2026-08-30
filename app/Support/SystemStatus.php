@@ -42,6 +42,7 @@ class SystemStatus
     public function snapshot(): array
     {
         return [
+            'features' => $this->features(),
             'queues' => $this->queues(),
             'failedJobs' => $this->failedJobs(),
             'sandbox' => $this->sandbox(),
@@ -49,6 +50,20 @@ class SystemStatus
             'runs' => $this->runs(),
             'log' => $this->logTail(),
             'checkedAt' => now()->toIso8601String(),
+        ];
+    }
+
+    /**
+     * Which halves of the tool module this deployment runs. Reading it here
+     * saves an operator from guessing why a menu entry is missing.
+     *
+     * @return array{submissions: string, requests: bool}
+     */
+    private function features(): array
+    {
+        return [
+            'submissions' => Features::submissionMode(),
+            'requests' => Features::requests(),
         ];
     }
 

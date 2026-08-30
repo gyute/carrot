@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property string $ulid
  * @property int $user_id
  * @property int|null $tool_id
+ * @property int|null $tool_request_id
  * @property SubmissionAction $action
  * @property SubmissionStatus $status
  * @property array<string, mixed> $payload
@@ -36,10 +37,11 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read User $user
  * @property-read Tool|null $tool
+ * @property-read ToolRequest|null $toolRequest
  * @property-read User|null $reviewer
  * @property-read User|null $endorser
  */
-#[Fillable(['user_id', 'tool_id', 'action', 'status', 'payload', 'note', 'endorsed_by', 'endorse_comment', 'endorsed_at', 'reviewer_id', 'review_comment', 'submitted_at', 'reviewed_at'])]
+#[Fillable(['user_id', 'tool_id', 'tool_request_id', 'action', 'status', 'payload', 'note', 'endorsed_by', 'endorse_comment', 'endorsed_at', 'reviewer_id', 'review_comment', 'submitted_at', 'reviewed_at'])]
 class ToolSubmission extends Model
 {
     /** @use HasFactory<ToolSubmissionFactory> */
@@ -87,6 +89,17 @@ class ToolSubmission extends Model
     public function tool(): BelongsTo
     {
         return $this->belongsTo(Tool::class);
+    }
+
+    /**
+     * The ask this submission answers, when it was filed from one. Approving
+     * such a submission delivers the request.
+     *
+     * @return BelongsTo<ToolRequest, $this>
+     */
+    public function toolRequest(): BelongsTo
+    {
+        return $this->belongsTo(ToolRequest::class);
     }
 
     /**

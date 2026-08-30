@@ -5,11 +5,12 @@ use App\Http\Controllers\Admin\RunController;
 use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\ToolController;
+use App\Http\Controllers\Admin\ToolRequestController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 // Approvals: department managers (first stage) and admins (second stage).
-Route::middleware(['auth', 'can:reviewer'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'can:reviewer', 'feature:submissions'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('approvals', [ApprovalController::class, 'index'])->name('approvals.index');
     Route::get('approvals/{submission}', [ApprovalController::class, 'show'])->name('approvals.show');
     Route::post('approvals/{submission}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
@@ -42,4 +43,15 @@ Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group
     Route::patch('users/{user}', [UserController::class, 'update'])->name('users.update');
 
     Route::get('system', [SystemController::class, 'index'])->name('system.index');
+});
+
+// The development team's request queue: one stage, admins only.
+Route::middleware(['auth', 'can:admin', 'feature:requests'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('requests', [ToolRequestController::class, 'index'])->name('requests.index');
+    Route::get('requests/{toolRequest}', [ToolRequestController::class, 'show'])->name('requests.show');
+    Route::post('requests/{toolRequest}/accept', [ToolRequestController::class, 'accept'])->name('requests.accept');
+    Route::post('requests/{toolRequest}/start', [ToolRequestController::class, 'start'])->name('requests.start');
+    Route::post('requests/{toolRequest}/decline', [ToolRequestController::class, 'decline'])->name('requests.decline');
+    Route::post('requests/{toolRequest}/duplicate', [ToolRequestController::class, 'duplicate'])->name('requests.duplicate');
+    Route::post('requests/{toolRequest}/deliver', [ToolRequestController::class, 'deliver'])->name('requests.deliver');
 });

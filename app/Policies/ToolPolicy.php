@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Enums\ToolKind;
 use App\Models\Tool;
 use App\Models\User;
+use App\Support\Features;
 
 class ToolPolicy
 {
@@ -36,7 +37,7 @@ class ToolPolicy
      */
     public function submitChange(User $user, Tool $tool): bool
     {
-        return $this->owns($user, $tool);
+        return Features::maySubmit($user) && $this->owns($user, $tool);
     }
 
     /**
