@@ -193,9 +193,9 @@ class SystemStatus
      */
     private function logTail(int $lines = 80): array
     {
-        $path = storage_path('logs/laravel.log');
+        $path = $this->logPath();
 
-        if (! File::exists($path)) {
+        if ($path === null || ! File::exists($path)) {
             return ['path' => null, 'lines' => []];
         }
 
@@ -219,5 +219,38 @@ class SystemStatus
         }
 
         return ['path' => $path, 'lines' => array_slice($all, -$lines)];
+    }
+
+    /**
+     * Where the configured log channel writes. Follows LOG_CHANNEL rather
+     * than assuming storage/logs/laravel.log, and looks inside a `stack` for
+     * the first channel that writes to a file. A daily channel appends the
+     * date to the filename, so the current day's file is the one to read.
+     */
+    private function logPath(): ?string
+    {
+        $channels = (array) config('logging.channels', []);
+        $names = [(string) config('logging.default')];
+
+        if (($channels[$names[0]]['driver'] ?? null) === 'stack') {
+            $names = array_map('strval', (array) ($channels[$names[0]]['channels'] ?? []));
+        }
+
+        foreach ($names as $name) {
+            $channel = $channels[$name] ?? null;
+            $path = is_array($channel) ? ($channel['path'] ?? null) : null;
+
+            if (! is_string($path)) {
+                continue;
+            }
+
+            if (($channel['driver'] ?? null) === 'daily') {
+                $path = preg_replace('/\.log$/', '-'.now()->toDateString().'.log', $path) ?? $path;
+            }
+
+            return $path;
+        }
+
+        return null;
     }
 }

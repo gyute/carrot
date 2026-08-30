@@ -41,6 +41,24 @@ php artisan db:seed --force
 queues, Vite and the log tail. **The worker matters**: script tool runs are
 queued jobs, so without it they stay in `待機中` forever.
 
+## What has to be set in `.env`
+
+`composer setup` copies `.env.example` and the app runs as it is. These are the
+values worth a second look:
+
+| Key                                                   | Why                                                                                                                |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `DB_PORT`                                             | Compose publishes Postgres on it; change it when 5432 is taken                                                     |
+| `SANDBOX_DRIVER`                                      | `none` only queues script runs. `bubblewrap` locally, `docker` on the runner host, or script tools never finish     |
+| `REVERB_APP_ID` / `_KEY` / `_SECRET`, `VITE_REVERB_*` | Live updates. Leave blank and every screen falls back to polling - nothing breaks, it is just slower                |
+| `CATALOG_DEPARTMENTS`                                 | The 所属 allowlist, comma separated. Blank means the field is free text                                            |
+| `PASSKEYS_USER_HANDLE_SECRET`                         | Defaults to `APP_KEY`. Set it to its own fixed value if `APP_KEY` will ever be rotated, or passkeys stop resolving |
+| `LOG_CHANNEL`                                         | The system screen tails whichever channel this names, so a `daily` or custom path is followed, not assumed         |
+
+Nothing else in the app hardcodes a deployment value: the departments, the
+sandbox images and limits, the runtime labels and the log the system screen
+tails all come from configuration.
+
 ## Layout
 
 | Path                                                        | What lives there                                           |
