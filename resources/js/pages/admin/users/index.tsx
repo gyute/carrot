@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { index, update } from '@/routes/admin/users';
 
 type AdminUser = {
-    id: number;
+    ulid: string;
     name: string;
     username: string;
     email: string;
@@ -58,7 +58,7 @@ function RoleRow({
         <form
             onSubmit={(event) => {
                 event.preventDefault();
-                form.patch(update(user.id).url, { onSuccess: onDone });
+                form.patch(update(user.ulid).url, { onSuccess: onDone });
             }}
             className="flex flex-wrap items-start gap-2"
         >
@@ -116,7 +116,7 @@ export default function AdminUsers({
     departments,
 }: Props) {
     const [search, setSearch] = useState(filters.q);
-    const [editing, setEditing] = useState<number | null>(null);
+    const [editing, setEditing] = useState<string | null>(null);
 
     const go = (params: { q?: string; role?: string | null; page?: number }) =>
         router.get(
@@ -202,7 +202,7 @@ export default function AdminUsers({
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {users.data.map((user) => (
-                            <tr key={user.id} className="align-top">
+                            <tr key={user.ulid} className="align-top">
                                 <td className="px-4 py-3">
                                     <span className="font-medium text-slate-800">
                                         {user.name}
@@ -215,7 +215,7 @@ export default function AdminUsers({
                                     </div>
                                 </td>
 
-                                {editing === user.id ? (
+                                {editing === user.ulid ? (
                                     <td className="px-4 py-3" colSpan={4}>
                                         <RoleRow
                                             user={user}
@@ -247,7 +247,7 @@ export default function AdminUsers({
                                                 size="sm"
                                                 variant="outline"
                                                 onClick={() =>
-                                                    setEditing(user.id)
+                                                    setEditing(user.ulid)
                                                 }
                                             >
                                                 <Pencil className="size-4" />

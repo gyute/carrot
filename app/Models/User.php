@@ -42,9 +42,16 @@ class User extends Authenticatable implements PasskeyUser
     use HasFactory, HasUlids, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     /**
-     * The ULID is the handle other rows and forms point at; `id` stays the
-     * primary key, as on every other model here.
-     *
+     * The ULID is the handle other rows, forms and URLs point at; `id` stays
+     * the primary key, as on every other model here. The login ID is not a
+     * handle: an identity provider owns it once SSO is in place.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'ulid';
+    }
+
+    /**
      * @return array<int, string>
      */
     public function uniqueIds(): array

@@ -66,12 +66,12 @@ class UserController extends Controller
     }
 
     /**
-     * @return array{id: int, name: string, username: string, email: string, role: string, roleLabel: string, department: string|null, createdAt: string}
+     * @return array{ulid: string, name: string, username: string, email: string, role: string, roleLabel: string, department: string|null, createdAt: string}
      */
     private function present(User $user): array
     {
         return [
-            'id' => $user->id,
+            'ulid' => $user->ulid,
             'name' => $user->name,
             'username' => $user->username,
             'email' => $user->email,

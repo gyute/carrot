@@ -29,6 +29,21 @@ test('the list searches and filters by role', function () {
         );
 });
 
+test('a user is addressed by ULID, never by the row id', function () {
+    $admin = User::factory()->admin()->create();
+    $user = User::factory()->create();
+
+    expect(route('admin.users.update', $user))->toContain($user->ulid);
+
+    $this->actingAs($admin)
+        ->patch("/admin/users/{$user->id}", ['role' => 'manager', 'department' => '開発'])
+        ->assertNotFound();
+
+    $this->actingAs($admin)
+        ->get(route('admin.users.index'))
+        ->assertInertia(fn ($page) => $page->where('users.data.0.ulid', User::query()->orderBy('username')->first()?->ulid));
+});
+
 test('an admin sets a role and a department in place', function () {
     $admin = User::factory()->admin()->create();
     $user = User::factory()->create();
