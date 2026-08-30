@@ -3,10 +3,12 @@
 use App\Enums\ToolRequestStatus;
 use App\Enums\ToolStatus;
 use App\Enums\UserRole;
+use App\Models\Message;
 use App\Models\Tool;
 use App\Models\ToolRequest;
 use App\Models\ToolSubmission;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 /**
  * A smoke test for `demo:seed`, not a check on the demo's contents: it reads
@@ -126,4 +128,57 @@ test('the demo refuses to seed a production install', function () {
     $this->artisan('demo:seed', ['--force' => true])->assertSuccessful();
 
     expect(Tool::query()->count())->toBeGreaterThan(0);
+});
+
+/**
+ * Every bell row links to the message it was raised for, and that message
+ * links on to a screen. A row whose message is gone is a dead end.
+ */
+function danglingNotifications(): int
+{
+    $live = Message::query()->pluck('ulid')->all();
+
+    return DB::table('notifications')->get()
+        ->filter(function (object $row) use ($live): bool {
+            $ulid = json_decode((string) $row->data, true)['message'] ?? null;
+
+            return $ulid !== null && ! in_array($ulid, $live, true);
+        })
+        ->count();
+}
+
+test('--fresh takes the announcements with it instead of piling them up', function () {
+    $this->artisan('demo:seed')->assertSuccessful();
+
+    $messages = Message::query()->count();
+    $notifications = DB::table('notifications')->count();
+
+    expect($messages)->toBeGreaterThan(0)
+        ->and($notifications)->toBeGreaterThan(0);
+
+    $this->artisan('demo:seed', ['--fresh' => true])->assertSuccessful();
+
+    // A second publish announces the same catalog once more, not twice over.
+    expect(Message::query()->count())->toBe($messages)
+        ->and(DB::table('notifications')->count())->toBe($notifications)
+        ->and(danglingNotifications())->toBe(0);
+});
+
+test('--clear removes the demo and its accounts, and leaves everything else', function () {
+    $this->artisan('demo:seed')->assertSuccessful();
+
+    $mine = Tool::factory()->create(['name' => 'デモではない自前のツール']);
+
+    $this->artisan('demo:seed', ['--clear' => true])->assertSuccessful();
+
+    expect(Tool::withTrashed()->count())->toBe(1)
+        ->and(Tool::query()->sole()->is($mine))->toBeTrue()
+        ->and(ToolRequest::query()->count())->toBe(0)
+        ->and(User::query()->whereIn('username', ['demo', 'demo-manager', 'demo-admin'])->count())->toBe(0)
+        ->and(danglingNotifications())->toBe(0);
+
+    // And it can be published again afterwards.
+    $this->artisan('demo:seed')->assertSuccessful();
+
+    expect(Tool::query()->count())->toBeGreaterThan(1);
 });

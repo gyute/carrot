@@ -6,8 +6,14 @@ catalog so the platform can be shown working.
 
 ```bash
 php artisan demo:seed            # publish what demo/tools.php describes
-php artisan demo:seed --fresh    # delete the demo tools and publish again
+php artisan demo:seed --fresh    # delete the demo data and publish it again
+php artisan demo:seed --clear    # delete the demo data and stop
 ```
+
+`--clear` also removes the three demo accounts, since they carry a documented
+password. Tools nobody seeded are left alone. Both `--fresh` and `--clear`
+take the inbox messages and bell notifications with them - they are what the
+demo raised, and nothing else links them to the rows they announce.
 
 It refuses to run in production without `--force`.
 

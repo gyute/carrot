@@ -11,12 +11,14 @@ use App\Enums\ToolKind;
 use App\Enums\ToolRequestPriority;
 use App\Enums\ToolRequestStatus;
 use App\Enums\UserRole;
+use App\Models\Message;
 use App\Models\Tool;
 use App\Models\ToolRequest;
 use App\Models\ToolSubmission;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use RuntimeException;
 
@@ -35,7 +37,8 @@ use RuntimeException;
 class SeedDemo extends Command
 {
     protected $signature = 'demo:seed
-                            {--fresh : Delete the demo tools and start over}
+                            {--fresh : Delete the demo data and publish it again}
+                            {--clear : Delete the demo data and stop, leaving everything else}
                             {--force : Run even when the app is in production}';
 
     protected $description = 'Publish the demo catalog from demo/tools.php';
@@ -50,10 +53,20 @@ class SeedDemo extends Command
 
         $definition = $this->definition();
         $department = (string) $definition['department'];
+
+        if ($this->option('clear')) {
+            $this->removeExisting($definition['tools'], $definition['requests'] ?? [], '--clear');
+            $this->removeAccounts();
+            $this->newLine();
+            $this->components->info('デモのデータを削除しました。ほかのツールはそのままです。');
+
+            return self::SUCCESS;
+        }
+
         [$requester, $manager, $admin] = $this->accounts($department);
 
         if ($this->option('fresh')) {
-            $this->removeExisting($definition['tools'], $definition['requests'] ?? []);
+            $this->removeExisting($definition['tools'], $definition['requests'] ?? [], '--fresh');
         }
 
         // Requests first: a tool may be filed against one, and approving it
@@ -206,13 +219,25 @@ class SeedDemo extends Command
      * @param  array<int, array<string, mixed>>  $tools
      * @param  array<int, array<string, mixed>>  $requests
      */
-    private function removeExisting(array $tools, array $requests): void
+    private function removeExisting(array $tools, array $requests, string $label): void
     {
         $names = array_map(fn (array $entry): string => (string) $entry['name'], $tools);
+        $titles = array_map(fn (array $entry): string => (string) $entry['title'], $requests);
 
-        ToolRequest::query()
-            ->whereIn('title', array_map(fn (array $entry): string => (string) $entry['title'], $requests))
-            ->delete();
+        // What is about to go, collected before it goes, so the inbox and the
+        // bell can be emptied of the announcements that pointed at it.
+        $toolIds = Tool::withTrashed()->whereIn('name', $names)->pluck('id')->all();
+        $submissions = ToolSubmission::query()
+            ->whereIn('payload->name', $names)
+            ->orWhereIn('tool_id', $toolIds)
+            ->pluck('id')
+            ->all();
+        $requestIds = ToolRequest::query()->whereIn('title', $titles)->pluck('id')->all();
+
+        $announced = $this->removeAnnouncements(ToolSubmission::class, $submissions)
+            + $this->removeAnnouncements(ToolRequest::class, $requestIds);
+
+        ToolRequest::query()->whereIn('id', $requestIds)->delete();
 
         $removed = 0;
 
@@ -226,7 +251,63 @@ class SeedDemo extends Command
             ->whereIn('payload->name', $names)
             ->delete();
 
-        $this->components->twoColumnDetail('--fresh', "<fg=gray>{$removed} 件を削除しました</>");
+        $this->components->twoColumnDetail($label, "<fg=gray>ツール {$removed} 件 / お知らせ {$announced} 件を削除しました</>");
+    }
+
+    /**
+     * Deletes the inbox messages raised about `$ids`, and the bell rows that
+     * link to them. Without this a demo published a few times leaves every
+     * old announcement behind, since nothing else ties them to the rows they
+     * were about.
+     *
+     * @param  class-string  $type
+     * @param  array<int, int>  $ids
+     */
+    private function removeAnnouncements(string $type, array $ids): int
+    {
+        if ($ids === []) {
+            return 0;
+        }
+
+        $messages = Message::query()->where('subject_type', $type)->whereIn('subject_id', $ids);
+        $ulids = $messages->clone()->pluck('ulid')->all();
+        $removed = $messages->delete();
+
+        if ($ulids !== []) {
+            // `notifications.data` is a text column, so match the ULID in the
+            // JSON rather than reaching for a JSON path the driver may not have.
+            DB::table('notifications')
+                ->where(function ($query) use ($ulids): void {
+                    foreach ($ulids as $ulid) {
+                        $query->orWhere('data', 'like', '%"'.$ulid.'"%');
+                    }
+                })
+                ->delete();
+        }
+
+        return $removed;
+    }
+
+    /**
+     * The three demo accounts. Removing them is part of clearing the demo:
+     * they carry a documented password, so they should not outlive the data
+     * they were made for.
+     */
+    private function removeAccounts(): void
+    {
+        $accounts = User::query()->whereIn('username', ['demo', 'demo-manager', 'demo-admin'])->pluck('id');
+
+        // Everything else the accounts touched is reached by a foreign key and
+        // goes with them; the bell is not, so it would keep rows pointing at
+        // messages that no longer exist.
+        DB::table('notifications')
+            ->where('notifiable_type', User::class)
+            ->whereIn('notifiable_id', $accounts)
+            ->delete();
+
+        $removed = User::query()->whereIn('id', $accounts)->delete();
+
+        $this->components->twoColumnDetail('--clear', "<fg=gray>デモ用アカウント {$removed} 件を削除しました</>");
     }
 
     /**
