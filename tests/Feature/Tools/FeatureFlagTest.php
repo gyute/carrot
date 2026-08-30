@@ -58,23 +58,6 @@ test('submissions `admin` leaves the screens up but only the development team fi
             ->where('features.maySubmit', true));
 });
 
-test('the catalog only offers to register a tool when this person may', function () {
-    Tool::factory()->create();
-    config(['catalog.features.submissions' => 'admin']);
-
-    // The button is a link to a screen the policy refuses, so the catalog has
-    // to read the same flag the submission screens do.
-    $this->actingAs(User::factory()->create())
-        ->get(route('tools.index'))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page->where('features.maySubmit', false));
-
-    $this->actingAs(User::factory()->admin()->create())
-        ->get(route('tools.index'))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page->where('features.maySubmit', true));
-});
-
 test('requests off takes the request screens away', function () {
     $toolRequest = ToolRequest::factory()->create();
     config(['catalog.features.requests' => false]);

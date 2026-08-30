@@ -1,15 +1,13 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowUpRight, Plus, SearchX, X } from 'lucide-react';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowUpRight, SearchX, X } from 'lucide-react';
 import { useState } from 'react';
 import ToolIcon from '@/components/tool-icon';
 import type { TagGroup } from '@/components/tool-tag-filter';
 import ToolTagFilter from '@/components/tool-tag-filter';
 import ToolsNav from '@/components/tools-nav';
-import { Button } from '@/components/ui/button';
 import { STATUS_STYLES, toolAccent } from '@/lib/tool-presets';
 import type { ToolStatus } from '@/lib/tool-presets';
 import { cn } from '@/lib/utils';
-import { create as createSubmission } from '@/routes/tools/submissions';
 
 type CatalogTool = {
     ulid: string;
@@ -40,7 +38,6 @@ function isShownByDefault(tool: CatalogTool): boolean {
 }
 
 export default function ToolsIndex({ tools, tagGroups }: Props) {
-    const { features } = usePage().props;
     const GROUP_LABELS = new Map(
         tagGroups.map(({ key, label }) => [key, label] as const),
     );
@@ -87,28 +84,19 @@ export default function ToolsIndex({ tools, tagGroups }: Props) {
         <>
             <Head title="ツール" />
 
+            {/*
+             * Finding a tool is what this screen is for, so the filter is the
+             * only action on it. Registering one lives on the 申請 tab, next
+             * to the requests it produces.
+             */}
             <ToolsNav
                 actions={
-                    <div className="flex items-center gap-2">
-                        <ToolTagFilter
-                            groups={tagGroups}
-                            selected={selected}
-                            onToggle={toggleTag}
-                            onClear={clearTags}
-                        />
-                        {features.maySubmit && (
-                            <Button
-                                asChild
-                                size="sm"
-                                className="bg-sky-700 text-white hover:bg-sky-800"
-                            >
-                                <Link href={createSubmission()}>
-                                    <Plus className="size-4" />
-                                    ツールを登録
-                                </Link>
-                            </Button>
-                        )}
-                    </div>
+                    <ToolTagFilter
+                        groups={tagGroups}
+                        selected={selected}
+                        onToggle={toggleTag}
+                        onClear={clearTags}
+                    />
                 }
             />
 
