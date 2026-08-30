@@ -1,5 +1,5 @@
 import { Form, Link, usePage } from '@inertiajs/react';
-import { LogOut, UserRound } from 'lucide-react';
+import { Activity, LogOut, UserRound } from 'lucide-react';
 import { useEffect } from 'react';
 import type { PropsWithChildren } from 'react';
 import { toast } from 'sonner';
@@ -7,6 +7,7 @@ import NotificationBell from '@/components/notification-bell';
 import PortalLogo from '@/components/portal-logo';
 import { Button } from '@/components/ui/button';
 import { home, logout } from '@/routes';
+import { index as system } from '@/routes/admin/system';
 
 /**
  * The signed in portal: the blue bar with the wordmark on every module screen.
@@ -33,6 +34,15 @@ export default function PortalLayout({ children }: PropsWithChildren) {
                     </Link>
 
                     <div className="ml-auto flex items-center gap-3 text-sm text-white">
+                        {auth.user.role === 'admin' && (
+                            <Link
+                                href={system()}
+                                title="システム状態（管理者）"
+                                className="flex size-9 items-center justify-center rounded-full text-white transition hover:bg-white/15"
+                            >
+                                <Activity className="size-5" />
+                            </Link>
+                        )}
                         <NotificationBell />
 
                         <span className="flex items-center gap-2">

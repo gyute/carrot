@@ -8,12 +8,15 @@ use App\Sandbox\DockerSandboxRunner;
 use App\Sandbox\FakeSandboxRunner;
 use App\Sandbox\NullSandboxRunner;
 use App\Sandbox\SandboxRunner;
+use App\Support\SystemStatus;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\DevCommands;
 use Illuminate\Http\Request;
+use Illuminate\Queue\Events\Looping;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -55,6 +58,9 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('admin', fn (User $user): bool => $user->isAdmin());
         Gate::define('reviewer', fn (User $user): bool => $user->isReviewer());
+
+        // Each worker loop leaves a pulse the admin system screen reads.
+        Event::listen(Looping::class, fn (Looping $event) => SystemStatus::heartbeat((string) $event->queue));
 
         RateLimiter::for('tool-runs', fn (Request $request): Limit => Limit::perMinute((int) config('sandbox.rate_limit_per_minute'))
             ->by((string) $request->user()?->id));

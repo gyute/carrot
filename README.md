@@ -80,7 +80,9 @@ row in the `tools` table.
   stages: the requester's department **manager** endorses first, then a system
   **admin** confirms and publishes (an admin may also approve straight from the
   first stage; a department with no manager falls through to the admins).
-  Admins may deprecate, restore or delete a tool directly. Set roles from the
+  Admins may deprecate, restore or delete a tool directly and see `/admin/system`
+  (queues, workers, sandbox, Reverb, recent runs and the log tail).
+  Set roles from the
   shell: `php artisan carrot:promote <username> --role=manager --department=開発`,
   `--role=admin`, `--revoke`. The seeder creates `manager` / `admin` (password
   `password`) for trying this locally.
