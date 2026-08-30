@@ -92,7 +92,7 @@ class ToolSubmission extends Model
     }
 
     /**
-     * The ask this submission answers, when it was filed from one. Approving
+     * The request this submission answers, when it was filed from one. Approving
      * such a submission delivers the request.
      *
      * @return BelongsTo<ToolRequest, $this>

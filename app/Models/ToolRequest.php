@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * An ask for a tool that does not exist yet. Unlike a submission it carries
+ * A request for a tool that does not exist yet. Unlike a submission it carries
  * nothing runnable - the development team reads it and builds the tool, and
  * the submission that publishes it closes this request.
  *

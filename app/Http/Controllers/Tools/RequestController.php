@@ -16,7 +16,7 @@ use Inertia\Response;
 
 /**
  * The requester's side: asking the development team for a tool that does not
- * exist yet, and following what happened to the ask.
+ * exist yet, and following what happened to the request.
  */
 class RequestController extends Controller
 {

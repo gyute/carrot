@@ -28,7 +28,7 @@ use RuntimeException;
  * it and an admin publishes it. So the demo is also a demonstration - the
  * approval history, the versions and the inbox messages are all genuine.
  *
- * The asks in the same file are seeded the same way, and one of the tools is
+ * The requests in the same file are seeded the same way, and one of the tools is
  * filed against one of them, so the demo also shows a request closing itself
  * when the tool that answers it goes live.
  */
@@ -56,8 +56,8 @@ class SeedDemo extends Command
             $this->removeExisting($definition['tools'], $definition['requests'] ?? []);
         }
 
-        // Asks first: a tool may be filed against one, and approving it then
-        // closes that ask on its own.
+        // Requests first: a tool may be filed against one, and approving it
+        // then closes that request on its own.
         $this->seedRequests($definition['requests'] ?? [], $requester, $admin, $triage);
 
         foreach ($definition['tools'] as $entry) {
@@ -116,7 +116,7 @@ class SeedDemo extends Command
     }
 
     /**
-     * Files each ask as the demo requester and moves it to the state the
+     * Files each request as the demo requester and moves it to the state the
      * definition asks for, through the same action the triage screen uses.
      *
      * @param  array<int, array<string, mixed>>  $requests
@@ -161,7 +161,7 @@ class SeedDemo extends Command
     }
 
     /**
-     * The ask a tool entry answers, when it names one.
+     * The request a tool entry answers, when it names one.
      *
      * @param  array<string, mixed>  $entry
      */

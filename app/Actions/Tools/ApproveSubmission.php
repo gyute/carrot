@@ -55,7 +55,7 @@ class ApproveSubmission
             return $tool;
         });
 
-        // Publishing the tool is what answers the ask, so the request
+        // Publishing the tool is what answers the request, so it
         // closes itself rather than waiting for someone to remember.
         $toolRequest = $submission->toolRequest;
 

@@ -68,23 +68,23 @@ values worth a second look:
 | `REVERB_APP_ID` / `_KEY` / `_SECRET`, `VITE_REVERB_*` | Live updates. Leave blank and every screen falls back to polling - nothing breaks, it is just slower               |
 | `CATALOG_DEPARTMENTS`                                 | The 所属 allowlist, comma separated. Blank means the field is free text                                            |
 | `CATALOG_SUBMISSIONS`                                 | Who may register a tool: `all`, `admin` (the development team only) or `none` (nobody, and the screens are gone)   |
-| `CATALOG_REQUESTS`                                    | The ask-the-development-team queue at `/tools/requests`. Off and the screens are gone                              |
+| `CATALOG_REQUESTS`                                    | The request queue at `/tools/requests`, for a tool that does not exist yet. Off and the screens are gone           |
 | `PASSKEYS_USER_HANDLE_SECRET`                         | Defaults to `APP_KEY`. Set it to its own fixed value if `APP_KEY` will ever be rotated, or passkeys stop resolving |
 | `LOG_CHANNEL`                                         | The system screen tails whichever channel this names, so a `daily` or custom path is followed, not assumed         |
 
 ## Layout
 
-| Path                                                        | What lives there                                       |
-| ----------------------------------------------------------- | ------------------------------------------------------ |
-| `routes/web.php`, `routes/settings.php`, `routes/tools.php` | Routes, split by area                                  |
-| `app/Http/Controllers/Tools/`                               | The tool module                                        |
+| Path                                                        | What lives there                                                 |
+| ----------------------------------------------------------- | ---------------------------------------------------------------- |
+| `routes/web.php`, `routes/settings.php`, `routes/tools.php` | Routes, split by area                                            |
+| `app/Http/Controllers/Tools/`                               | The tool module                                                  |
 | `database/migrations/`                                      | `tools`, `tags`, `tag_tool`, `tool_submissions`, `tool_requests` |
-| `config/catalog.php`                                        | The 所属 list and the two feature switches             |
-| `app/Sandbox/`                                              | The sandbox runners script tools execute in            |
-| `config/sandbox.php`, `docker/sandbox/`                     | Sandbox limits, driver and container images            |
-| `resources/js/pages/`                                       | Inertia page components                                |
-| `demo/`                                                     | The demo catalog, published by `php artisan demo:seed` |
-| `.ai/rules/`                                                | Decisions and traps worth knowing before editing       |
+| `config/catalog.php`                                        | The 所属 list and the two feature switches                       |
+| `app/Sandbox/`                                              | The sandbox runners script tools execute in                      |
+| `config/sandbox.php`, `docker/sandbox/`                     | Sandbox limits, driver and container images                      |
+| `resources/js/pages/`                                       | Inertia page components                                          |
+| `demo/`                                                     | The demo catalog, published by `php artisan demo:seed`           |
+| `.ai/rules/`                                                | Decisions and traps worth knowing before editing                 |
 
 ## The tool module
 
@@ -96,14 +96,14 @@ row in the `tools` table.
   script in the sandbox.
 - The catalog filters on status, category and 所属; deprecated tools stay for
   reference but are hidden until their status is ticked.
-- **Asks** (`tool_requests`): somebody who cannot build a tool describes what
-  they need and the development team triages it - open → accepted → in
-  progress → delivered, or declined / duplicate / withdrawn. An ask is visible
-  to its requester's own 所属 and to the team, nobody else. Approving a
-  submission filed against an ask is what delivers it, so the tool going live
-  is what closes the request.
-- **Requests** (`tool_submissions`): registering a tool and changing what it
-  does (URL / script / runtime / inputs) or retiring it go through
+- **Requests** (`tool_requests`, 依頼): somebody who cannot build a tool
+  describes what they need and the development team triages it - open →
+  accepted → in progress → delivered, or declined / duplicate / withdrawn. A
+  request is visible to its requester's own 所属 and to the team, nobody else.
+  Approving a submission filed against a request is what delivers it, so the
+  tool going live is what closes it.
+- **Submissions** (`tool_submissions`, 登録): registering a tool and changing
+  what it does (URL / script / runtime / inputs) or retiring it go through
   draft → pending → endorsed → approved / rejected. Display fields - name, summary,
   description, icon, tags - are edited in place by the owner without review.
 - **Versions**: every approval stamps the tool with the approval date to the
@@ -122,7 +122,7 @@ row in the `tools` table.
   decide which of the two flows this deployment runs. A flow that is off is
   absent, not forbidden - its routes answer 404 and its menu entries are gone.
   Who may file inside an enabled flow is a separate, 403 question, which is how
-  `CATALOG_SUBMISSIONS=admin` takes asks from everyone while only the
+  `CATALOG_SUBMISSIONS=admin` takes requests from everyone while only the
   development team registers tools.
 
 `/admin` covers every table without a database client:
@@ -206,14 +206,14 @@ Pest, feature tests throughout, a few seconds end to end. They exercise HTTP
 and Inertia props rather than calling classes directly, so a route, a policy
 and a page prop are all held down at once.
 
-| Suite                              | What it holds down                                                                                                                                                                                                                                                           |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tests/Feature/Tools/`             | The catalog: what is listed, the tag groups and their counts, and the rule that an embed only ever frames an external https origin. The request flow: drafts, per-kind validation, withdrawal, change and retire requests, and display fields edited in place without review. Asks: the 所属 they are stamped with and who may read them, and that a flow switched off answers 404 while a flow someone may not use answers 403 |
-| `tests/Feature/Admin/`             | Two-stage approval, version stamping (including twice in one minute), slug uniqueness, rejection. Ask triage: accept, decline with a reason, merge a duplicate, and that approving a submission filed against an ask delivers it. The admin screens: roles and 所属, the trash and purge, tag rename/merge, run pruning, and the system status snapshot                                                      |
-| `tests/Feature/Sandbox/`           | Every isolation flag of the docker command, the output cap, the network choice, the source-hash check that refuses to run what was not approved, per-user rate limiting, run visibility and pruning                                                                          |
-| `tests/Feature/Inbox/`             | Who gets messaged and notified at each stage, read state, and that a message is only ever visible to its recipient                                                                                                                                                           |
-| `tests/Feature/DemoSeedTest.php`   | That `demo:seed` publishes through the real approval flow, files its asks the same way and lets the tool that answers one close it, is safe to re-run, and refuses production                                                                                                |
-| `tests/Feature/Auth/`, `Settings/` | Login by username, registration rules, password reset, two-factor and passkeys - inherited from the starter kit                                                                                                                                                              |
+| Suite                              | What it holds down                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tests/Feature/Tools/`             | The catalog: what is listed, the tag groups and their counts, and the rule that an embed only ever frames an external https origin. The request flow: drafts, per-kind validation, withdrawal, change and retire requests, and display fields edited in place without review. Requests: the 所属 they are stamped with and who may read them, and that a flow switched off answers 404 while a flow someone may not use answers 403 |
+| `tests/Feature/Admin/`             | Two-stage approval, version stamping (including twice in one minute), slug uniqueness, rejection. Request triage: accept, decline with a reason, merge a duplicate, and that approving a submission filed against a request delivers it. The admin screens: roles and 所属, the trash and purge, tag rename/merge, run pruning, and the system status snapshot                                                                      |
+| `tests/Feature/Sandbox/`           | Every isolation flag of the docker command, the output cap, the network choice, the source-hash check that refuses to run what was not approved, per-user rate limiting, run visibility and pruning                                                                                                                                                                                                                                 |
+| `tests/Feature/Inbox/`             | Who gets messaged and notified at each stage, read state, and that a message is only ever visible to its recipient                                                                                                                                                                                                                                                                                                                  |
+| `tests/Feature/DemoSeedTest.php`   | That `demo:seed` publishes through the real approval flow, files its requests the same way and lets the tool that answers one close it, is safe to re-run, and refuses production                                                                                                                                                                                                                                                   |
+| `tests/Feature/Auth/`, `Settings/` | Login by username, registration rules, password reset, two-factor and passkeys - inherited from the starter kit                                                                                                                                                                                                                                                                                                                     |
 
 Two suites are opt-in and skip unless the tooling is there:
 `BubblewrapRunnerTest` needs `bwrap` installed, and `DockerRunnerTest` needs

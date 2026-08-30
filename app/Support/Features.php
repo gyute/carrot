@@ -14,7 +14,7 @@ class Features
     /** Nobody may register a tool, so the catalog only ever shrinks. */
     public const SUBMISSIONS_NONE = 'none';
 
-    /** Only the development team registers tools; everyone else asks. */
+    /** Only the development team registers tools; everyone else requests one. */
     public const SUBMISSIONS_ADMIN = 'admin';
 
     /** Anyone may register a tool for their department. */

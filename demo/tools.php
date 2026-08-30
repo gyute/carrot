@@ -10,8 +10,8 @@ return [
     'department' => 'デモ部',
 
     /*
-    | Asks the development team has not turned into tools yet - plus one it
-    | has, which the entry in `tools` below answers. Titles are how the
+    | Requests the development team has not turned into tools yet - plus one
+    | it has, which the entry in `tools` below answers. Titles are how the
     | command recognises a request on a later run.
     */
     'requests' => [

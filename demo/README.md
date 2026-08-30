@@ -18,7 +18,7 @@ the demo requester, has the demo department manager endorse it and a demo
 admin publish it - the three steps a real tool goes through - so every demo
 tool ends up with a genuine version stamp, approval history and inbox message.
 
-The asks in the same file are seeded the same way, through the actions the
+The requests in the same file are seeded the same way, through the actions the
 triage screen uses. One tool is filed against one of them, so the demo also
 shows what closes a request: the tool that answers it going live, not somebody
 ticking it off.
@@ -34,7 +34,7 @@ Three accounts are created or reset each run, all with password `password`:
 Messages and bell notifications are queued, so they arrive once a worker is
 running (`composer run dev` starts one).
 
-## Adding an ask
+## Adding a request
 
 Add an entry to the `requests` list and re-run with `--fresh`. The title is
 how the command recognises it on a later run:
@@ -69,7 +69,7 @@ submission payload plus a `state`:
     'categories' => ['ポータル'],
     'config' => ['url' => '/tools'],
     'source' => 'scripts/hello.php', // script only; a real file under demo/
-    'answers' => 'デモ: 何かしたい',   // optional: an ask this tool closes
+    'answers' => 'デモ: 何かしたい',   // optional: a request this tool closes
     'state' => 'published',          // 'pending' leaves it for review instead
 ],
 ```

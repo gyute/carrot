@@ -11,7 +11,7 @@ use App\Models\User;
 /**
  * Closes a request with the tool that answers it. Called from the triage
  * screen, and from ApproveSubmission when the approved submission was filed
- * against a request - so publishing the tool is what closes the ask.
+ * against a request - so publishing the tool is what closes it.
  */
 class DeliverToolRequest
 {
