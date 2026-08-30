@@ -5,6 +5,13 @@
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
+/*
+ * Keep this even though nothing sets `.dark` any more. Without it Tailwind's
+ * own `dark:` variant falls back to `prefers-color-scheme`, and the `dark:`
+ * classes still sitting in the shadcn components would start firing on a
+ * visitor whose OS is dark - in an app that has no dark palette to go with
+ * them. Pinning the variant to a class nobody sets keeps them inert.
+ */
 @custom-variant dark (&:is(.dark *));
 
 @theme {
@@ -101,42 +108,6 @@
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.87 0 0);
 }
-
-.dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.145 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.145 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.985 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.396 0.141 25.723);
-    --destructive-foreground: oklch(0.637 0.237 25.331);
-    --border: oklch(0.269 0 0);
-    --input: oklch(0.269 0 0);
-    --ring: oklch(0.439 0 0);
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.985 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(0.269 0 0);
-    --sidebar-ring: oklch(0.439 0 0);
-}
-
 @layer base {
     * {
         @apply border-border;
@@ -162,17 +133,6 @@
  * palette, no matter which appearance the visitor picked, so the branded blue
  * surfaces keep their contrast.
  */
-/*
- * `color-scheme` paints what the stylesheet cannot: scrollbars, form
- * controls, spinners. app.blade.php sets it from the appearance the visitor
- * picked, which is right for the settings screens - but the portal is light
- * whatever they picked, so it says so for itself, and for the page scrollbar,
- * which hangs off the element above this one.
- */
-html.dark:has(.portal-surface) {
-    color-scheme: light;
-}
-
 .portal-surface {
     color: var(--color-foreground);
     color-scheme: light;

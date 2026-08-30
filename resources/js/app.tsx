@@ -2,7 +2,6 @@ import { createInertiaApp } from '@inertiajs/react';
 import { configureEcho } from '@laravel/echo-react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { initializeTheme } from '@/hooks/use-appearance';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import PortalLayout from '@/layouts/portal-layout';
@@ -50,4 +49,3 @@ createInertiaApp({
 });
 
 // This will set light / dark mode on load...
-initializeTheme();
