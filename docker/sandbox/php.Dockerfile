@@ -1,6 +1,6 @@
 # The PHP sandbox image. Built by CI and pulled by the runner host; never
 # built on the runner. No compilers, no curl, no package manager left behind.
-FROM php:8.3-cli-alpine
+FROM php:8.4-cli-alpine
 
 RUN apk add --no-cache coreutils \
     && { \

@@ -20,7 +20,7 @@ return [
     'binary' => env('SANDBOX_BINARY', 'docker'),
 
     'images' => [
-        'php' => env('SANDBOX_IMAGE_PHP', 'carrot-sandbox-php:8.3'),
+        'php' => env('SANDBOX_IMAGE_PHP', 'carrot-sandbox-php:8.4'),
         'shell' => env('SANDBOX_IMAGE_SHELL', 'carrot-sandbox-shell:3.20'),
     ],
 
@@ -36,7 +36,7 @@ return [
     */
 
     'runtimes' => [
-        'php' => env('SANDBOX_RUNTIME_PHP', 'PHP 8.3 (php:8.3-cli-alpine)'),
+        'php' => env('SANDBOX_RUNTIME_PHP', 'PHP 8.4 (php:8.4-cli-alpine)'),
         'shell' => env('SANDBOX_RUNTIME_SHELL', 'Shell - BusyBox sh + coreutils + jq (alpine:3.20)'),
     ],
 

@@ -1,7 +1,7 @@
 # Sandbox images
 
 ```sh
-docker build -t carrot-sandbox-php:8.3   -f docker/sandbox/php.Dockerfile   docker/sandbox
+docker build -t carrot-sandbox-php:8.4   -f docker/sandbox/php.Dockerfile   docker/sandbox
 docker build -t carrot-sandbox-shell:3.20 -f docker/sandbox/shell.Dockerfile docker/sandbox
 ```
 

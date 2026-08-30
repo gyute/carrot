@@ -5,7 +5,7 @@ The UI is Japanese throughout.
 
 ## Requirements
 
-- PHP 8.3+, Composer
+- PHP 8.4+, Composer
 - Node 20+
 - Docker (for the bundled PostgreSQL container)
 
