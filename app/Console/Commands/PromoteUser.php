@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 
 /**
  * Roles are not editable from the UI yet, so reviewers are made from the
- * shell: `carrot:promote paku --role=manager --department=開発`.
+ * shell: `carrot:promote paku --role=manager --department=<name>`.
  */
 class PromoteUser extends Command
 {

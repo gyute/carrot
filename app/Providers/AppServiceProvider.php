@@ -68,7 +68,7 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * `php artisan dev` runs one worker for every queue this box uses -
-     * sandbox runs would otherwise sit in 待機中 forever - and Reverb for
+     * sandbox runs would otherwise sit queued forever - and Reverb for
      * live updates.
      */
     protected function configureDevProcesses(): void
