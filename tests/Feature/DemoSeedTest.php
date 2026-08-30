@@ -1,8 +1,10 @@
 <?php
 
+use App\Enums\ToolRequestStatus;
 use App\Enums\ToolStatus;
 use App\Enums\UserRole;
 use App\Models\Tool;
+use App\Models\ToolRequest;
 use App\Models\ToolSubmission;
 use App\Models\User;
 
@@ -11,7 +13,7 @@ use App\Models\User;
  * demo/tools.php and asserts what holds whatever anyone puts in there, so
  * adding or renaming a demo tool never breaks this file.
  *
- * @return array{department: string, tools: array<int, array<string, mixed>>}
+ * @return array{department: string, tools: array<int, array<string, mixed>>, requests?: array<int, array<string, mixed>>}
  */
 function demoDefinition(): array
 {
@@ -64,20 +66,54 @@ test('the demo catalog is published through the real approval flow', function ()
     expect(Tool::query()->count())->toBeGreaterThan(0);
 });
 
+test('the demo asks are filed, and the tool answering one closes it', function () {
+    $definition = demoDefinition();
+    $requests = $definition['requests'] ?? [];
+
+    $this->artisan('demo:seed')->assertSuccessful();
+
+    $requester = User::query()->where('username', 'demo')->sole();
+
+    expect(ToolRequest::query()->count())->toBe(count($requests));
+
+    foreach ($requests as $entry) {
+        $toolRequest = ToolRequest::query()->where('title', $entry['title'])->sole();
+
+        expect($toolRequest->user_id)->toBe($requester->id)
+            ->and($toolRequest->department)->toBe($definition['department']);
+    }
+
+    // A tool that names an ask delivers it by being approved, rather than
+    // being wired to it by hand - the same path a real request takes.
+    foreach ($definition['tools'] as $entry) {
+        if (! isset($entry['answers'])) {
+            continue;
+        }
+
+        $toolRequest = ToolRequest::query()->where('title', $entry['answers'])->sole();
+
+        expect($toolRequest->status)->toBe(ToolRequestStatus::Delivered)
+            ->and($toolRequest->tool?->name)->toBe($entry['name']);
+    }
+});
+
 test('seeding twice changes nothing, and --fresh starts over', function () {
     $this->artisan('demo:seed')->assertSuccessful();
 
     $before = Tool::query()->pluck('id')->sort()->values();
+    $askCount = ToolRequest::query()->count();
 
     $this->artisan('demo:seed')->assertSuccessful();
 
-    expect(Tool::query()->pluck('id')->sort()->values())->toEqual($before);
+    expect(Tool::query()->pluck('id')->sort()->values())->toEqual($before)
+        ->and(ToolRequest::query()->count())->toBe($askCount);
 
     $this->artisan('demo:seed', ['--fresh' => true])->assertSuccessful();
 
     // Same catalog, brand new rows: --fresh really did delete and republish.
     expect(Tool::query()->count())->toBe($before->count())
-        ->and(Tool::query()->pluck('id')->intersect($before)->all())->toBe([]);
+        ->and(Tool::query()->pluck('id')->intersect($before)->all())->toBe([])
+        ->and(ToolRequest::query()->count())->toBe($askCount);
 });
 
 test('the demo refuses to seed a production install', function () {

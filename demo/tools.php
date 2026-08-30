@@ -9,6 +9,40 @@ return [
     /* Deliberately not a real department name. */
     'department' => 'デモ部',
 
+    /*
+    | Asks the development team has not turned into tools yet - plus one it
+    | has, which the entry in `tools` below answers. Titles are how the
+    | command recognises a request on a later run.
+    */
+    'requests' => [
+
+        [
+            'title' => 'デモ: 会議室の空きをまとめて見たい',
+            'body' => "今は会議室ごとにカレンダーを開いて空きを探しています。\n朝の予約が重なる時間帯だと 10 分ほどかかります。\n全部屋の空きが一画面で見られると助かります。",
+            'categories' => ['ポータル'],
+            'needed_by' => '+3 weeks',
+            'state' => 'open',
+        ],
+
+        [
+            'title' => 'デモ: 請求書の消費税を一括で計算したい',
+            'body' => "月末に請求書を 1 件ずつ開いて電卓で消費税を出しています。\n100 件あると半日かかり、写し間違いも起きます。",
+            'categories' => ['データ'],
+            'desired_kind' => 'script',
+            'state' => 'in_progress',
+        ],
+
+        /* Answered by「デモ: 環境情報」below, so the request closes itself. */
+        [
+            'title' => 'デモ: サンドボックスの実行環境を知りたい',
+            'body' => "スクリプトツールを書きたいのですが、どのランタイムが使えるのか分かりません。\n実行環境を表示するだけのツールがほしいです。",
+            'categories' => ['サンプル'],
+            'desired_kind' => 'script',
+            'state' => 'accepted',
+        ],
+
+    ],
+
     'tools' => [
 
         [
@@ -95,6 +129,9 @@ return [
                 ],
             ],
             'source' => 'scripts/environment.sh',
+            // Approving this is what closes the request of the same subject,
+            // so the demo shows the seam rather than a hand-made link.
+            'answers' => 'デモ: サンドボックスの実行環境を知りたい',
             'state' => 'published',
         ],
 
