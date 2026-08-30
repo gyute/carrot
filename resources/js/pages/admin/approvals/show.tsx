@@ -7,7 +7,7 @@ import SubmissionPayloadView from '@/components/submission-payload';
 import ToolRunForm from '@/components/tool-run-form';
 import ToolsNav from '@/components/tools-nav';
 import { Button } from '@/components/ui/button';
-import { formatDateTime } from '@/lib/format';
+import { formatTimestamp } from '@/lib/format';
 import { SUBMISSION_STATUS_STYLES } from '@/lib/tool-presets';
 import { cn } from '@/lib/utils';
 import { RUN_STATUS_STYLES, RunOutput } from '@/pages/tools/runs/show';
@@ -76,7 +76,7 @@ export default function ApprovalShow({ submission, testRuns, can }: Props) {
                     </span>
                 </div>
                 <div className="tabular-nums">
-                    申請日時 {formatDateTime(submission.submittedAt)}
+                    申請日時 {formatTimestamp(submission.submittedAt)}
                 </div>
                 {submission.tool && (
                     <div>
@@ -96,7 +96,7 @@ export default function ApprovalShow({ submission, testRuns, can }: Props) {
                             {submission.reviewer}
                         </span>{' '}
                         <span className="tabular-nums">
-                            ({formatDateTime(submission.reviewedAt)})
+                            ({formatTimestamp(submission.reviewedAt)})
                         </span>
                     </div>
                 )}
@@ -168,7 +168,7 @@ export default function ApprovalShow({ submission, testRuns, can }: Props) {
                                     styles={RUN_STATUS_STYLES}
                                 />
                                 <span className="tabular-nums">
-                                    {formatDateTime(latestRun.createdAt)}
+                                    {formatTimestamp(latestRun.createdAt)}
                                 </span>
                                 {latestRun.finished && (
                                     <span className="tabular-nums">

@@ -2,7 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { ClipboardCheck } from 'lucide-react';
 import StatusPill from '@/components/status-pill';
 import ToolsNav from '@/components/tools-nav';
-import { formatDateTime } from '@/lib/format';
+import { formatTimestamp } from '@/lib/format';
 import { KIND_LABELS, SUBMISSION_STATUS_STYLES } from '@/lib/tool-presets';
 import { show } from '@/routes/admin/approvals';
 import type { SubmissionSummary } from '@/types/tools';
@@ -74,7 +74,7 @@ function Table({
                                 )}
                             </td>
                             <td className="px-4 py-3 text-slate-500 tabular-nums">
-                                {formatDateTime(row.submittedAt)}
+                                {formatTimestamp(row.submittedAt)}
                             </td>
                             <td className="px-4 py-3">
                                 <StatusPill

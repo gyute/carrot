@@ -7,7 +7,7 @@ import {
     Loader2,
 } from 'lucide-react';
 import StatusPill from '@/components/status-pill';
-import { formatDateTime } from '@/lib/format';
+import { formatTimestamp } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { RUN_STATUS_STYLES } from '@/pages/tools/runs/show';
 import { show as showRun } from '@/routes/tools/runs';
@@ -142,7 +142,7 @@ export default function SystemIndex({ status }: { status: Status }) {
                     秒ごとに更新します。
                 </p>
                 <span className="ml-auto text-xs text-slate-400 tabular-nums">
-                    {formatDateTime(status.checkedAt)}
+                    {formatTimestamp(status.checkedAt)}
                 </span>
             </div>
 
@@ -213,7 +213,7 @@ export default function SystemIndex({ status }: { status: Status }) {
                                             ok={queue.alive}
                                             label={
                                                 queue.heartbeatAt
-                                                    ? formatDateTime(
+                                                    ? formatTimestamp(
                                                           queue.heartbeatAt,
                                                       )
                                                     : '未確認'
@@ -328,7 +328,7 @@ export default function SystemIndex({ status }: { status: Status }) {
                                         {run.user}
                                     </span>
                                     <span className="ml-auto text-xs text-slate-400 tabular-nums">
-                                        {formatDateTime(run.createdAt)}
+                                        {formatTimestamp(run.createdAt)}
                                         {run.durationMs !== null &&
                                             ` · ${run.durationMs} ms`}
                                     </span>
@@ -355,7 +355,7 @@ export default function SystemIndex({ status }: { status: Status }) {
                                             {job.queue}
                                         </span>
                                         <span className="ml-auto text-xs text-slate-400 tabular-nums">
-                                            {formatDateTime(job.failedAt)}
+                                            {formatTimestamp(job.failedAt)}
                                         </span>
                                     </div>
                                     <p className="mt-1 truncate text-xs text-rose-700">

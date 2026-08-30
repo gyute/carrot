@@ -4,7 +4,7 @@ import LiveUpdates from '@/components/live-updates';
 import StatusPill from '@/components/status-pill';
 import ToolIcon from '@/components/tool-icon';
 import ToolsNav from '@/components/tools-nav';
-import { formatDateTime } from '@/lib/format';
+import { formatTimestamp } from '@/lib/format';
 import { toolAccent } from '@/lib/tool-presets';
 import { show as showTool } from '@/routes/tools';
 import type { ToolRunSummary } from '@/types/tools';
@@ -103,7 +103,7 @@ export default function ToolRunShow({ tool, run }: Props) {
                 <div>実行者 {run.requestedBy}</div>
                 <div>環境 {run.runtimeLabel}</div>
                 <div className="tabular-nums">
-                    開始 {formatDateTime(run.startedAt ?? run.createdAt)}
+                    開始 {formatTimestamp(run.startedAt ?? run.createdAt)}
                 </div>
                 {run.finished && (
                     <div className="tabular-nums">

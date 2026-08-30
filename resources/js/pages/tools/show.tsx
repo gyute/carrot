@@ -19,7 +19,7 @@ import ToolsNav from '@/components/tools-nav';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { formatDateTime } from '@/lib/format';
+import { formatDateTime, formatTimestamp } from '@/lib/format';
 import {
     KIND_LABELS,
     NETWORK_LABELS,
@@ -453,7 +453,7 @@ export default function ToolShow({
                                                 styles={RUN_STATUS_STYLES}
                                             />
                                             <span className="text-slate-500 tabular-nums">
-                                                {formatDateTime(run.createdAt)}
+                                                {formatTimestamp(run.createdAt)}
                                             </span>
                                             <span className="text-xs text-slate-500">
                                                 {run.requestedBy}
@@ -588,7 +588,7 @@ export default function ToolShow({
                                 className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3"
                             >
                                 <span className="text-slate-500 tabular-nums">
-                                    {formatDateTime(entry.reviewedAt)}
+                                    {formatTimestamp(entry.reviewedAt)}
                                 </span>
                                 <Link
                                     href={showSubmission(entry.ulid)}

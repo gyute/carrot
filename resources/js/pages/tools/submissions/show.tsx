@@ -4,7 +4,7 @@ import StatusPill from '@/components/status-pill';
 import SubmissionPayloadView from '@/components/submission-payload';
 import ToolsNav from '@/components/tools-nav';
 import { Button } from '@/components/ui/button';
-import { formatDateTime } from '@/lib/format';
+import { formatTimestamp } from '@/lib/format';
 import { SUBMISSION_STATUS_STYLES } from '@/lib/tool-presets';
 import { show as showTool } from '@/routes/tools';
 import { destroy, edit, index, submit } from '@/routes/tools/submissions';
@@ -96,7 +96,7 @@ export default function SubmissionShow({ submission, can }: Props) {
                 <div>
                     申請日時{' '}
                     <span className="font-medium text-slate-700 tabular-nums">
-                        {formatDateTime(submission.submittedAt)}
+                        {formatTimestamp(submission.submittedAt)}
                     </span>
                 </div>
                 {submission.endorser && (
@@ -106,7 +106,7 @@ export default function SubmissionShow({ submission, can }: Props) {
                             {submission.endorser}
                         </span>{' '}
                         <span className="tabular-nums">
-                            ({formatDateTime(submission.endorsedAt)})
+                            ({formatTimestamp(submission.endorsedAt)})
                         </span>
                     </div>
                 )}
@@ -117,7 +117,7 @@ export default function SubmissionShow({ submission, can }: Props) {
                             {submission.reviewer}
                         </span>{' '}
                         <span className="tabular-nums">
-                            ({formatDateTime(submission.reviewedAt)})
+                            ({formatTimestamp(submission.reviewedAt)})
                         </span>
                     </div>
                 )}
