@@ -32,28 +32,6 @@ return [
 
     'connections' => [
 
-        /*
-         * Read-only source for the tool module's CSV exports. Every setting
-         * falls back to the application database so the demo runs unconfigured
-         * - and the fallbacks use ?: rather than env() defaults because
-         * .env.example ships these keys blank, and a blank env value is a
-         * value: it would otherwise connect to host "" and fail.
-         */
-        'warehouse' => [
-            'driver' => 'pgsql',
-            'url' => env('WAREHOUSE_DB_URL') ?: null,
-            'host' => env('WAREHOUSE_DB_HOST') ?: env('DB_HOST', '127.0.0.1'),
-            'port' => env('WAREHOUSE_DB_PORT') ?: env('DB_PORT', '5432'),
-            'database' => env('WAREHOUSE_DB_DATABASE') ?: env('DB_DATABASE', 'carrot'),
-            'username' => env('WAREHOUSE_DB_USERNAME') ?: env('DB_USERNAME', 'carrot'),
-            'password' => env('WAREHOUSE_DB_PASSWORD') ?: env('DB_PASSWORD', ''),
-            'charset' => env('WAREHOUSE_DB_CHARSET') ?: 'utf8',
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'search_path' => env('WAREHOUSE_DB_SCHEMA') ?: 'public',
-            'sslmode' => env('WAREHOUSE_DB_SSLMODE') ?: 'prefer',
-        ],
-
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),

@@ -1,9 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
-import { AppWindow, ArrowUpRight, ScrollText } from 'lucide-react';
+import { AppWindow, ArrowUpRight } from 'lucide-react';
 import type { ComponentType } from 'react';
 import ToolsNav from '@/components/tools-nav';
 import { studio } from '@/routes/tools';
-import { create as createExport } from '@/routes/tools/exports';
 
 type Tool = {
     name: string;
@@ -16,15 +15,6 @@ type Tool = {
 };
 
 const TOOLS: Tool[] = [
-    {
-        name: '日次アクセスログ',
-        summary: 'ポータルへのアクセス履歴を CSV で書き出します。',
-        category: 'データ',
-        owner: '情報システム部',
-        icon: ScrollText,
-        accent: 'from-amber-400 to-orange-500',
-        href: createExport().url,
-    },
     {
         name: 'スタジオ',
         summary: '許可された外部ページをポータル内にそのまま表示します。',

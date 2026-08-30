@@ -34,8 +34,7 @@ php artisan db:seed --force
 ## Running it
 
 `composer run dev` starts four processes at once - the PHP server, `queue:listen`,
-Vite and the log tail. **The queue worker matters**: the tool module's CSV exports
-run as queued jobs, so without a worker they stay in `待機中` forever.
+Vite and the log tail.
 
 ## Layout
 
@@ -43,7 +42,6 @@ run as queued jobs, so without a worker they stay in `待機中` forever.
 | ----------------------------------------------------------- | ---------------------------------------------------------- |
 | `routes/web.php`, `routes/settings.php`, `routes/tools.php` | Routes, split by area                                      |
 | `app/Http/Controllers/Tools/`                               | The tool module                                            |
-| `config/exports.php`                                        | Export definitions - the reviewed SQL each CSV export runs |
 | `config/tools.php`                                          | Pages the studio tool is allowed to frame                  |
 | `resources/js/pages/`                                       | Inertia page components                                    |
 | `.ai/rules/`                                                | Decisions and traps worth knowing before editing           |
@@ -52,15 +50,7 @@ run as queued jobs, so without a worker they stay in `待機中` forever.
 
 `/tools` collects the in-house tools.
 
-- **日次アクセスログ** queues a CSV export. The batch list at `/tools/exports/jobs`
-  shows progress; a finished file is downloaded by its owner, or by anyone holding
-  the download code issued when the batch was requested. Files expire after
-  `EXPORT_RETENTION_DAYS` days.
 - **スタジオ** frames an external page listed in `config/tools.php`.
-
-Exports read through the `warehouse` database connection. It falls back to the
-application database, so the demo runs with no extra configuration; point
-`WAREHOUSE_DB_*` at RDS with a read-only role for anything real.
 
 ## Checks
 
