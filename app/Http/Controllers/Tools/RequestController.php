@@ -70,7 +70,7 @@ class RequestController extends Controller
         ToolRequestSubmitted::dispatch($toolRequest);
 
         return to_route('tools.requests.show', $toolRequest)
-            ->with('status', 'リクエストを送りました。開発チームからの連絡をお待ちください。');
+            ->with('status', '依頼を送りました。開発チームからの連絡をお待ちください。');
     }
 
     public function show(ToolRequest $toolRequest): Response
@@ -108,7 +108,7 @@ class RequestController extends Controller
             'categories' => array_values($request->validated('categories', [])),
         ])->save();
 
-        return to_route('tools.requests.show', $toolRequest)->with('status', 'リクエストを更新しました。');
+        return to_route('tools.requests.show', $toolRequest)->with('status', '依頼を更新しました。');
     }
 
     public function destroy(ToolRequest $toolRequest): RedirectResponse
@@ -117,6 +117,6 @@ class RequestController extends Controller
 
         $toolRequest->forceFill(['status' => ToolRequestStatus::Withdrawn])->save();
 
-        return to_route('tools.requests.show', $toolRequest)->with('status', 'リクエストを取り下げました。');
+        return to_route('tools.requests.show', $toolRequest)->with('status', '依頼を取り下げました。');
     }
 }

@@ -24,12 +24,12 @@ export default function RequestsIndex({
 
     return (
         <>
-            <Head title="リクエスト" />
+            <Head title="依頼" />
 
             <ToolsNav />
 
             <div className="mt-6 flex flex-wrap items-end gap-x-4 gap-y-2">
-                <h1 className="text-xl font-bold text-slate-800">リクエスト</h1>
+                <h1 className="text-xl font-bold text-slate-800">依頼</h1>
                 <p className="text-sm text-slate-500">
                     ほしいツールを開発チームに依頼できます。同じ所属のメンバーにも表示されます。
                 </p>
@@ -40,7 +40,7 @@ export default function RequestsIndex({
                 >
                     <Link href={create()}>
                         <Plus className="size-4" />
-                        リクエストする
+                        依頼する
                     </Link>
                 </Button>
             </div>
@@ -49,7 +49,7 @@ export default function RequestsIndex({
                 <div className="mt-4 inline-flex gap-1 rounded-lg bg-slate-200/60 p-1 text-sm">
                     {[
                         { label: 'すべて', value: false },
-                        { label: '自分のリクエスト', value: true },
+                        { label: '自分の依頼', value: true },
                     ].map(({ label, value }) => (
                         <button
                             key={label}
@@ -73,7 +73,7 @@ export default function RequestsIndex({
                 <div className="mt-6 flex flex-col items-center rounded-xl border border-dashed border-slate-300 bg-white/60 px-6 py-16 text-center">
                     <MessageSquarePlus className="size-8 text-slate-300" />
                     <p className="mt-3 text-sm font-medium text-slate-600">
-                        まだリクエストはありません
+                        まだ依頼はありません
                     </p>
                     <p className="mt-1 text-xs text-slate-400">
                         毎回手作業でやっていることがあれば、そのまま書いて送ってください。

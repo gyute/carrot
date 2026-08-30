@@ -33,8 +33,8 @@ class ToolRequestFiled extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'ツールのリクエストが届きました',
-            'body' => "{$this->toolRequest->user->name} さんが「{$this->toolRequest->title}」をリクエストしました。",
+            'title' => 'ツールの依頼が届きました',
+            'body' => "{$this->toolRequest->user->name} さんが「{$this->toolRequest->title}」を依頼しました。",
             'url' => route('inbox.show', $this->message, absolute: false),
             'request' => $this->toolRequest->ulid,
             'message' => $this->message->ulid,

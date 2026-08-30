@@ -29,7 +29,7 @@ class NotifyRequesterOfDelivery implements ShouldQueue
             'sender_id' => $toolRequest->decided_by,
             'kind' => MessageKind::RequestDelivered,
             'subject' => "【公開】{$toolRequest->title}",
-            'body' => "リクエストいただいた「{$toolRequest->title}」に対して、ツール「{$tool->name}」を公開しました。\nご確認ください。",
+            'body' => "ご依頼いただいた「{$toolRequest->title}」に対して、ツール「{$tool->name}」を公開しました。\nご確認ください。",
             'action_url' => route('tools.show', $tool, absolute: false),
             'action_label' => 'ツールを開く',
             'subject_type' => ToolRequest::class,

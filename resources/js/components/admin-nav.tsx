@@ -52,7 +52,7 @@ export default function AdminNav() {
         ...(features.requests
             ? [
                   {
-                      label: 'リクエスト',
+                      label: '依頼',
                       href: adminRequests().url,
                       icon: MessageSquarePlus,
                       adminOnly: true,

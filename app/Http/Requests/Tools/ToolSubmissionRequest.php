@@ -198,7 +198,7 @@ class ToolSubmissionRequest extends FormRequest
             'categories' => 'カテゴリ',
             'categories.*' => 'カテゴリ',
             'note' => '申請メモ',
-            'tool_request' => 'リクエスト',
+            'tool_request' => '依頼',
             'config.url' => 'URL',
             'config.runtime' => 'ランタイム',
             'config.timeout_sec' => 'タイムアウト',

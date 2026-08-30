@@ -97,14 +97,12 @@ function Table({
 export default function AdminRequestsIndex({ open, working, closed }: Props) {
     return (
         <>
-            <Head title="リクエスト対応" />
+            <Head title="依頼対応" />
 
             <AdminNav />
 
             <div className="mt-6 flex flex-wrap items-end gap-x-4 gap-y-2">
-                <h1 className="text-xl font-bold text-slate-800">
-                    リクエスト対応
-                </h1>
+                <h1 className="text-xl font-bold text-slate-800">依頼対応</h1>
                 <p className="text-sm text-slate-500">
                     現場から届いたツールの依頼です。重複はここでまとめます。
                 </p>
@@ -119,16 +117,16 @@ export default function AdminRequestsIndex({ open, working, closed }: Props) {
                     </span>
                 )}
             </h2>
-            <Table rows={open} emptyText="未対応のリクエストはありません。" />
+            <Table rows={open} emptyText="未対応の依頼はありません。" />
 
             <h2 className="mt-8 text-sm font-bold text-slate-700">対応中</h2>
             <Table
                 rows={working}
-                emptyText="対応予定・対応中のリクエストはありません。"
+                emptyText="対応予定・対応中の依頼はありません。"
             />
 
             <h2 className="mt-8 text-sm font-bold text-slate-700">完了</h2>
-            <Table rows={closed} emptyText="完了したリクエストはありません。" />
+            <Table rows={closed} emptyText="完了した依頼はありません。" />
         </>
     );
 }

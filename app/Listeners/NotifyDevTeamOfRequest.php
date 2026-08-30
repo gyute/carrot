@@ -28,10 +28,10 @@ class NotifyDevTeamOfRequest implements ShouldQueue
                 'recipient_id' => $admin->id,
                 'sender_id' => $toolRequest->user_id,
                 'kind' => MessageKind::RequestFiled,
-                'subject' => "【リクエスト】{$toolRequest->title}",
+                'subject' => "【依頼】{$toolRequest->title}",
                 'body' => $this->body($toolRequest),
                 'action_url' => route('admin.requests.show', $toolRequest, absolute: false),
-                'action_label' => 'リクエストを開く',
+                'action_label' => '依頼を開く',
                 'subject_type' => ToolRequest::class,
                 'subject_id' => $toolRequest->id,
             ]);
@@ -50,10 +50,10 @@ class NotifyDevTeamOfRequest implements ShouldQueue
                 'recipient_id' => $manager->id,
                 'sender_id' => $toolRequest->user_id,
                 'kind' => MessageKind::RequestFiled,
-                'subject' => "【部署のリクエスト】{$toolRequest->title}",
-                'body' => "{$toolRequest->user->name} さんが開発チームにツールをリクエストしました。\n参考までにお知らせします。判断は開発チームが行います。",
+                'subject' => "【部署の依頼】{$toolRequest->title}",
+                'body' => "{$toolRequest->user->name} さんが開発チームにツールを依頼しました。\n参考までにお知らせします。判断は開発チームが行います。",
                 'action_url' => route('tools.requests.show', $toolRequest, absolute: false),
-                'action_label' => 'リクエストを開く',
+                'action_label' => '依頼を開く',
                 'subject_type' => ToolRequest::class,
                 'subject_id' => $toolRequest->id,
             ]);
@@ -69,7 +69,7 @@ class NotifyDevTeamOfRequest implements ShouldQueue
             : "{$toolRequest->user->name} さん";
 
         $lines = [
-            "{$who}がツールをリクエストしました。",
+            "{$who}がツールを依頼しました。",
             '',
             $toolRequest->body,
         ];

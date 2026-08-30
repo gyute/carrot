@@ -38,7 +38,7 @@ export default function RequestForm({ toolRequest, limits }: Props) {
         }
     };
 
-    const title = toolRequest ? 'リクエストを編集' : 'ツールをリクエスト';
+    const title = toolRequest ? '依頼を編集' : 'ツールを依頼';
 
     return (
         <>
@@ -51,7 +51,7 @@ export default function RequestForm({ toolRequest, limits }: Props) {
                 className="mt-6 inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-800"
             >
                 <ArrowLeft className="size-3.5" />
-                リクエスト一覧へ
+                依頼一覧へ
             </Link>
 
             <h1 className="mt-2 text-xl font-bold text-slate-800">{title}</h1>
@@ -168,8 +168,8 @@ export default function RequestForm({ toolRequest, limits }: Props) {
 
                     <p className="mt-4 text-xs text-slate-500">
                         {limits.department
-                            ? `所属「${limits.department}」のリクエストとして登録され、同じ所属のメンバーと開発チームが読めます。`
-                            : '所属が未設定のため、このリクエストはあなたと開発チームだけに表示されます。所属はシステム管理者が設定します。'}
+                            ? `所属「${limits.department}」の依頼として登録され、同じ所属のメンバーと開発チームが読めます。`
+                            : '所属が未設定のため、この依頼はあなたと開発チームだけに表示されます。所属はシステム管理者が設定します。'}
                     </p>
                 </section>
 
@@ -180,7 +180,7 @@ export default function RequestForm({ toolRequest, limits }: Props) {
                         className="bg-sky-700 text-white hover:bg-sky-800"
                     >
                         <Send className="size-4" />
-                        {toolRequest ? '保存' : 'リクエストを送る'}
+                        {toolRequest ? '保存' : '依頼を送る'}
                     </Button>
                 </div>
             </form>

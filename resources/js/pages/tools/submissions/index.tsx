@@ -24,7 +24,7 @@ export default function SubmissionsIndex({
             <div className="mt-6 flex flex-wrap items-end gap-x-4 gap-y-2">
                 <h1 className="text-xl font-bold text-slate-800">申請</h1>
                 <p className="text-sm text-slate-500">
-                    ツールの登録・変更・非推奨化の申請と、その結果です。
+                    あなたが出したツールの登録・変更・非推奨化の申請と、その結果です。
                 </p>
                 {features.maySubmit && (
                     <Button

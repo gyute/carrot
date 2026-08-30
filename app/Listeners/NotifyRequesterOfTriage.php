@@ -38,7 +38,7 @@ class NotifyRequesterOfTriage implements ShouldQueue
             'subject' => "【{$toolRequest->status->label()}】{$toolRequest->title}",
             'body' => implode("\n", $lines),
             'action_url' => route('tools.requests.show', $toolRequest, absolute: false),
-            'action_label' => 'リクエストを開く',
+            'action_label' => '依頼を開く',
             'subject_type' => ToolRequest::class,
             'subject_id' => $toolRequest->id,
         ]);

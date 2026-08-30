@@ -62,7 +62,7 @@ export default function AdminRequestShow({
 
     return (
         <>
-            <Head title={`リクエスト: ${toolRequest.title}`} />
+            <Head title={`依頼: ${toolRequest.title}`} />
 
             <AdminNav />
 
@@ -71,7 +71,7 @@ export default function AdminRequestShow({
                 className="mt-6 inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-800"
             >
                 <ArrowLeft className="size-3.5" />
-                リクエスト一覧へ
+                依頼一覧へ
             </Link>
 
             <div className="mt-2 flex flex-wrap items-center gap-3">
@@ -284,7 +284,7 @@ export default function AdminRequestShow({
                             <Input
                                 id="duplicate_of"
                                 value={form.data.duplicate_of}
-                                placeholder="まとめ先リクエストのULID"
+                                placeholder="まとめ先の依頼のULID"
                                 onChange={(e) =>
                                     form.setData('duplicate_of', e.target.value)
                                 }
@@ -361,7 +361,7 @@ export default function AdminRequestShow({
                                                 }).url
                                             }
                                         >
-                                            このリクエストからツールを登録
+                                            この依頼からツールを登録
                                         </Link>
                                     </Button>
                                 )}

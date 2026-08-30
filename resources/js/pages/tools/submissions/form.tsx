@@ -163,8 +163,8 @@ export default function SubmissionForm({
 
             {answers && (
                 <p className="mt-2 rounded-lg border border-sky-200 bg-sky-50 px-4 py-2 text-sm text-sky-900">
-                    リクエスト「{answers.title}
-                    」への回答として登録します。承認されるとそのリクエストは公開済みになります。
+                    依頼「{answers.title}
+                    」への回答として登録します。承認されるとその依頼は公開済みになります。
                 </p>
             )}
             <p className="mt-1 text-sm text-slate-500">

@@ -20,14 +20,14 @@ type Props = {
 
 export default function RequestShow({ toolRequest, can }: Props) {
     const withdraw = () => {
-        if (window.confirm('このリクエストを取り下げますか？')) {
+        if (window.confirm('この依頼を取り下げますか？')) {
             router.delete(destroy(toolRequest.ulid).url);
         }
     };
 
     return (
         <>
-            <Head title={`リクエスト: ${toolRequest.title}`} />
+            <Head title={`依頼: ${toolRequest.title}`} />
 
             <ToolsNav />
 
@@ -36,7 +36,7 @@ export default function RequestShow({ toolRequest, can }: Props) {
                 className="mt-6 inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-800"
             >
                 <ArrowLeft className="size-3.5" />
-                リクエスト一覧へ
+                依頼一覧へ
             </Link>
 
             <div className="mt-2 flex flex-wrap items-center gap-3">
@@ -154,7 +154,7 @@ export default function RequestShow({ toolRequest, can }: Props) {
             {toolRequest.tool && (
                 <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
                     <p className="text-xs font-semibold">
-                        このリクエストに対して公開されたツール
+                        この依頼に対して公開されたツール
                     </p>
                     <Link
                         href={showTool(toolRequest.tool.ulid)}

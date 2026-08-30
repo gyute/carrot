@@ -68,7 +68,7 @@ class ReviewToolRequest extends FormRequest
             'comment' => 'コメント',
             'priority' => '優先度',
             'assignee' => '担当者',
-            'duplicate_of' => '重複元のリクエスト',
+            'duplicate_of' => '重複元の依頼',
             'tool' => '公開したツール',
         ];
     }

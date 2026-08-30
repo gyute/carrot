@@ -40,7 +40,7 @@ export default function ToolsNav({ actions }: { actions?: ReactNode }) {
         ...(features.requests
             ? [
                   {
-                      label: 'リクエスト',
+                      label: '依頼',
                       href: requests().url,
                       icon: MessageSquarePlus,
                   },

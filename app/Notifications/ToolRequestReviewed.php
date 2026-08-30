@@ -36,7 +36,7 @@ class ToolRequestReviewed extends Notification implements ShouldQueue
         $delivered = $this->toolRequest->status === ToolRequestStatus::Delivered;
 
         return [
-            'title' => $delivered ? 'リクエストしたツールが公開されました' : 'リクエストの状況が変わりました',
+            'title' => $delivered ? '依頼したツールが公開されました' : '依頼の状況が変わりました',
             'body' => "「{$this->toolRequest->title}」は{$this->toolRequest->status->label()}になりました。",
             'url' => route('inbox.show', $this->message, absolute: false),
             'request' => $this->toolRequest->ulid,
