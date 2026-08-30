@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ApprovalController;
 use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\Admin\ToolController;
+use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 // Approvals: department managers (first stage) and admins (second stage).
@@ -21,6 +22,9 @@ Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group
     Route::post('tools/{tool}/deprecate', [ToolController::class, 'deprecate'])->name('tools.deprecate');
     Route::post('tools/{tool}/restore', [ToolController::class, 'restore'])->name('tools.restore');
     Route::delete('tools/{tool}', [ToolController::class, 'destroy'])->name('tools.destroy');
+
+    Route::get('users', [UserController::class, 'index'])->name('users.index');
+    Route::patch('users/{user}', [UserController::class, 'update'])->name('users.update');
 
     Route::get('system', [SystemController::class, 'index'])->name('system.index');
 });

@@ -1,0 +1,65 @@
+import { Link, usePage } from '@inertiajs/react';
+import { Activity, ClipboardCheck, Users } from 'lucide-react';
+import type { ComponentType } from 'react';
+import { cn } from '@/lib/utils';
+import { index as approvals } from '@/routes/admin/approvals';
+import { index as system } from '@/routes/admin/system';
+import { index as users } from '@/routes/admin/users';
+
+type Tab = {
+    label: string;
+    href: string;
+    icon: ComponentType<{ className?: string }>;
+    adminOnly: boolean;
+};
+
+/**
+ * The menu for the admin section. A manager only reviews, so everything that
+ * writes to a table other than tool_submissions is hidden from them - the
+ * routes refuse it too, this just keeps the row honest.
+ */
+export default function AdminNav() {
+    const { url, props } = usePage();
+    const isAdmin = props.auth.user.role === 'admin';
+
+    const tabs: Tab[] = [
+        {
+            label: '承認',
+            href: approvals().url,
+            icon: ClipboardCheck,
+            adminOnly: false,
+        },
+        { label: 'ユーザー', href: users().url, icon: Users, adminOnly: true },
+        {
+            label: 'システム',
+            href: system().url,
+            icon: Activity,
+            adminOnly: true,
+        },
+    ].filter((tab) => isAdmin || !tab.adminOnly);
+
+    return (
+        <nav className="inline-flex gap-1 rounded-lg bg-slate-200/60 p-1">
+            {tabs.map(({ label, href, icon: Icon }) => {
+                const active = url.startsWith(href);
+
+                return (
+                    <Link
+                        key={href}
+                        href={href}
+                        aria-current={active ? 'page' : undefined}
+                        className={cn(
+                            'inline-flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-sm font-medium transition',
+                            active
+                                ? 'bg-white text-slate-900 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-800',
+                        )}
+                    >
+                        <Icon className="size-4" />
+                        {label}
+                    </Link>
+                );
+            })}
+        </nav>
+    );
+}

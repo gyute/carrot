@@ -7,6 +7,7 @@ import {
     Loader2,
 } from 'lucide-react';
 import StatusPill from '@/components/status-pill';
+import AdminNav from '@/components/admin-nav';
 import { formatTimestamp } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { RUN_STATUS_STYLES } from '@/pages/tools/runs/show';
@@ -130,6 +131,8 @@ export default function SystemIndex({ status }: { status: Status }) {
     return (
         <>
             <Head title="システム" />
+
+            <AdminNav />
 
             <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
                 <h1 className="flex items-center gap-2 text-xl font-bold text-slate-800">

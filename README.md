@@ -100,9 +100,9 @@ row in the `tools` table.
   first stage; a department with no manager falls through to the admins).
   Admins may deprecate, restore or delete a tool directly and see `/admin/system`
   (queues, workers, sandbox, Reverb, recent runs and the log tail).
-  Set roles from the
-  shell: `php artisan carrot:promote <username> --role=manager --department=開発`,
-  `--role=admin`, `--revoke`. The seeder creates `manager` / `admin` (password
+  Roles and 所属 are edited at `/admin/users`; the same two columns can be set
+  from the shell with `php artisan carrot:promote <username> --role=manager
+  --department=開発`, `--role=admin`, `--revoke`. The seeder creates `manager` / `admin` (password
   `password`) for trying this locally.
 
 ## The sandbox
