@@ -17,6 +17,10 @@ composer setup                # install, .env, app key, migrate, seed, npm insta
 composer run dev              # serve + queue worker + vite + logs
 ```
 
+If 5432 is already in use on your machine, copy `.env.example` to `.env` first and
+set `DB_PORT` to a free port (5433, say) - compose publishes the container on
+whatever `DB_PORT` says, and Laravel connects to the same one.
+
 `composer setup` is safe to run again: the seeders skip what is already there.
 Open http://127.0.0.1:8000 and sign in with the seeded account.
 
