@@ -56,6 +56,10 @@ row in the `tools` table.
   script in the sandbox.
 - The catalog filters on status, category and 所属; deprecated tools stay for
   reference but are hidden until their status is ticked.
+- **Roles**: `users.role` is `member`, `manager` or `admin`. Set roles from the
+  shell: `php artisan carrot:promote <username> --role=manager --department=開発`,
+  `--role=admin`, `--revoke`. The seeder creates `manager` / `admin` (password
+  `password`) for trying this locally.
 
 ## Checks
 

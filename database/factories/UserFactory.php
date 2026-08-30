@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -28,6 +29,7 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'username' => Str::of(fake()->unique()->userName())->lower()->replaceMatches('/[^a-z0-9_-]/', '')->value(),
             'email' => fake()->unique()->safeEmail(),
+            'role' => UserRole::Member,
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
@@ -56,6 +58,27 @@ class UserFactory extends Factory
             'two_factor_secret' => encrypt('secret'),
             'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
             'two_factor_confirmed_at' => now(),
+        ]);
+    }
+
+    /**
+     * Indicate that the user gives the department-stage approval.
+     */
+    public function manager(string $department): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::Manager,
+            'department' => $department,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is a system administrator.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::Admin,
         ]);
     }
 }
