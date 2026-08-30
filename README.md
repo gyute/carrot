@@ -6,7 +6,7 @@ The UI is Japanese throughout.
 ## Requirements
 
 - PHP 8.4+, Composer
-- Node 20+
+- Node 22+
 - Docker (for the bundled PostgreSQL container)
 
 ## Setup
@@ -22,11 +22,24 @@ set `DB_PORT` to a free port (5433, say) - compose publishes the container on
 whatever `DB_PORT` says, and Laravel connects to the same one.
 
 `composer setup` is safe to run again: the seeders skip what is already there.
-Open http://127.0.0.1:8000 and sign in with the seeded account.
+Open http://127.0.0.1:8000 and sign in.
 
-| Login ID | Password   |
-| -------- | ---------- |
-| `test`   | `password` |
+| Login ID  | Role    | Password   |
+| --------- | ------- | ---------- |
+| `test`    | member  | `password` |
+| `manager` | manager | `password` |
+| `admin`   | admin   | `password` |
+
+`/tools` starts empty, because a tool is something someone registers rather
+than code in this repository. To see the platform with something in it:
+
+```bash
+php artisan demo:seed         # publish the demo catalog; --fresh to redo it
+```
+
+That adds `demo`, `demo-manager` and `demo-admin` (also `password`) and walks
+a handful of sample tools through the real approval flow. See
+[`demo/README.md`](demo/README.md) for what it publishes and how to add to it.
 
 After pulling changes into an environment that is already set up:
 
@@ -49,8 +62,8 @@ values worth a second look:
 | Key                                                   | Why                                                                                                                |
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `DB_PORT`                                             | Compose publishes Postgres on it; change it when 5432 is taken                                                     |
-| `SANDBOX_DRIVER`                                      | `none` only queues script runs. `bubblewrap` locally, `docker` on the runner host, or script tools never finish     |
-| `REVERB_APP_ID` / `_KEY` / `_SECRET`, `VITE_REVERB_*` | Live updates. Leave blank and every screen falls back to polling - nothing breaks, it is just slower                |
+| `SANDBOX_DRIVER`                                      | `none` only queues script runs. `bubblewrap` locally, `docker` on the runner host, or script tools never finish    |
+| `REVERB_APP_ID` / `_KEY` / `_SECRET`, `VITE_REVERB_*` | Live updates. Leave blank and every screen falls back to polling - nothing breaks, it is just slower               |
 | `CATALOG_DEPARTMENTS`                                 | The 所属 allowlist, comma separated. Blank means the field is free text                                            |
 | `PASSKEYS_USER_HANDLE_SECRET`                         | Defaults to `APP_KEY`. Set it to its own fixed value if `APP_KEY` will ever be rotated, or passkeys stop resolving |
 | `LOG_CHANNEL`                                         | The system screen tails whichever channel this names, so a `daily` or custom path is followed, not assumed         |
@@ -61,17 +74,17 @@ tails all come from configuration.
 
 ## Layout
 
-| Path                                                        | What lives there                                           |
-| ----------------------------------------------------------- | ---------------------------------------------------------- |
-| `routes/web.php`, `routes/settings.php`, `routes/tools.php` | Routes, split by area                                      |
-| `app/Http/Controllers/Tools/`                               | The tool module                                            |
-| `database/migrations/`                                      | `tools`, `tags`, `tag_tool` and `tool_submissions`          |
-| `config/catalog.php`                                        | The 所属 list, from `CATALOG_DEPARTMENTS`                   |
-| `app/Sandbox/`                                              | The sandbox runners script tools execute in                |
-| `config/sandbox.php`, `docker/sandbox/`                     | Sandbox limits, driver and container images                |
-| `resources/js/pages/`                                       | Inertia page components                                    |
-| `demo/`                                                     | The demo catalog, published by `php artisan demo:seed`      |
-| `.ai/rules/`                                                | Decisions and traps worth knowing before editing           |
+| Path                                                        | What lives there                                       |
+| ----------------------------------------------------------- | ------------------------------------------------------ |
+| `routes/web.php`, `routes/settings.php`, `routes/tools.php` | Routes, split by area                                  |
+| `app/Http/Controllers/Tools/`                               | The tool module                                        |
+| `database/migrations/`                                      | `tools`, `tags`, `tag_tool` and `tool_submissions`     |
+| `config/catalog.php`                                        | The 所属 list, from `CATALOG_DEPARTMENTS`              |
+| `app/Sandbox/`                                              | The sandbox runners script tools execute in            |
+| `config/sandbox.php`, `docker/sandbox/`                     | Sandbox limits, driver and container images            |
+| `resources/js/pages/`                                       | Inertia page components                                |
+| `demo/`                                                     | The demo catalog, published by `php artisan demo:seed` |
+| `.ai/rules/`                                                | Decisions and traps worth knowing before editing       |
 
 ## The tool module
 
@@ -104,17 +117,24 @@ row in the `tools` table.
   所属), `/admin/tools` (every row, deleted ones included, restore or purge),
   `/admin/tags` (rename and merge), `/admin/runs` (browse, delete, prune) and
   `/admin/system` (queues, workers, sandbox, Reverb, recent runs, log tail).
-  Roles and 所属 are edited at `/admin/users`; the same two columns can be set
-  from the shell with `php artisan carrot:promote <username> --role=manager
-  --department=開発`, `--role=admin`, `--revoke`. The seeder creates `manager` / `admin` (password
-  `password`) for trying this locally.
+  `/admin/users` writes the same two columns as
+  `php artisan carrot:promote <username> --role=manager --department=開発`
+  (`--role=admin`, `--revoke`), for a box with no browser.
 
-## Showing it working
+## The demo catalog
 
-`/tools` starts empty. `php artisan demo:seed` publishes a small, obviously
-fake catalog - a couple of link tools, two embeds and two sandbox scripts -
-by filing them as requests and walking them through both approval stages, so
-the versions, the history and the inbox are all real. See `demo/README.md`.
+`php artisan demo:seed` publishes a small, obviously fake catalog - two link
+tools, two embeds, two sandbox scripts and one request left waiting so the
+approval screens have something to show. It writes no `tools` rows directly:
+each one is filed as a request, endorsed by the demo department manager and
+published by a demo admin, so the versions, the approval history and the inbox
+messages are all real.
+
+It is safe to re-run (existing entries are skipped), `--fresh` deletes and
+republishes, and it refuses to run in production without `--force`. The
+catalog itself is [`demo/tools.php`](demo/tools.php) and the script sources
+are files under `demo/scripts/` - see [`demo/README.md`](demo/README.md) to
+add one.
 
 ## The sandbox
 
@@ -125,7 +145,7 @@ was requested with, and hands it to a `SandboxRunner`:
 | `SANDBOX_DRIVER` | Where                    | Isolation                                                                                                                 |
 | ---------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
 | `docker`         | the runner host          | throwaway container: `--network none`, read-only root, uid 65534, all caps dropped, memory/cpu/pid limits, `timeout` kill |
-| `bubblewrap`     | a dev box without Docker | fresh namespaces, no network, read-only root, private /tmp; memory via ulimit. Not for production                          |
+| `bubblewrap`     | a dev box without Docker | fresh namespaces, no network, read-only root, private /tmp; memory via ulimit. Not for production                         |
 | `fake`           | tests                    | never executes anything                                                                                                   |
 | `none`           | the web host             | only queues runs; throws if a job ever executes here                                                                      |
 
@@ -149,11 +169,12 @@ queue and storage credentials and nothing else.
 
 1. Create an unprivileged account, e.g. `carrot-runner`, with `/etc/subuid` and
    `/etc/subgid` ranges.
-2. Install rootless Docker for that account (`dockerd-rootless-setuptool.sh
-   install`) and `loginctl enable-linger carrot-runner` so its daemon survives
-   logout. Never add the account to the `docker` group - a root dockerd socket is
-   root, and `DockerSandboxRunner` refuses to start unless `docker info` reports
-   rootless (`SANDBOX_REQUIRE_ROOTLESS=false` only on a development box).
+2. Install rootless Docker for that account
+   (`dockerd-rootless-setuptool.sh install`), then run
+   `loginctl enable-linger carrot-runner` so its daemon survives logout.
+   Never add the account to the `docker` group - a root dockerd socket is
+   root, and `DockerSandboxRunner` refuses to start unless `docker info`
+   reports rootless (`SANDBOX_REQUIRE_ROOTLESS=false` only on a dev box).
 3. Enable cgroup v2 delegation for the user (`systemd` drop-in with
    `Delegate=cpu cpuset io memory pids`) or the `--memory`/`--cpus`/`--pids-limit`
    flags are ignored.

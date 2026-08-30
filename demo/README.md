@@ -21,11 +21,11 @@ approval history and real inbox messages.
 
 It creates three accounts if they are missing (password `password`):
 
-| Login | Role | Why |
-| --- | --- | --- |
-| `demo` | member | files the requests, owns the tools |
-| `demo-manager` | manager of the demo department | the first approval stage |
-| `demo-admin` | admin | publishes, and can see `/admin` |
+| Login          | Role                           | Why                                |
+| -------------- | ------------------------------ | ---------------------------------- |
+| `demo`         | member                         | files the requests, owns the tools |
+| `demo-manager` | manager of the demo department | the first approval stage           |
+| `demo-admin`   | admin                          | publishes, and can see `/admin`    |
 
 Messages and bell notifications are queued, so they arrive once a worker is
 running (`composer run dev` starts one).
