@@ -38,7 +38,7 @@ export default function SubmissionShow({ submission, can }: Props) {
                 className="mt-6 inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-800"
             >
                 <ArrowLeft className="size-3.5" />
-                申請一覧へ
+                登録一覧へ
             </Link>
 
             <div className="mt-2 flex flex-wrap items-center gap-3">

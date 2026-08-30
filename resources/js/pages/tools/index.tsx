@@ -86,7 +86,7 @@ export default function ToolsIndex({ tools, tagGroups }: Props) {
 
             {/*
              * Finding a tool is what this screen is for, so the filter is the
-             * only action on it. Registering one lives on the 申請 tab, next
+             * only action on it. Registering one lives on the 登録 tab, next
              * to the requests it produces.
              */}
             <ToolsNav

@@ -156,7 +156,7 @@ export default function SubmissionForm({
                 className="mt-6 inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-800"
             >
                 <ArrowLeft className="size-3.5" />
-                {changeRequest ? 'ツールへ戻る' : '申請一覧へ'}
+                {changeRequest ? 'ツールへ戻る' : '登録一覧へ'}
             </Link>
 
             <h1 className="mt-2 text-xl font-bold text-slate-800">{title}</h1>

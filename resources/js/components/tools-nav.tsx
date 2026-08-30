@@ -47,7 +47,7 @@ export default function ToolsNav({ actions }: { actions?: ReactNode }) {
               ]
             : []),
         ...(features.submissions
-            ? [{ label: '申請', href: submissions().url, icon: FilePen }]
+            ? [{ label: '登録', href: submissions().url, icon: FilePen }]
             : []),
         ...(features.submissions && isReviewer
             ? [
