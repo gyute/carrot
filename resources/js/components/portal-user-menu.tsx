@@ -1,17 +1,15 @@
 import { Form, Link } from '@inertiajs/react';
-import { KeyRound, LogOut, UserRound } from 'lucide-react';
+import { LogOut, UserRound } from 'lucide-react';
 import { usePopover } from '@/hooks/use-popover';
 import { cn } from '@/lib/utils';
 import { logout } from '@/routes';
 import { edit as editProfile } from '@/routes/profile';
-import { edit as editSecurity } from '@/routes/security';
 import type { User } from '@/types';
 
 /**
- * The account menu in the portal header. The settings screens have their own
- * navigation once you are inside them, but nothing in the portal used to
- * point at them - the name was plain text - so they could only be reached by
- * typing the URL.
+ * The account menu in the portal header. One way in is enough: the settings
+ * screens carry their own navigation, so password and two-factor live behind
+ * the profile link rather than being listed again here.
  */
 export default function PortalUserMenu({ user }: { user: User }) {
     const { ref, open, toggle, setOpen } = usePopover<HTMLDivElement>();
@@ -54,15 +52,6 @@ export default function PortalUserMenu({ user }: { user: User }) {
                         <UserRound className="size-4 text-slate-400" />
                         プロフィール
                     </Link>
-                    <Link
-                        href={editSecurity()}
-                        onClick={() => setOpen(false)}
-                        className={item}
-                    >
-                        <KeyRound className="size-4 text-slate-400" />
-                        パスワードと認証
-                    </Link>
-
                     <Form
                         {...logout.form()}
                         className="border-t border-slate-100"
