@@ -35,7 +35,7 @@ export function RunOutput({ run }: { run: ToolRunSummary }) {
                 <p className="mb-1 text-xs font-semibold text-slate-500">
                     標準出力
                 </p>
-                <pre className="max-h-[32rem] min-h-16 overflow-auto rounded-lg bg-slate-900 p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-slate-100">
+                <pre className="max-h-[32rem] min-h-16 overflow-auto rounded-lg bg-slate-900 p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-slate-100 scheme-dark">
                     {run.stdout ??
                         (run.finished ? '' : '実行が終わると表示されます…')}
                 </pre>
@@ -46,7 +46,7 @@ export function RunOutput({ run }: { run: ToolRunSummary }) {
                     <p className="mb-1 text-xs font-semibold text-rose-600">
                         標準エラー
                     </p>
-                    <pre className="max-h-64 overflow-auto rounded-lg bg-rose-950 p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-rose-100">
+                    <pre className="max-h-64 overflow-auto rounded-lg bg-rose-950 p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap text-rose-100 scheme-dark">
                         {run.stderr}
                     </pre>
                 </div>

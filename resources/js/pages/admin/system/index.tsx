@@ -385,7 +385,7 @@ export default function SystemIndex({ status }: { status: Status }) {
                         )
                     }
                 >
-                    <pre className="max-h-[28rem] overflow-auto rounded-lg bg-slate-900 p-4 font-mono text-[11px] leading-relaxed">
+                    <pre className="max-h-[28rem] overflow-auto rounded-lg bg-slate-900 p-4 font-mono text-[11px] leading-relaxed scheme-dark">
                         {status.log.lines.length === 0 ? (
                             <span className="text-slate-500">
                                 ログはまだありません。

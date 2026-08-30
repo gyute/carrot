@@ -162,8 +162,20 @@
  * palette, no matter which appearance the visitor picked, so the branded blue
  * surfaces keep their contrast.
  */
+/*
+ * `color-scheme` paints what the stylesheet cannot: scrollbars, form
+ * controls, spinners. app.blade.php sets it from the appearance the visitor
+ * picked, which is right for the settings screens - but the portal is light
+ * whatever they picked, so it says so for itself, and for the page scrollbar,
+ * which hangs off the element above this one.
+ */
+html.dark:has(.portal-surface) {
+    color-scheme: light;
+}
+
 .portal-surface {
     color: var(--color-foreground);
+    color-scheme: light;
 
     --color-background: oklch(1 0 0);
     --color-foreground: oklch(0.145 0 0);

@@ -41,15 +41,18 @@ const isDarkMode = (appearance: Appearance): boolean => {
     return appearance === 'dark' || (appearance === 'system' && prefersDark());
 };
 
+/**
+ * Only the class is set here. `color-scheme` - what paints the scrollbars and
+ * the other native controls - follows from it in app.css, so a surface that
+ * is light whatever the visitor picked can say so. An inline style could not
+ * be overridden by any rule.
+ */
 const applyTheme = (appearance: Appearance): void => {
     if (typeof document === 'undefined') {
         return;
     }
 
-    const isDark = isDarkMode(appearance);
-
-    document.documentElement.classList.toggle('dark', isDark);
-    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+    document.documentElement.classList.toggle('dark', isDarkMode(appearance));
 };
 
 const subscribe = (callback: () => void) => {

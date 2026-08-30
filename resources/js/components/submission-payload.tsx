@@ -185,7 +185,7 @@ export default function SubmissionPayloadView({
                         )}
                     </Row>
                     <Row label="ソース" changed={diff('source')}>
-                        <pre className="max-h-96 overflow-auto rounded-lg bg-slate-900 p-4 font-mono text-xs leading-relaxed text-slate-100">
+                        <pre className="max-h-96 overflow-auto rounded-lg bg-slate-900 p-4 font-mono text-xs leading-relaxed text-slate-100 scheme-dark">
                             {payload.source}
                         </pre>
                     </Row>
