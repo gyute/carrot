@@ -1,24 +1,34 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, Check, Undo2 } from 'lucide-react';
+import { Head, Link, useForm, usePoll } from '@inertiajs/react';
+import { ArrowLeft, Check, FlaskConical, Undo2 } from 'lucide-react';
 import { useState } from 'react';
 import InputError from '@/components/input-error';
 import StatusPill from '@/components/status-pill';
 import SubmissionPayloadView from '@/components/submission-payload';
+import ToolRunForm from '@/components/tool-run-form';
 import ToolsNav from '@/components/tools-nav';
 import { Button } from '@/components/ui/button';
 import { formatDateTime } from '@/lib/format';
 import { SUBMISSION_STATUS_STYLES } from '@/lib/tool-presets';
 import { cn } from '@/lib/utils';
-import { approve, index, reject } from '@/routes/admin/approvals';
+import { RUN_STATUS_STYLES, RunOutput } from '@/pages/tools/runs/show';
+import { approve, index, reject, testRun } from '@/routes/admin/approvals';
 import { show as showTool } from '@/routes/tools';
-import type { SubmissionDetail } from '@/types/tools';
+import type { SubmissionDetail, ToolRunSummary } from '@/types/tools';
 
 type Props = {
     submission: SubmissionDetail;
-    can: { review: boolean; finalize: boolean };
+    testRuns: ToolRunSummary[];
+    can: { review: boolean; finalize: boolean; testRun: boolean };
 };
 
-export default function ApprovalShow({ submission, can }: Props) {
+export default function ApprovalShow({ submission, testRuns, can }: Props) {
+    const latestRun = testRuns[0];
+
+    usePoll(
+        2000,
+        { only: ['testRuns'] },
+        { autoStart: latestRun ? !latestRun.finished : false },
+    );
     const form = useForm({ comment: '' });
     const [decision, setDecision] = useState<'approve' | 'reject' | null>(null);
 
@@ -132,6 +142,46 @@ export default function ApprovalShow({ submission, can }: Props) {
                     />
                 )}
             </div>
+
+            {can.testRun && (
+                <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <h2 className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                        <FlaskConical className="size-4" />
+                        サンドボックスで試す
+                    </h2>
+                    <p className="mt-1 text-xs text-slate-500">
+                        申請されたコードをそのまま隔離環境で実行し、結果を見てから判定できます。
+                    </p>
+                    <div className="mt-4">
+                        <ToolRunForm
+                            inputs={submission.payload.config?.inputs ?? []}
+                            action={testRun(submission.ulid).url}
+                            label="テスト実行"
+                        />
+                    </div>
+                    {latestRun && (
+                        <div className="mt-5 border-t border-slate-100 pt-4">
+                            <div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                                <StatusPill
+                                    value={latestRun.status}
+                                    label={latestRun.statusLabel}
+                                    styles={RUN_STATUS_STYLES}
+                                />
+                                <span className="tabular-nums">
+                                    {formatDateTime(latestRun.createdAt)}
+                                </span>
+                                {latestRun.finished && (
+                                    <span className="tabular-nums">
+                                        {latestRun.durationMs ?? 0} ms ·
+                                        終了コード {latestRun.exitCode ?? '—'}
+                                    </span>
+                                )}
+                            </div>
+                            <RunOutput run={latestRun} />
+                        </div>
+                    )}
+                </section>
+            )}
 
             {can.review ? (
                 <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">

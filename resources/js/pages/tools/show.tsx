@@ -7,12 +7,14 @@ import {
     RotateCcw,
     Save,
     Trash2,
+    Wrench,
 } from 'lucide-react';
 import { useState } from 'react';
 import EmbedFrame from '@/components/embed-frame';
 import InputError from '@/components/input-error';
 import StatusPill from '@/components/status-pill';
 import ToolIcon from '@/components/tool-icon';
+import ToolRunForm from '@/components/tool-run-form';
 import ToolsNav from '@/components/tools-nav';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,11 +22,13 @@ import { Label } from '@/components/ui/label';
 import { formatDateTime } from '@/lib/format';
 import {
     KIND_LABELS,
+    NETWORK_LABELS,
     STATUS_STYLES,
     SUBMISSION_STATUS_STYLES,
     toolAccent,
 } from '@/lib/tool-presets';
 import { cn } from '@/lib/utils';
+import { RUN_STATUS_STYLES } from '@/pages/tools/runs/show';
 import {
     deprecate as adminDeprecate,
     destroy as adminDestroy,
@@ -32,17 +36,25 @@ import {
 } from '@/routes/admin/tools';
 import { deprecate, index, update } from '@/routes/tools';
 import { create as createChange } from '@/routes/tools/change';
+import { show as showRun, store as storeRun } from '@/routes/tools/runs';
 import { show as showSubmission } from '@/routes/tools/submissions';
-import type { FormLimits, SubmissionSummary, ToolDetail } from '@/types/tools';
+import type {
+    FormLimits,
+    SubmissionSummary,
+    ToolDetail,
+    ToolRunSummary,
+} from '@/types/tools';
 
 type Props = {
     tool: ToolDetail;
     history: SubmissionSummary[];
+    runs: ToolRunSummary[];
     openChange: SubmissionSummary | null;
     limits: FormLimits;
     can: {
         updateMetadata: boolean;
         submitChange: boolean;
+        run: boolean;
         manage: boolean;
         delete: boolean;
     };
@@ -212,6 +224,7 @@ function MetadataForm({
 export default function ToolShow({
     tool,
     history,
+    runs,
     openChange,
     limits,
     can,
@@ -389,6 +402,74 @@ export default function ToolShow({
                         </p>
                     )}
                 </div>
+            )}
+
+            {tool.kind === 'script' && (
+                <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <h2 className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                        <Wrench className="size-4" />
+                        実行
+                        <span className="text-xs font-normal text-slate-500">
+                            {limits.runtimes[tool.config.runtime ?? 'php'] ??
+                                tool.config.runtime}{' '}
+                            · ネットワーク{' '}
+                            {NETWORK_LABELS[tool.config.network ?? 'none']} ·
+                            タイムアウト {tool.config.timeout_sec}s · メモリ{' '}
+                            {tool.config.memory_mb}MB
+                        </span>
+                    </h2>
+
+                    <div className="mt-4">
+                        {can.run ? (
+                            <ToolRunForm
+                                inputs={tool.config.inputs ?? []}
+                                action={storeRun(tool.ulid).url}
+                            />
+                        ) : (
+                            <p className="text-sm text-slate-500">
+                                非推奨のツールは実行できません。
+                            </p>
+                        )}
+                    </div>
+
+                    {runs.length > 0 && (
+                        <div className="mt-6">
+                            <h3 className="text-xs font-semibold text-slate-500">
+                                最近の実行
+                            </h3>
+                            <ul className="mt-2 divide-y divide-slate-100 rounded-lg border border-slate-200 text-sm">
+                                {runs.map((run) => (
+                                    <li key={run.ulid}>
+                                        <Link
+                                            href={showRun([
+                                                tool.ulid,
+                                                run.ulid,
+                                            ])}
+                                            className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 transition hover:bg-slate-50"
+                                        >
+                                            <StatusPill
+                                                value={run.status}
+                                                label={run.statusLabel}
+                                                styles={RUN_STATUS_STYLES}
+                                            />
+                                            <span className="text-slate-500 tabular-nums">
+                                                {formatDateTime(run.createdAt)}
+                                            </span>
+                                            <span className="text-xs text-slate-500">
+                                                {run.requestedBy}
+                                            </span>
+                                            {run.durationMs !== null && (
+                                                <span className="ml-auto text-xs text-slate-400 tabular-nums">
+                                                    {run.durationMs} ms
+                                                </span>
+                                            )}
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </section>
             )}
 
             {(can.submitChange || can.manage) && (

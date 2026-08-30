@@ -5,6 +5,7 @@ namespace App\Support\Presenters;
 use App\Http\Requests\Tools\ToolSubmissionRequest;
 use App\Models\Tool;
 use App\Models\ToolSubmission;
+use App\Sandbox\RuntimeLabels;
 
 /**
  * The submission shapes handed to the requester's and the admin's screens.
@@ -12,6 +13,8 @@ use App\Models\ToolSubmission;
  */
 class SubmissionPresenter
 {
+    public function __construct(private RuntimeLabels $runtimes) {}
+
     /**
      * @return array{ulid: string, action: string, actionLabel: string, status: string, statusLabel: string, name: string, kind: string|null, requester: string, department: string|null, tool: array{ulid: string, name: string, slug: string}|null, note: string|null, endorser: string|null, endorseComment: string|null, endorsedAt: string|null, reviewer: string|null, reviewComment: string|null, submittedAt: string|null, reviewedAt: string|null, createdAt: string}
      */
@@ -58,19 +61,8 @@ class SubmissionPresenter
             ...$this->summary($submission),
             'payload' => $submission->payload,
             'current' => $submission->tool === null ? null : $this->payloadFromTool($submission->tool),
-            'runtimes' => $this->runtimes(),
+            'runtimes' => $this->runtimes->all(),
         ];
-    }
-
-    /**
-     * What the configured images run scripts with, for showing to people who
-     * write or read them.
-     *
-     * @return array<string, string>
-     */
-    private function runtimes(): array
-    {
-        return array_map('strval', (array) config('sandbox.runtimes', []));
     }
 
     /**
@@ -118,7 +110,7 @@ class SubmissionPresenter
             'icons' => Tool::ICONS,
             'accents' => Tool::ACCENTS,
             'departments' => array_values((array) config('catalog.departments', [])),
-            'runtimes' => $this->runtimes(),
+            'runtimes' => $this->runtimes->all(),
             'timeoutMax' => (int) config('sandbox.timeout_max'),
             'memoryMax' => (int) config('sandbox.memory_max'),
             'sourceBytes' => ToolSubmissionRequest::MAX_SOURCE_BYTES,

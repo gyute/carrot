@@ -5,11 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Actions\Tools\ApproveSubmission;
 use App\Actions\Tools\EndorseSubmission;
 use App\Actions\Tools\RejectSubmission;
+use App\Actions\Tools\StartToolRun;
 use App\Enums\SubmissionStatus;
+use App\Enums\ToolKind;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ReviewSubmissionRequest;
+use App\Models\ToolRun;
 use App\Models\ToolSubmission;
 use App\Support\Presenters\SubmissionPresenter;
+use App\Support\Presenters\ToolRunPresenter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -18,7 +22,7 @@ use Inertia\Response;
 
 class ApprovalController extends Controller
 {
-    public function __construct(private SubmissionPresenter $presenter) {}
+    public function __construct(private SubmissionPresenter $presenter, private ToolRunPresenter $runs) {}
 
     /**
      * What this reviewer has to act on first, then what has been decided.
@@ -52,13 +56,38 @@ class ApprovalController extends Controller
 
         $submission->load(['tool.tags', 'user', 'reviewer', 'endorser']);
 
+        $testRuns = ToolRun::query()
+            ->with('user')
+            ->where('tool_submission_id', $submission->id)
+            ->latest()
+            ->limit(5)
+            ->get();
+
         return Inertia::render('admin/approvals/show', [
             'submission' => $this->presenter->detail($submission),
+            'testRuns' => $testRuns->map($this->runs->present(...))->all(),
             'can' => [
                 'review' => Gate::allows('review', $submission),
                 'finalize' => Gate::allows('finalize', $submission),
+                'testRun' => Gate::allows('review', $submission) && ($submission->payload['kind'] ?? null) === ToolKind::Script->value,
             ],
         ]);
+    }
+
+    /**
+     * Run the submitted script in the sandbox before deciding on it.
+     */
+    public function testRun(Request $request, ToolSubmission $submission, StartToolRun $start): RedirectResponse
+    {
+        Gate::authorize('review', $submission);
+
+        abort_unless(($submission->payload['kind'] ?? null) === ToolKind::Script->value, 422, 'スクリプトではありません。');
+
+        $inputs = $request->input('inputs', []);
+
+        $start->forSubmission($submission, $request->user(), is_array($inputs) ? $inputs : []);
+
+        return to_route('admin.approvals.show', $submission)->with('status', 'サンドボックスで実行を開始しました。');
     }
 
     /**

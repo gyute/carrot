@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ToolController;
 use App\Http\Controllers\Tools\SubmissionController;
+use App\Http\Controllers\Tools\ToolRunController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {
@@ -23,4 +24,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('tools/{tool}/change', [SubmissionController::class, 'create'])->name('tools.change.create');
     Route::post('tools/{tool}/change', [SubmissionController::class, 'store'])->name('tools.change.store');
     Route::post('tools/{tool}/deprecate', [SubmissionController::class, 'deprecate'])->name('tools.deprecate');
+    Route::post('tools/{tool}/runs', [ToolRunController::class, 'store'])
+        ->middleware('throttle:tool-runs')
+        ->name('tools.runs.store');
+    Route::get('tools/{tool}/runs/{run}', [ToolRunController::class, 'show'])->name('tools.runs.show');
 });

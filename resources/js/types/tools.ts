@@ -105,3 +105,23 @@ export type ToolDetail = {
     deprecatedAt: string | null;
     pendingChange: boolean;
 };
+
+export type ToolRunSummary = {
+    ulid: string;
+    status: 'queued' | 'running' | 'completed' | 'failed' | 'timed_out';
+    statusLabel: string;
+    finished: boolean;
+    runtime: string;
+    runtimeLabel: string;
+    inputs: Record<string, unknown>;
+    exitCode: number | null;
+    stdout: string | null;
+    stderr: string | null;
+    truncated: boolean;
+    durationMs: number | null;
+    errorMessage: string | null;
+    requestedBy: string;
+    createdAt: string;
+    startedAt: string | null;
+    finishedAt: string | null;
+};

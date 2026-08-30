@@ -33,8 +33,9 @@ php artisan db:seed --force
 
 ## Running it
 
-`composer run dev` starts four processes at once - the PHP server, `queue:listen`,
-Vite and the log tail.
+`composer run dev` starts the PHP server, a worker on the `sandbox,default`
+queues, Vite and the log tail. **The worker matters**: script tool runs are
+queued jobs, so without it they stay in `待機中` forever.
 
 ## Layout
 
@@ -44,6 +45,8 @@ Vite and the log tail.
 | `app/Http/Controllers/Tools/`                               | The tool module                                            |
 | `database/migrations/`                                      | `tools`, `tags`, `tag_tool` and `tool_submissions`          |
 | `config/catalog.php`                                        | The 所属 list, from `CATALOG_DEPARTMENTS`                   |
+| `app/Sandbox/`                                              | The sandbox runners script tools execute in                |
+| `config/sandbox.php`, `docker/sandbox/`                     | Sandbox limits, driver and container images                |
 | `resources/js/pages/`                                       | Inertia page components                                    |
 | `.ai/rules/`                                                | Decisions and traps worth knowing before editing           |
 
@@ -73,6 +76,56 @@ row in the `tools` table.
   shell: `php artisan carrot:promote <username> --role=manager --department=開発`,
   `--role=admin`, `--revoke`. The seeder creates `manager` / `admin` (password
   `password`) for trying this locally.
+
+## The sandbox
+
+Script tools never run inside the app. A queued `RunToolJob` on the `sandbox`
+queue re-reads the approved source, checks its hash against the one the run
+was requested with, and hands it to a `SandboxRunner`:
+
+| `SANDBOX_DRIVER` | Where                    | Isolation                                                                                                                 |
+| ---------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `docker`         | the runner host          | throwaway container: `--network none`, read-only root, uid 65534, all caps dropped, memory/cpu/pid limits, `timeout` kill |
+| `bubblewrap`     | a dev box without Docker | fresh namespaces, no network, read-only root, private /tmp; memory via ulimit. Not for production                          |
+| `fake`           | tests                    | never executes anything                                                                                                   |
+| `none`           | the web host             | only queues runs; throws if a job ever executes here                                                                      |
+
+A script tool declares whether it needs the internet (`config.network`:
+`none`, the default, or `internet`). Reviewers see the choice highlighted on the
+approval screen and can run the submitted script in the sandbox before deciding;
+the runner attaches an `internet` tool to `SANDBOX_INTERNET_NETWORK` (default
+`bridge` - point it at a bridge whose egress you control) and everything else to
+`--network none`.
+
+Inputs reach the script as a JSON file named by `$TOOL_INPUTS`; stdout is the
+result, capped at `SANDBOX_OUTPUT_BYTES`. Runs are rate limited per user
+(`SANDBOX_RATE_LIMIT` per minute) and pruned after `SANDBOX_RUN_RETENTION_DAYS`
+by the scheduled `carrot:prune-runs`.
+
+### Runner host
+
+Run the same codebase on a separate host that serves no HTTP and only works the
+queues: `php artisan queue:work --queue=sandbox,default`. It needs the database,
+queue and storage credentials and nothing else.
+
+1. Create an unprivileged account, e.g. `carrot-runner`, with `/etc/subuid` and
+   `/etc/subgid` ranges.
+2. Install rootless Docker for that account (`dockerd-rootless-setuptool.sh
+   install`) and `loginctl enable-linger carrot-runner` so its daemon survives
+   logout. Never add the account to the `docker` group - a root dockerd socket is
+   root, and `DockerSandboxRunner` refuses to start unless `docker info` reports
+   rootless (`SANDBOX_REQUIRE_ROOTLESS=false` only on a development box).
+3. Enable cgroup v2 delegation for the user (`systemd` drop-in with
+   `Delegate=cpu cpuset io memory pids`) or the `--memory`/`--cpus`/`--pids-limit`
+   flags are ignored.
+4. Build the images in CI (`docker/sandbox/README.md`) and pull them on the host;
+   the runner never builds.
+5. Set `SANDBOX_DRIVER=docker` and `DOCKER_HOST=unix:///run/user/<uid>/docker.sock`
+   in the runner's `.env`; the web host keeps `SANDBOX_DRIVER=none`.
+
+Locally, `composer run dev` runs a worker on `sandbox,default` next to the web
+server, so `SANDBOX_DRIVER=bubblewrap` (or `docker` with a rootless daemon)
+makes script tools work end to end on one machine.
 
 ## Checks
 

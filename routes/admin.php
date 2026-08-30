@@ -10,6 +10,9 @@ Route::middleware(['auth', 'can:reviewer'])->prefix('admin')->name('admin.')->gr
     Route::get('approvals/{submission}', [ApprovalController::class, 'show'])->name('approvals.show');
     Route::post('approvals/{submission}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
     Route::post('approvals/{submission}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
+    Route::post('approvals/{submission}/test-run', [ApprovalController::class, 'testRun'])
+        ->middleware('throttle:tool-runs')
+        ->name('approvals.test-run');
 });
 
 // System administration: admins only.
