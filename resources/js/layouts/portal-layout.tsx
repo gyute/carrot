@@ -1,12 +1,12 @@
-import { Form, Link, usePage } from '@inertiajs/react';
-import { Activity, LogOut, UserRound } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { Activity } from 'lucide-react';
 import { useEffect } from 'react';
 import type { PropsWithChildren } from 'react';
 import { toast } from 'sonner';
 import NotificationBell from '@/components/notification-bell';
 import PortalLogo from '@/components/portal-logo';
-import { Button } from '@/components/ui/button';
-import { home, logout } from '@/routes';
+import PortalUserMenu from '@/components/portal-user-menu';
+import { home } from '@/routes';
 import { index as system } from '@/routes/admin/system';
 
 /**
@@ -45,27 +45,7 @@ export default function PortalLayout({ children }: PropsWithChildren) {
                         )}
                         <NotificationBell />
 
-                        <span className="flex items-center gap-2">
-                            <span className="flex size-8 items-center justify-center rounded-full bg-white/20">
-                                <UserRound className="size-4" />
-                            </span>
-                            <span>
-                                {auth.user.name}（{auth.user.username}）さん
-                            </span>
-                        </span>
-
-                        <Form {...logout.form()}>
-                            <Button
-                                type="submit"
-                                variant="ghost"
-                                size="sm"
-                                className="text-white hover:bg-white/15 hover:text-white"
-                                data-test="logout-button"
-                            >
-                                <LogOut className="size-4" />
-                                ログアウト
-                            </Button>
-                        </Form>
+                        <PortalUserMenu user={auth.user} />
                     </div>
                 </div>
             </header>
