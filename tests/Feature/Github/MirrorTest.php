@@ -203,16 +203,18 @@ test('a branch that is not there is refused, not created', function () {
         'github.branch' => 'mian',
     ]);
 
-    Http::fake(['*/git/ref/heads/mian' => Http::response(status: 404)]);
+    // 404 is a branch that is not there; 409 is a repository with no commits
+    // at all. Setting one up is the operator's job either way.
+    foreach ([404, 409] as $status) {
+        Http::fake(['*/git/ref/heads/mian' => Http::response(status: $status)]);
 
-    // A repository with no commits reads the same way, and wants the same
-    // answer: setting one up is the operator's job, not the mirror's.
-    expect(fn () => (new MirrorToolToRepo($tool->ulid, $tool->slug))->handle(app(GitHub::class)))
-        ->toThrow(RuntimeException::class, 'no branch named `mian`');
+        expect(fn () => (new MirrorToolToRepo($tool->ulid, $tool->slug))->handle(app(GitHub::class)))
+            ->toThrow(RuntimeException::class, 'no branch named `mian`');
 
-    // It asked one question and wrote nothing.
-    Http::assertSentCount(1);
-    Http::assertNotSent(fn ($request) => $request->method() !== 'GET');
+        // It asked one question and wrote nothing.
+        Http::assertSentCount(1);
+        Http::assertNotSent(fn ($request) => $request->method() !== 'GET');
+    }
 });
 
 test('the system screen names a missing branch before any tool changes', function () {
@@ -228,7 +230,7 @@ test('the system screen names a missing branch before any tool changes', functio
         ->get(route('admin.system.index'))
         ->assertInertia(fn ($page) => $page
             ->where('status.mirror.ok', false)
-            ->where('status.mirror.message', 'GitHub: the repository has no branch named `mian`. Create it - a repository with no commits has none - or point GITHUB_BRANCH at one that exists.'));
+            ->where('status.mirror.message', 'GitHub: the repository has no branch named `mian`. Push a first commit to it - a new repository has no branches until you do - or point GITHUB_BRANCH at one that exists.'));
 });
 
 test('a repository name without an owner is named as such, not left as a 404', function () {

@@ -148,9 +148,12 @@ class GitHub
     {
         $response = $this->request()->get($this->url("git/ref/heads/{$branch}"));
 
-        if ($response->status() === 404) {
+        // 404 when the branch is not there, 409 when the repository has no
+        // commits at all. Same answer either way: somebody has to set the
+        // repository up first.
+        if (in_array($response->status(), [404, 409], true)) {
             throw new RuntimeException(
-                "GitHub: the repository has no branch named `{$branch}`. Create it - a repository with no commits has none - or point GITHUB_BRANCH at one that exists.",
+                "GitHub: the repository has no branch named `{$branch}`. Push a first commit to it - a new repository has no branches until you do - or point GITHUB_BRANCH at one that exists.",
             );
         }
 
