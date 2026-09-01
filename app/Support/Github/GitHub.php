@@ -125,6 +125,14 @@ class GitHub
             return ['ok' => false, 'message' => "{$repository} への書き込み権限がトークンにありません。"];
         }
 
+        // Says so here rather than leaving it for the first tool somebody
+        // changes to fail on.
+        try {
+            $this->head((string) config('github.branch'));
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'message' => $e->getMessage()];
+        }
+
         return ['ok' => true, 'message' => null];
     }
 
@@ -140,19 +148,30 @@ class GitHub
     }
 
     /**
-     * The commit the branch points at, or null when there is none: either the
-     * repository has no commits yet, or GITHUB_BRANCH names a branch that
-     * does not exist. Both end the same way - the branch is created.
+     * The commit the branch points at, or null when the repository has no
+     * commits at all and the first write has to start its history.
+     *
+     * A missing branch is not the same thing as a new repository, and the two
+     * arrive as the same 404. If the repository has other branches then
+     * GITHUB_BRANCH names one that is not there - a typo, or a default branch
+     * called something else - and starting an orphan branch would bury the
+     * mistake in a place nobody looks. That is worth failing over.
      */
     private function head(string $branch): ?string
     {
         $response = $this->request()->get($this->url("git/ref/heads/{$branch}"));
 
-        if ($response->status() === 404) {
-            return null;
+        if ($response->status() !== 404) {
+            return (string) $response->throw()->json()['object']['sha'];
         }
 
-        return (string) $response->throw()->json()['object']['sha'];
+        if ($this->get('git/matching-refs/heads/') !== []) {
+            throw new RuntimeException(
+                "GitHub: the repository has no branch named `{$branch}`. Set GITHUB_BRANCH to one that exists.",
+            );
+        }
+
+        return null;
     }
 
     /**
@@ -189,7 +208,11 @@ class GitHub
             throw new RuntimeException('GITHUB_REPOSITORY is not set.');
         }
 
-        return rtrim(config('github.api_url').'/repos/'.$repository.'/'.$path, '/');
+        $base = config('github.api_url').'/repos/'.$repository;
+
+        // The trailing slash in `git/matching-refs/heads/` is what makes it
+        // mean "every branch", so it is not trimmed away.
+        return $path === '' ? $base : $base.'/'.ltrim($path, '/');
     }
 
     private function request(): PendingRequest

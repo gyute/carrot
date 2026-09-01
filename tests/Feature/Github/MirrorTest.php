@@ -13,6 +13,15 @@ use Illuminate\Support\Facades\Http;
  * Turns the mirror on for a test and answers the Git Data API with the shapes
  * the client reads, so the assertions are about what we send.
  */
+beforeEach(function (): void {
+    // A fake that does not match must fail the test rather than reach GitHub -
+    // it already did once, and only a 401 gave it away.
+    Http::preventStrayRequests();
+
+    // Nothing renders through a server-side renderer here.
+    config(['inertia.ssr.enabled' => false]);
+});
+
 function mirrorOn(string $newTree = 'tree-new'): void
 {
     config([
@@ -198,6 +207,7 @@ test('a repository with no commits yet gets its history started', function () {
     Http::fake([
         // No refs at all: nobody has committed to it.
         '*/git/ref/heads/main' => Http::response(status: 404),
+        '*/git/matching-refs/heads/' => Http::response([]),
         '*/git/blobs' => Http::response(['sha' => 'blob-sha']),
         '*/git/trees' => Http::response(['sha' => 'tree-new']),
         '*/git/commits' => Http::response(['sha' => 'commit-sha']),
@@ -222,9 +232,51 @@ test('a repository with no commits yet gets its history started', function () {
 test('purging against an empty repository asks for nothing', function () {
     config(['github.repository' => 'acme/carrot-tools', 'github.token' => 'ghp_test', 'github.branch' => 'main']);
 
-    Http::fake(['*/git/ref/heads/main' => Http::response(status: 404)]);
+    Http::fake([
+        '*/git/ref/heads/main' => Http::response(status: 404),
+        '*/git/matching-refs/heads/' => Http::response([]),
+    ]);
 
     (new MirrorToolToRepo('01gone', 'never-existed'))->handle(app(GitHub::class));
 
-    Http::assertSentCount(1);
+    Http::assertSentCount(2);
+});
+
+test('a branch that is simply missing is a configuration error, not a new repository', function () {
+    $tool = Tool::factory()->create();
+
+    config([
+        'github.repository' => 'acme/carrot-tools',
+        'github.token' => 'ghp_test',
+        'github.branch' => 'mian',
+    ]);
+
+    Http::fake([
+        '*/git/ref/heads/mian' => Http::response(status: 404),
+        // The repository has history; the configured branch is a typo.
+        '*/git/matching-refs/heads/' => Http::response([['ref' => 'refs/heads/main']]),
+    ]);
+
+    expect(fn () => (new MirrorToolToRepo($tool->ulid, $tool->slug))->handle(app(GitHub::class)))
+        ->toThrow(RuntimeException::class, 'no branch named `mian`');
+
+    // Nothing was written on the way to finding out.
+    Http::assertNotSent(fn ($request) => $request->method() !== 'GET');
+});
+
+test('the system screen names a missing branch before any tool changes', function () {
+    config(['github.repository' => 'acme/carrot-tools', 'github.token' => 'ghp_test', 'github.branch' => 'mian']);
+    cache()->forget('github:check');
+
+    Http::fake([
+        '*/repos/acme/carrot-tools' => Http::response(['private' => true, 'permissions' => ['push' => true]]),
+        '*/git/ref/heads/mian' => Http::response(status: 404),
+        '*/git/matching-refs/heads/' => Http::response([['ref' => 'refs/heads/main']]),
+    ]);
+
+    $this->actingAs(User::factory()->admin()->create())
+        ->get(route('admin.system.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('status.mirror.ok', false)
+            ->where('status.mirror.message', 'GitHub: the repository has no branch named `mian`. Set GITHUB_BRANCH to one that exists.'));
 });
