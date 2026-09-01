@@ -148,6 +148,14 @@ class Tool extends Model
     }
 
     /**
+     * @return HasMany<ToolRun, $this>
+     */
+    public function runs(): HasMany
+    {
+        return $this->hasMany(ToolRun::class);
+    }
+
+    /**
      * @param  Builder<Tool>  $query
      */
     public function scopeRunning(Builder $query): void

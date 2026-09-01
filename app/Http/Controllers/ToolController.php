@@ -13,6 +13,7 @@ use App\Models\ToolSubmission;
 use App\Models\User;
 use App\Support\Features;
 use App\Support\Presenters\SubmissionPresenter;
+use App\Support\Presenters\ToolRunPresenter;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,13 +28,21 @@ class ToolController extends Controller
      * off the tool's own column, department off the tool as well, category
      * off the tags table.
      */
+    /**
+     * How many of the visitor's own runs the tool page lists under 最近の実行.
+     */
+    private const RECENT_RUNS = 5;
+
     private const TAG_GROUPS = [
         'status' => 'ステータス',
         'category' => 'カテゴリ',
         'department' => '所属',
     ];
 
-    public function __construct(private SubmissionPresenter $presenter) {}
+    public function __construct(
+        private SubmissionPresenter $presenter,
+        private ToolRunPresenter $runPresenter,
+    ) {}
 
     /**
      * Show the catalog of in-house tools: every published tool, plus the
@@ -74,6 +83,17 @@ class ToolController extends Controller
             ->latest('reviewed_at')
             ->get();
 
+        // Only runs the visitor is allowed to open, or the links under
+        // 最近の実行 would 403. ToolRunController::show() draws the same line.
+        $runs = $tool->kind === ToolKind::Script
+            ? $tool->runs()
+                ->with('user')
+                ->unless($request->user()->isAdmin(), fn ($query) => $query->where('user_id', $request->user()->id))
+                ->latest()
+                ->limit(self::RECENT_RUNS)
+                ->get()
+            : new Collection;
+
         // Without the submission screens there is nowhere for this link to
         // go, so the page must not offer one.
         $openChange = Features::submissions()
@@ -103,9 +123,11 @@ class ToolController extends Controller
                 'pendingChange' => $tool->submissions()->pending()->exists(),
             ],
             'history' => $history->map($this->presenter->summary(...))->all(),
+            'runs' => $runs->map($this->runPresenter->present(...))->all(),
             'openChange' => $openChange === null ? null : $this->presenter->summary($openChange),
             'limits' => $this->presenter->limits(),
             'can' => [
+                'run' => Gate::allows('run', $tool),
                 'updateMetadata' => Gate::allows('updateMetadata', $tool),
                 'submitChange' => Gate::allows('submitChange', $tool),
                 'manage' => Gate::allows('manage', $tool),

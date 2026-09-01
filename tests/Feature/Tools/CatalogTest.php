@@ -2,6 +2,7 @@
 
 use App\Models\Tag;
 use App\Models\Tool;
+use App\Models\ToolRun;
 use App\Models\User;
 
 test('the catalog requires signing in', function () {
@@ -91,4 +92,48 @@ test('a tool on our own origin is never framed', function () {
     $this->actingAs(User::factory()->create())
         ->get(route('tools.show', $tool))
         ->assertInertia(fn ($page) => $page->where('tool.embedUrl', null));
+});
+
+test('a script tool page carries the run form and the visitor own runs', function () {
+    $tool = Tool::factory()->script()->create();
+    $visitor = User::factory()->create();
+    $mine = ToolRun::factory()->completed()->for($tool)->for($visitor)->create();
+    ToolRun::factory()->completed()->for($tool)->for(User::factory()->create())->create();
+
+    $this->actingAs($visitor)
+        ->get(route('tools.show', $tool))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('tools/show')
+            ->where('can.run', true)
+            ->has('runs', 1)
+            ->where('runs.0.ulid', $mine->ulid)
+        );
+});
+
+test('a tool page with nothing to run still hands the screen an empty run list', function () {
+    $tool = Tool::factory()->link('/tools/example')->create();
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('tools.show', $tool))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->has('runs', 0));
+});
+
+test('an administrator sees every run on a script tool', function () {
+    $tool = Tool::factory()->script()->create();
+    ToolRun::factory()->completed()->for($tool)->for(User::factory()->create())->create();
+    ToolRun::factory()->completed()->for($tool)->for(User::factory()->create())->create();
+
+    $this->actingAs(User::factory()->admin()->create())
+        ->get(route('tools.show', $tool))
+        ->assertInertia(fn ($page) => $page->has('runs', 2));
+});
+
+test('a deprecated tool offers no run form', function () {
+    $tool = Tool::factory()->script()->deprecated()->create();
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('tools.show', $tool))
+        ->assertInertia(fn ($page) => $page->where('can.run', false));
 });
