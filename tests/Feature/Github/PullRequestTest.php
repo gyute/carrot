@@ -9,9 +9,9 @@ use App\Models\ToolSubmission;
 use App\Models\User;
 use App\Support\Github\GitHub;
 use App\Support\Github\SubmissionDocument;
+use App\Support\Github\ToolDocument;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 
 beforeEach(function (): void {
     Http::preventStrayRequests();
@@ -150,29 +150,19 @@ test('every status change reaches the review side, withdrawal included', functio
     );
 });
 
-test('the document projects a create submission that has no tool yet', function () {
+test('a create proposes the path its tool will end up at', function () {
     config(['github.path' => 'tools']);
 
-    $submission = ToolSubmission::factory()->create(['payload' => [
-        ...ToolSubmission::factory()->make()->payload,
-        'name' => 'Tax calculator',
-    ]]);
+    $submission = ToolSubmission::factory()->pending()->create();
+    $proposed = (new SubmissionDocument($submission))->directory();
 
-    $document = new SubmissionDocument($submission);
+    expect($proposed)->toBe("tools/{$submission->ulid}")
+        ->and(array_keys((new SubmissionDocument($submission))->files()))->toBe([$proposed.'/tool.json'])
+        ->and((new SubmissionDocument($submission))->branch())->toBe('submission/'.$submission->ulid);
 
-    expect($document->directory())->toBe('tools/tax-calculator')
-        ->and(array_keys($document->files()))->toBe(['tools/tax-calculator/tool.json'])
-        ->and($document->branch())->toBe('submission/'.$submission->ulid);
-});
+    // Approving publishes the tool at that very path, so merging the pull
+    // request does not leave a directory behind under another name.
+    $tool = app(ApproveSubmission::class)->handle($submission, User::factory()->admin()->create());
 
-test('a name with nothing sluggable in it still lands somewhere', function () {
-    config(['github.path' => 'tools']);
-
-    // Str::slug drops Japanese entirely, so every such tool would otherwise
-    // want the same directory. ApproveSubmission numbers them; the mirror
-    // follows whatever slug the row ended up with.
-    $submission = ToolSubmission::factory()->create();
-
-    expect(Str::slug($submission->payload['name']))->toBe('')
-        ->and((new SubmissionDocument($submission))->directory())->toBe('tools/tool');
+    expect((new ToolDocument($tool))->directory())->toBe($proposed);
 });

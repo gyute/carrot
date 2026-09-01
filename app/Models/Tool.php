@@ -54,7 +54,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, Tag> $tags
  */
 #[Fillable([
-    'slug', 'kind', 'name', 'summary', 'description', 'icon', 'accent', 'status',
+    'ulid', 'slug', 'kind', 'name', 'summary', 'description', 'icon', 'accent', 'status',
     'owner_id', 'department', 'config', 'source', 'source_hash', 'version', 'mirror_commit_sha',
     'requested_by', 'endorsed_by', 'approved_by', 'approved_submission_id', 'published_at', 'deprecated_at',
 ])]

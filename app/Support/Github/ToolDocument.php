@@ -18,7 +18,7 @@ class ToolDocument
 
     public function directory(): string
     {
-        return config('github.path').'/'.$this->tool->slug;
+        return config('github.path').'/'.$this->tool->ulid;
     }
 
     /**

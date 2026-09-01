@@ -23,7 +23,7 @@ class SubmissionDocument
 
     public function directory(): string
     {
-        return config('github.path').'/'.$this->slug();
+        return config('github.path').'/'.$this->toolUlid();
     }
 
     /**
@@ -84,11 +84,20 @@ class SubmissionDocument
         return $this->submission->tool;
     }
 
+    /**
+     * Where the tool lives in the repository. A create has no tool yet, but
+     * ApproveSubmission gives the one it publishes this submission's ULID, so
+     * the path proposed here is the path it ends up at.
+     */
+    private function toolUlid(): string
+    {
+        $tool = $this->tool();
+
+        return $tool === null ? $this->submission->ulid : $tool->ulid;
+    }
+
     private function slug(): string
     {
-        // A create has no tool yet, so the slug is projected the same way
-        // ApproveSubmission will pick it. A name that collides gets a
-        // different one at approval, and the state mirror writes the truth.
         $tool = $this->tool();
 
         if ($tool !== null) {

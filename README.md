@@ -128,7 +128,8 @@ row in the `tools` table.
   `/settings/profile` does the same and hands the tools to your department's
   manager; the last administrator is refused.
 - **Mirror**: with `GITHUB_REPOSITORY` and `GITHUB_TOKEN` set, every published
-  tool is a directory in a private repository - `tool.json` plus the script -
+  tool is a directory in a private repository, named by the same ULID that
+  `/tools/{ulid}` uses - `tool.json` plus the script -
   so a change has a commit behind it and two versions can be diffed. It is
   state, not events: a queued job re-reads the row and writes what it is now,
   because eight code paths write to `tools` and hooking them one by one is a

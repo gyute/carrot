@@ -161,13 +161,16 @@ test('a purged tool takes its directory with it', function () {
     });
 });
 
-test('the document reads the tool as it is now, not as it was saved', function () {
+test('a tool lives at the ULID the portal addresses it by', function () {
     config(['github.path' => 'tools']);
 
-    $tool = Tool::factory()->create(['slug' => 'shell-one', 'config' => ['runtime' => 'shell'], 'source' => "echo hi\n"]);
+    // Str::slug drops Japanese entirely, so slugs would have made every tool
+    // here `tool`, `tool-2`, `tool-3`. The ULID is also what /tools/{ulid}
+    // uses, so a directory and a page are the same identifier.
+    $tool = Tool::factory()->create(['config' => ['runtime' => 'shell'], 'source' => "echo hi\n"]);
 
     expect(array_keys((new ToolDocument($tool))->files()))
-        ->toBe(['tools/shell-one/tool.json', 'tools/shell-one/source.sh']);
+        ->toBe(["tools/{$tool->ulid}/tool.json", "tools/{$tool->ulid}/source.sh"]);
 });
 
 test('the system screen says whether the mirror is on and reachable', function () {

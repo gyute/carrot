@@ -36,6 +36,10 @@ Three things that follow from it:
 - A purged tool has no row left, so the job carries the slug as well as the ULID and removes the directory when the row is gone.
 - 404 and 409 are not the same thing. 404 means the branch is missing from a repository that has others - a typo in GITHUB_BRANCH - and is refused, because starting a branch there buries the mistake. 409 means GitHub considers the repository empty, which no typo can produce, so the first commit is written. It goes through the Contents API: the Git Data API refuses even a blob until a repository has a commit.
 
+A tool's directory is its ULID, not its slug - the same identifier `/tools/{ulid}` uses, so a directory in the repository and a page in the portal are the same thing. Slugs would not do: `Str::slug` drops Japanese entirely, so every tool here would be `tool`, `tool-2`, `tool-3`.
+
+That is also why `ApproveSubmission` gives a newly published tool the ULID of the submission that created it. A create submission has no tool yet, so its pull request has to propose a path before one exists; giving the tool that same ULID makes the proposed path the final path, and merging leaves nothing behind under another name.
+
 Nothing personal is committed. `ToolDocument` writes ULIDs for owner/requester/endorser/approver and leaves the department out. Git only adds: a name committed once cannot be taken back, which would undo retiring a person rather than deleting them (`.ai/rules/app.md`).
 
 GitHub is never in the way of an approval. The job is queued outside the transaction, retries with backoff, and a failure shows up as a failed job on `/admin/system` - `GitHub::check()` there also refuses a public repository, since mirroring internal tooling to one would publish it.

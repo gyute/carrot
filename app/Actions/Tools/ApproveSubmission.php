@@ -74,6 +74,10 @@ class ApproveSubmission
         $source = $submission->source();
 
         $tool = Tool::query()->create([
+            // The submission's own ULID: one submission creates one tool, the
+            // two already point at each other, and the mirror needs the path
+            // a pull request proposes to be the path the tool ends up at.
+            'ulid' => $submission->ulid,
             'slug' => $this->uniqueSlug((string) $payload['name']),
             'kind' => $payload['kind'],
             'name' => $payload['name'],
