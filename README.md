@@ -25,6 +25,18 @@ composer run dev              # serve + queue worker + vite + reverb + logs
 matters**: script runs and notifications are queued jobs, so without it they
 stay in `待機中` forever.
 
+Script tools need two more steps, because the sandbox ships off:
+
+```bash
+composer sandbox:images       # build the two container images
+```
+
+Then set `SANDBOX_DRIVER=docker` in `.env` - and on macOS
+`SANDBOX_REQUIRE_ROOTLESS=false` too, because Docker Desktop is not a rootless
+daemon and the runner refuses one otherwise. Skip this and every script tool
+fails with `SANDBOX_DRIVER is 'none' on this host`; link and embed tools are
+unaffected. [The sandbox](#the-sandbox) explains why `none` is the default.
+
 If 5432 is already in use on your machine, copy `.env.example` to `.env` first and
 set `DB_PORT` to a free port (5433, say) - compose publishes the container on
 whatever `DB_PORT` says, and Laravel connects to the same one.
@@ -71,7 +83,6 @@ values worth a second look:
 | `CATALOG_REQUESTS`                                    | The request queue at `/tools/requests`, for a tool that does not exist yet. Off and the screens are gone           |
 | `PASSKEYS_USER_HANDLE_SECRET`                         | Defaults to `APP_KEY`. Set it to its own fixed value if `APP_KEY` will ever be rotated, or passkeys stop resolving |
 | `LOG_CHANNEL`                                         | The system screen tails whichever channel this names, so a `daily` or custom path is followed, not assumed         |
-| `GITHUB_REPOSITORY` / `GITHUB_TOKEN`                  | `owner/name` of a private repository every published tool is mirrored to. Blank means off - nothing is called      |
 
 ## Layout
 
@@ -83,7 +94,6 @@ values worth a second look:
 | `config/catalog.php`                                        | The 所属 list and the two feature switches                       |
 | `app/Sandbox/`                                              | The sandbox runners script tools execute in                      |
 | `config/sandbox.php`, `docker/sandbox/`                     | Sandbox limits, driver and container images                      |
-| `config/github.php`, `app/Support/Github/`                  | The mirror: what is written to the repository, and how           |
 | `resources/js/pages/`                                       | Inertia page components                                          |
 | `demo/`                                                     | The demo catalog, published by `php artisan demo:seed`           |
 | `.ai/rules/`                                                | Decisions and traps worth knowing before editing                 |
@@ -127,16 +137,6 @@ row in the `tools` table.
   owns can only be touched by an administrator. Closing your own account from
   `/settings/profile` does the same and hands the tools to your department's
   manager; the last administrator is refused.
-- **Mirror**: with `GITHUB_REPOSITORY` and `GITHUB_TOKEN` set, every published
-  tool is a directory in a private repository, named by the same ULID that
-  `/tools/{ulid}` uses - `tool.json` plus the script -
-  so a change has a commit behind it and two versions can be diffed. It is
-  state, not events: a queued job re-reads the row and writes what it is now,
-  because eight code paths write to `tools` and hooking them one by one is a
-  list that falls behind. Nobody's name and no department is written there;
-  people are ULIDs, since git only adds and a name committed once cannot be
-  taken back. GitHub never blocks an approval - a failed write is a failed
-  job, visible on `/admin/system`.
 - **Halves you can switch off**: `CATALOG_SUBMISSIONS` and `CATALOG_REQUESTS`
   decide which of the two flows this deployment runs. A flow that is off is
   absent, not forbidden - its routes answer 404 and its menu entries are gone.
@@ -229,7 +229,6 @@ and a page prop are all held down at once.
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `tests/Feature/Tools/`             | The catalog: what is listed, the tag groups and their counts, and the rule that an embed only ever frames an external https origin. The request flow: drafts, per-kind validation, withdrawal, change and retire requests, and display fields edited in place without review. Requests: the 所属 they are stamped with and who may read them, and that a flow switched off answers 404 while a flow someone may not use answers 403                                                                                             |
 | `tests/Feature/Admin/`             | Retiring a person: the history keeps naming them anonymously, their inbox and passkeys go, their tools reach a successor, and the last administrator is refused. Two-stage approval, version stamping (including twice in one minute), slug uniqueness, rejection. Request triage: accept, decline with a reason, merge a duplicate, and that approving a submission filed against a request delivers it. The admin screens: roles and 所属, the trash and purge, tag rename/merge, run pruning, and the system status snapshot |
-| `tests/Feature/Github/`            | That the mirror stays off until it is configured, that every way a tool changes reaches it (ownership handover included), that a change is one commit, that an unchanged repository is left alone, and that ULIDs go in where names never do                                                                                                                                                                                                                                                                                    |
 | `tests/Feature/Sandbox/`           | Every isolation flag of the docker command, the output cap, the network choice, the source-hash check that refuses to run what was not approved, per-user rate limiting, run visibility and pruning                                                                                                                                                                                                                                                                                                                             |
 | `tests/Feature/Inbox/`             | Who gets messaged and notified at each stage, read state, and that a message is only ever visible to its recipient                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `tests/Feature/DemoSeedTest.php`   | That `demo:seed` publishes through the real approval flow, files its requests the same way and lets the tool that answers one close it, is safe to re-run, and refuses production                                                                                                                                                                                                                                                                                                                                               |

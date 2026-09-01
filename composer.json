@@ -56,6 +56,10 @@
             "Composer\\Config::disableProcessTimeout",
             "@php artisan dev"
         ],
+        "sandbox:images": [
+            "docker build -t carrot-sandbox-php:8.4 -f docker/sandbox/php.Dockerfile docker/sandbox",
+            "docker build -t carrot-sandbox-shell:3.20 -f docker/sandbox/shell.Dockerfile docker/sandbox"
+        ],
         "lint": [
             "pint --parallel"
         ],
