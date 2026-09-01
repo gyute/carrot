@@ -184,3 +184,47 @@ test('the system screen says whether the mirror is on and reachable', function (
             ->where('status.mirror.ok', false)
             ->where('status.mirror.repository', 'acme/carrot-tools'));
 });
+
+test('a repository with no commits yet gets its history started', function () {
+    $tool = Tool::factory()->create(['slug' => 'first', 'source' => null]);
+
+    config([
+        'github.repository' => 'acme/carrot-tools',
+        'github.token' => 'ghp_test',
+        'github.branch' => 'main',
+        'github.path' => 'tools',
+    ]);
+
+    Http::fake([
+        // No refs at all: nobody has committed to it.
+        '*/git/ref/heads/main' => Http::response(status: 404),
+        '*/git/blobs' => Http::response(['sha' => 'blob-sha']),
+        '*/git/trees' => Http::response(['sha' => 'tree-new']),
+        '*/git/commits' => Http::response(['sha' => 'commit-sha']),
+        '*/git/refs' => Http::response(['ref' => 'refs/heads/main']),
+    ]);
+
+    (new MirrorToolToRepo($tool->ulid, $tool->slug))->handle(app(GitHub::class));
+
+    // No base tree to build on, and a root commit rather than a child.
+    Http::assertSent(fn ($request) => str_contains($request->url(), '/git/trees')
+        && ! array_key_exists('base_tree', $request->data()));
+    Http::assertSent(fn ($request) => str_contains($request->url(), '/git/commits')
+        && $request->method() === 'POST'
+        && $request->data()['parents'] === []);
+
+    // The branch is created, not moved.
+    Http::assertSent(fn ($request) => $request->method() === 'POST'
+        && str_ends_with($request->url(), '/git/refs')
+        && $request->data()['ref'] === 'refs/heads/main');
+});
+
+test('purging against an empty repository asks for nothing', function () {
+    config(['github.repository' => 'acme/carrot-tools', 'github.token' => 'ghp_test', 'github.branch' => 'main']);
+
+    Http::fake(['*/git/ref/heads/main' => Http::response(status: 404)]);
+
+    (new MirrorToolToRepo('01gone', 'never-existed'))->handle(app(GitHub::class));
+
+    Http::assertSentCount(1);
+});

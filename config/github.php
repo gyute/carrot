@@ -12,7 +12,8 @@ return [
     | and the portal behaves exactly as it did before.
     |
     | The repository has to be a private one, and not this repository: what is
-    | written there is an organisation's internal tooling.
+    | written there is an organisation's internal tooling. It may be empty:
+    | the first write starts its history and creates the branch.
     |
     */
 
