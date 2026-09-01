@@ -203,18 +203,47 @@ test('a branch that is not there is refused, not created', function () {
         'github.branch' => 'mian',
     ]);
 
-    // 404 is a branch that is not there; 409 is a repository with no commits
-    // at all. Setting one up is the operator's job either way.
-    foreach ([404, 409] as $status) {
-        Http::fake(['*/git/ref/heads/mian' => Http::response(status: $status)]);
+    // 404: the repository has other branches, so this is a typo in
+    // GITHUB_BRANCH. Starting one would bury it somewhere nobody looks.
+    Http::fake(['*/git/ref/heads/mian' => Http::response(status: 404)]);
 
-        expect(fn () => (new MirrorToolToRepo($tool->ulid, $tool->slug))->handle(app(GitHub::class)))
-            ->toThrow(RuntimeException::class, 'no branch named `mian`');
+    expect(fn () => (new MirrorToolToRepo($tool->ulid, $tool->slug))->handle(app(GitHub::class)))
+        ->toThrow(RuntimeException::class, 'no branch named `mian`');
 
-        // It asked one question and wrote nothing.
-        Http::assertSentCount(1);
-        Http::assertNotSent(fn ($request) => $request->method() !== 'GET');
-    }
+    Http::assertSentCount(1);
+    Http::assertNotSent(fn ($request) => $request->method() !== 'GET');
+});
+
+test('a repository with no commits is started rather than refused', function () {
+    $tool = Tool::factory()->create(['slug' => 'first', 'source' => null]);
+
+    config([
+        'github.repository' => 'acme/carrot-tools',
+        'github.token' => 'ghp_test',
+        'github.branch' => 'main',
+        'github.path' => 'tools',
+    ]);
+
+    Http::fake([
+        // 409 is GitHub saying the repository holds nothing at all, which no
+        // typo can produce - so there is nothing to bury and no ambiguity.
+        '*/git/ref/heads/main' => Http::sequence()
+            ->push(['message' => 'Git Repository is empty.'], 409)
+            ->whenEmpty(Http::response(['object' => ['sha' => 'head-sha']])),
+        '*/contents/README.md' => Http::response(['commit' => ['sha' => 'readme-sha']]),
+        '*/git/commits/head-sha' => Http::response(['tree' => ['sha' => 'tree-base']]),
+        '*/git/blobs' => Http::response(['sha' => 'blob-sha']),
+        '*/git/trees' => Http::response(['sha' => 'tree-new']),
+        '*/git/commits' => Http::response(['sha' => 'commit-sha']),
+        '*/git/refs/heads/main' => Http::response([]),
+    ]);
+
+    (new MirrorToolToRepo($tool->ulid, $tool->slug))->handle(app(GitHub::class));
+
+    // The Git Data API cannot write into an empty repository - even a blob is
+    // refused - so the first commit goes through the Contents API.
+    Http::assertSent(fn ($r) => $r->method() === 'PUT' && str_contains($r->url(), '/contents/README.md'));
+    Http::assertSent(fn ($r) => $r->method() === 'POST' && str_contains($r->url(), '/git/trees'));
 });
 
 test('the system screen names a missing branch before any tool changes', function () {
@@ -230,7 +259,7 @@ test('the system screen names a missing branch before any tool changes', functio
         ->get(route('admin.system.index'))
         ->assertInertia(fn ($page) => $page
             ->where('status.mirror.ok', false)
-            ->where('status.mirror.message', 'GitHub: the repository has no branch named `mian`. Push a first commit to it - a new repository has no branches until you do - or point GITHUB_BRANCH at one that exists.'));
+            ->where('status.mirror.message', 'GitHub: the repository has no branch named `mian`. Point GITHUB_BRANCH at one that exists.'));
 });
 
 test('a repository name without an owner is named as such, not left as a 404', function () {

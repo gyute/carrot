@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Jobs\MirrorToolToRepo;
+use App\Jobs\SyncSubmissionPullRequest;
 use App\Models\Tool;
+use App\Models\ToolSubmission;
 use App\Models\User;
 use App\Sandbox\BubblewrapSandboxRunner;
 use App\Sandbox\DockerSandboxRunner;
@@ -92,6 +94,12 @@ class AppServiceProvider extends ServiceProvider
         Tool::deleted($mirror);
         Tool::restored($mirror);
         Tool::forceDeleted($mirror);
+
+        // Same reasoning for the review side: withdrawing a submission raises
+        // no event at all, and the statuses are set from five places.
+        ToolSubmission::saved(function (ToolSubmission $submission): void {
+            SyncSubmissionPullRequest::dispatchIf(GitHub::enabled(), $submission->ulid);
+        });
     }
 
     /**

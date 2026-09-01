@@ -33,6 +33,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $review_comment
  * @property Carbon|null $submitted_at
  * @property Carbon|null $reviewed_at
+ * @property int|null $github_pr_number
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read User $user
@@ -41,7 +42,7 @@ use Illuminate\Support\Carbon;
  * @property-read User|null $reviewer
  * @property-read User|null $endorser
  */
-#[Fillable(['user_id', 'tool_id', 'tool_request_id', 'action', 'status', 'payload', 'note', 'endorsed_by', 'endorse_comment', 'endorsed_at', 'reviewer_id', 'review_comment', 'submitted_at', 'reviewed_at'])]
+#[Fillable(['user_id', 'tool_id', 'tool_request_id', 'action', 'status', 'payload', 'note', 'endorsed_by', 'endorse_comment', 'endorsed_at', 'reviewer_id', 'review_comment', 'submitted_at', 'reviewed_at', 'github_pr_number'])]
 class ToolSubmission extends Model
 {
     /** @use HasFactory<ToolSubmissionFactory> */

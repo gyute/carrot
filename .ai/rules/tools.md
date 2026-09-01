@@ -34,9 +34,18 @@ Three things that follow from it:
 - A query-builder `update()` writes rows without raising a model event. `RetireUser` saves each tool one at a time for exactly this reason - do not "optimise" it back into a bulk update.
 - `ShouldBeUniqueUntilProcessing`, not `ShouldBeUnique`: the lock has to release when the write starts, or a change made mid-write is dropped and the mirror stops at a stale state.
 - A purged tool has no row left, so the job carries the slug as well as the ULID and removes the directory when the row is gone.
-- A missing branch is refused, never created - 404 for a branch that is not there, 409 for a repository with no commits at all, both the same message. Setting a repository up belongs to whoever owns it, and creating a branch would turn a typo in GITHUB_BRANCH into one nobody ever looks at.
+- 404 and 409 are not the same thing. 404 means the branch is missing from a repository that has others - a typo in GITHUB_BRANCH - and is refused, because starting a branch there buries the mistake. 409 means GitHub considers the repository empty, which no typo can produce, so the first commit is written. It goes through the Contents API: the Git Data API refuses even a blob until a repository has a commit.
 
 Nothing personal is committed. `ToolDocument` writes ULIDs for owner/requester/endorser/approver and leaves the department out. Git only adds: a name committed once cannot be taken back, which would undo retiring a person rather than deleting them (`.ai/rules/app.md`).
 
 GitHub is never in the way of an approval. The job is queued outside the transaction, retries with backoff, and a failure shows up as a failed job on `/admin/system` - `GitHub::check()` there also refuses a public repository, since mirroring internal tooling to one would publish it.
+
+## A submission's pull request follows the row too
+`SyncSubmissionPullRequest` hangs off `ToolSubmission::saved` and reads the status: draft does nothing, pending and endorsed keep a branch and PR up to date, approved squash-merges it onto the mirrored branch and records the sha on `tools.mirror_commit_sha`, rejected and withdrawn close it.
+
+Status, not events, for the reason the tool mirror is: withdrawing raises no event at all, and the five statuses are written from five different places.
+
+`SubmissionDocument` projects rather than reads - a create submission has no tool row yet - so the PR shows what the change would produce before anyone approves it. That is the whole point of the PR: the state mirror alone gives the history, but only a PR gives a diff to look at and somewhere for CI to run.
+
+A merge GitHub will not take is not an error. The portal has already approved; `MirrorToolToRepo` writes the published state to the branch either way, and the submission branch is left in place so somebody can see why. GitHub never decides anything here.
 

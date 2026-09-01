@@ -4,6 +4,7 @@ namespace App\Support\Github;
 
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
@@ -28,13 +29,21 @@ class GitHub
      *
      * @param  array<string, string>  $write  path => contents
      * @param  array<int, string>  $remove  directories to drop
+     * @param  string|null  $branch  defaults to the configured one
      * @return string|null the commit sha, or null when nothing differed
      */
-    public function commit(array $write, array $remove, string $message): ?string
+    public function commit(array $write, array $remove, string $message, ?string $branch = null): ?string
     {
-        $branch = (string) config('github.branch');
+        $branch ??= (string) config('github.branch');
 
         $head = $this->head($branch);
+
+        // Nothing to remove from a repository that holds nothing.
+        if ($head === null && $write === []) {
+            return null;
+        }
+
+        $head ??= $this->start($branch);
         $baseTree = (string) $this->get("git/commits/{$head}")['tree']['sha'];
 
         $entries = [];
@@ -136,24 +145,113 @@ class GitHub
     }
 
     /**
-     * The commit the branch points at.
-     *
-     * A missing branch is the operator's to fix, not the mirror's: creating
-     * one would mean writing structure into somebody else's repository, and a
-     * typo in GITHUB_BRANCH would quietly get a branch of its own that nobody
-     * ever looks at. A repository nobody has pushed to yet reads the same way
-     * and wants the same answer - initialise it.
+     * Points `$branch` at the tip of the configured one, creating it if it is
+     * not there yet. A branch that already exists is left where it is: the
+     * submission it belongs to keeps its own history.
      */
-    private function head(string $branch): string
+    public function branchFrom(string $branch): void
+    {
+        if ($this->request()->get($this->url("git/ref/heads/{$branch}"))->status() !== 404) {
+            return;
+        }
+
+        $this->post('git/refs', [
+            'ref' => "refs/heads/{$branch}",
+            'sha' => $this->head((string) config('github.branch')) ?? $this->start((string) config('github.branch')),
+        ]);
+    }
+
+    /**
+     * Opens a pull request for `$branch`, or returns the number of the one
+     * that is already open for it.
+     */
+    public function openPullRequest(string $branch, string $title, string $body): int
+    {
+        $open = $this->get('pulls?state=open&head='.rawurlencode($this->owner().':'.$branch));
+
+        if ($open !== []) {
+            return (int) $open[0]['number'];
+        }
+
+        return (int) $this->post('pulls', [
+            'title' => $title,
+            'body' => $body,
+            'head' => $branch,
+            'base' => (string) config('github.branch'),
+        ])['number'];
+    }
+
+    /**
+     * Squashes the pull request onto the branch. Null when GitHub refuses -
+     * a conflict, or nothing left to merge - which is not an error here: the
+     * portal has already decided, and the mirror writes the result anyway.
+     */
+    public function mergePullRequest(int $number, string $title): ?string
+    {
+        $response = $this->request()->put($this->url("pulls/{$number}/merge"), [
+            'merge_method' => 'squash',
+            'commit_title' => $title,
+        ]);
+
+        return $response->successful() ? (string) $response->json()['sha'] : null;
+    }
+
+    public function closePullRequest(int $number): void
+    {
+        $this->patch("pulls/{$number}", ['state' => 'closed']);
+    }
+
+    public function deleteBranch(string $branch): void
+    {
+        $this->request()->delete($this->url("git/refs/heads/{$branch}"));
+    }
+
+    private function owner(): string
+    {
+        return Str::before((string) config('github.repository'), '/');
+    }
+
+    /**
+     * Gives an empty repository its first commit, and with it the branch.
+     *
+     * The Git Data API cannot do this: with no commits behind it, even
+     * creating a blob comes back 409. The Contents API can, and creates the
+     * branch on the way, so the mirror only needs it this once.
+     */
+    private function start(string $branch): string
+    {
+        $this->request()->put($this->url('contents/README.md'), [
+            'message' => "Start the tool mirror\n",
+            'content' => base64_encode("# Tool mirror\n\nOne directory per published tool, written by CARROT.\n"),
+            'branch' => $branch,
+            'committer' => $this->committer(),
+        ])->throw();
+
+        return $this->head($branch)
+            ?? throw new RuntimeException('GitHub: the repository is still empty after starting it.');
+    }
+
+    /**
+     * The commit the branch points at, or null when the repository is empty
+     * and the first write has to start its history.
+     */
+    private function head(string $branch): ?string
     {
         $response = $this->request()->get($this->url("git/ref/heads/{$branch}"));
 
-        // 404 when the branch is not there, 409 when the repository has no
-        // commits at all. Same answer either way: somebody has to set the
-        // repository up first.
-        if (in_array($response->status(), [404, 409], true)) {
+        // 409 is GitHub saying the repository holds nothing at all, which no
+        // typo can produce - so there is no history to orphan and the first
+        // write starts one.
+        if ($response->status() === 409) {
+            return null;
+        }
+
+        // 404 is a branch that is not there in a repository that has others:
+        // a typo in GITHUB_BRANCH, or a default branch called something else.
+        // Starting a branch here would bury the mistake somewhere nobody looks.
+        if ($response->status() === 404) {
             throw new RuntimeException(
-                "GitHub: the repository has no branch named `{$branch}`. Push a first commit to it - a new repository has no branches until you do - or point GITHUB_BRANCH at one that exists.",
+                "GitHub: the repository has no branch named `{$branch}`. Point GITHUB_BRANCH at one that exists.",
             );
         }
 
@@ -161,7 +259,7 @@ class GitHub
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
     private function get(string $path): array
     {
