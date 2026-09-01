@@ -84,8 +84,8 @@ class SyncSubmissionPullRequest implements ShouldQueue
         $document = new SubmissionDocument($submission);
         $branch = $document->branch();
 
-        $github->branchFrom($branch);
-        $github->commit($document->files(), [], $document->title()."\n\n".$document->body(), $branch);
+        $head = $github->branchFrom($branch);
+        $github->commit($document->files(), [], $document->title()."\n\n".$document->body(), $branch, $head);
 
         $number = $github->openPullRequest($branch, $document->title(), $document->body());
 

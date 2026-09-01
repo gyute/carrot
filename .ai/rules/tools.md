@@ -51,6 +51,8 @@ Status, not events, for the reason the tool mirror is: withdrawing raises no eve
 
 `SubmissionDocument` projects rather than reads - a create submission has no tool row yet - so the PR shows what the change would produce before anyone approves it. That is the whole point of the PR: the state mirror alone gives the history, but only a PR gives a diff to look at and somewhere for CI to run.
 
+A ref that was just created is not always readable: `GET git/ref/heads/...` came back 404 for a branch the previous call had provably made. `branchFrom()` returns the sha it created the branch at and `commit()` takes it, so nothing reads back what it just wrote. `start()` does the same with the sha in the Contents API response.
+
 The pull request is built before approval, so its `tool.json` carries the version the tool had then. The merge lands it, and `MirrorToolToRepo` writes the published state straight after - that is the mirror correcting the proposal, not a bug.
 
 A merge GitHub will not take is not an error. The portal has already approved; `MirrorToolToRepo` writes the published state to the branch either way, and the submission branch is left in place so somebody can see why. GitHub never decides anything here.

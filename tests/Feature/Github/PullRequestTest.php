@@ -166,3 +166,38 @@ test('a create proposes the path its tool will end up at', function () {
 
     expect((new ToolDocument($tool))->directory())->toBe($proposed);
 });
+
+test('a branch just created is not read back, because GitHub may not have it yet', function () {
+    $submission = ToolSubmission::factory()->pending()->create();
+
+    config([
+        'github.repository' => 'acme/carrot-tools',
+        'github.token' => 'ghp_test',
+        'github.branch' => 'main',
+        'github.path' => 'tools',
+    ]);
+
+    Http::fake([
+        // Never there: a ref this new is not always readable straight away,
+        // and the real API answered 404 to exactly this call.
+        '*/git/ref/heads/submission/*' => Http::response(status: 404),
+        '*/git/ref/heads/main' => Http::response(['object' => ['sha' => 'head-sha']]),
+        '*/git/commits/head-sha' => Http::response(['tree' => ['sha' => 'tree-base']]),
+        '*/git/refs' => Http::response(['ref' => 'refs/heads/submission/x']),
+        '*/git/refs/heads/submission/*' => Http::response([]),
+        '*/git/blobs' => Http::response(['sha' => 'blob-sha']),
+        '*/git/trees' => Http::response(['sha' => 'tree-new']),
+        '*/git/commits' => Http::response(['sha' => 'commit-sha']),
+        '*/pulls?state=open*' => Http::response([]),
+        '*/pulls' => Http::response(['number' => 7]),
+    ]);
+
+    (new SyncSubmissionPullRequest($submission->ulid))->handle(app(GitHub::class));
+
+    // It built on the sha it created the branch at, not on one it read back.
+    Http::assertSent(fn ($r) => str_contains($r->url(), '/git/commits')
+        && $r->method() === 'POST'
+        && $r->data()['parents'] === ['head-sha']);
+
+    expect($submission->fresh()->github_pr_number)->toBe(7);
+});

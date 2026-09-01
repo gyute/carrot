@@ -31,13 +31,16 @@ class GitHub
      * @param  array<string, string>  $write  path => contents
      * @param  array<int, string>  $remove  directories to drop
      * @param  string|null  $branch  defaults to the configured one
+     * @param  string|null  $head  the branch tip, when the caller already knows it
      * @return string|null the commit sha, or null when nothing differed
      */
-    public function commit(array $write, array $remove, string $message, ?string $branch = null): ?string
+    public function commit(array $write, array $remove, string $message, ?string $branch = null, ?string $head = null): ?string
     {
         $branch ??= (string) config('github.branch');
 
-        $head = $this->head($branch);
+        // A ref just created is not always readable yet, so a caller that has
+        // just made one passes the sha rather than asking for it again.
+        $head ??= $this->head($branch);
 
         // Nothing to remove from a repository that holds nothing.
         if ($head === null && $write === []) {
@@ -148,19 +151,24 @@ class GitHub
 
     /**
      * Points `$branch` at the tip of the configured one, creating it if it is
-     * not there yet. A branch that already exists is left where it is: the
-     * submission it belongs to keeps its own history.
+     * not there yet, and gives back the commit it sits on. A branch that
+     * already exists is left where it is: the submission it belongs to keeps
+     * its own history.
      */
-    public function branchFrom(string $branch): void
+    public function branchFrom(string $branch): string
     {
-        if ($this->request()->get($this->url("git/ref/heads/{$branch}"))->status() !== 404) {
-            return;
+        $existing = $this->request()->get($this->url("git/ref/heads/{$branch}"));
+
+        if ($existing->status() !== 404) {
+            return (string) $existing->throw()->json()['object']['sha'];
         }
 
-        $this->post('git/refs', [
-            'ref' => "refs/heads/{$branch}",
-            'sha' => $this->head((string) config('github.branch')) ?? $this->start((string) config('github.branch')),
-        ]);
+        $base = (string) config('github.branch');
+        $sha = $this->head($base) ?? $this->start($base);
+
+        $this->post('git/refs', ['ref' => "refs/heads/{$branch}", 'sha' => $sha]);
+
+        return $sha;
     }
 
     /**
@@ -264,15 +272,15 @@ class GitHub
      */
     private function start(string $branch): string
     {
-        $this->request()->put($this->url('contents/README.md'), [
+        $response = $this->request()->put($this->url('contents/README.md'), [
             'message' => "Start the tool mirror\n",
             'content' => base64_encode("# Tool mirror\n\nOne directory per published tool, written by CARROT.\n"),
             'branch' => $branch,
             'committer' => $this->committer(),
         ])->throw();
 
-        return $this->head($branch)
-            ?? throw new RuntimeException('GitHub: the repository is still empty after starting it.');
+        // Straight from the response: a ref this new is not always readable.
+        return (string) $response->json()['commit']['sha'];
     }
 
     /**

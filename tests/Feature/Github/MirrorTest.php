@@ -230,11 +230,11 @@ test('a repository with no commits is started rather than refused', function () 
     Http::fake([
         // 409 is GitHub saying the repository holds nothing at all, which no
         // typo can produce - so there is nothing to bury and no ambiguity.
-        '*/git/ref/heads/main' => Http::sequence()
-            ->push(['message' => 'Git Repository is empty.'], 409)
-            ->whenEmpty(Http::response(['object' => ['sha' => 'head-sha']])),
+        '*/git/ref/heads/main' => Http::response(['message' => 'Git Repository is empty.'], 409),
         '*/contents/README.md' => Http::response(['commit' => ['sha' => 'readme-sha']]),
-        '*/git/commits/head-sha' => Http::response(['tree' => ['sha' => 'tree-base']]),
+        // Built on the sha the Contents API just gave back, not on one read
+        // from a ref that may not be visible yet.
+        '*/git/commits/readme-sha' => Http::response(['tree' => ['sha' => 'tree-base']]),
         '*/git/blobs' => Http::response(['sha' => 'blob-sha']),
         '*/git/trees' => Http::response(['sha' => 'tree-new']),
         '*/git/commits' => Http::response(['sha' => 'commit-sha']),
