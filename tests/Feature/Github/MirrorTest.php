@@ -281,3 +281,22 @@ test('a repository name without an owner is named as such, not left as a 404', f
     expect(fn () => (new MirrorToolToRepo($tool->ulid, $tool->slug))->handle(app(GitHub::class)))
         ->toThrow(RuntimeException::class, 'has to be owner/name');
 });
+
+test('a burst of saves in one transaction does not poison it', function () {
+    Bus::fake();
+    config(['github.repository' => 'acme/carrot-tools', 'github.token' => 'ghp_test']);
+
+    $tool = Tool::factory()->create();
+
+    // ApproveSubmission saves a tool twice inside one transaction. A unique
+    // lock would take the same cache row twice; the second insert fails on the
+    // duplicate key and Postgres ends the transaction, so the approval fails.
+    DB::transaction(function () use ($tool): void {
+        $tool->forceFill(['summary' => 'まず'])->save();
+        $tool->forceFill(['version' => '202609011257'])->save();
+    });
+
+    expect($tool->fresh()->version)->toBe('202609011257');
+
+    Bus::assertDispatched(MirrorToolToRepo::class);
+});

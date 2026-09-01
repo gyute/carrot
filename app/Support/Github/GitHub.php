@@ -3,6 +3,7 @@
 namespace App\Support\Github;
 
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -123,9 +124,10 @@ class GitHub
         }
 
         // Says so here rather than leaving it for the first tool somebody
-        // changes to fail on.
+        // changes, or the first submission somebody files, to fail on.
         try {
             $this->head((string) config('github.branch'));
+            $this->pulls('pulls?state=open&per_page=1');
         } catch (\Throwable $e) {
             return ['ok' => false, 'message' => $e->getMessage()];
         }
@@ -167,18 +169,30 @@ class GitHub
      */
     public function openPullRequest(string $branch, string $title, string $body): int
     {
-        $open = $this->get('pulls?state=open&head='.rawurlencode($this->owner().':'.$branch));
+        $open = $this->pulls('pulls?state=open&head='.rawurlencode($this->owner().':'.$branch));
 
         if ($open !== []) {
-            return (int) $open[0]['number'];
+            $number = (int) $open[0]['number'];
+
+            // The submission is the source of truth, so a pull request that
+            // has drifted from it is brought back rather than left as it was.
+            if ($open[0]['title'] !== $title || $open[0]['body'] !== $body) {
+                $this->request()->patch($this->url("pulls/{$number}"), ['title' => $title, 'body' => $body])->throw();
+            }
+
+            return $number;
         }
 
-        return (int) $this->post('pulls', [
+        $response = $this->request()->post($this->url('pulls'), [
             'title' => $title,
             'body' => $body,
             'head' => $branch,
             'base' => (string) config('github.branch'),
-        ])['number'];
+        ]);
+
+        $this->refusedForScope($response);
+
+        return (int) $response->throw()->json()['number'];
     }
 
     /**
@@ -193,12 +207,42 @@ class GitHub
             'commit_title' => $title,
         ]);
 
+        $this->refusedForScope($response);
+
         return $response->successful() ? (string) $response->json()['sha'] : null;
     }
 
     public function closePullRequest(int $number): void
     {
-        $this->patch("pulls/{$number}", ['state' => 'closed']);
+        $response = $this->request()->patch($this->url("pulls/{$number}"), ['state' => 'closed']);
+
+        $this->refusedForScope($response);
+        $response->throw();
+    }
+
+    /**
+     * A 403 here is not "no such repository" - it is a token that may write
+     * files but not open pull requests, which the raw message does not say.
+     */
+    private function refusedForScope(Response $response): void
+    {
+        if ($response->status() === 403) {
+            throw new RuntimeException(
+                'GitHub: the token cannot work with pull requests. Add the "Pull requests: read and write" permission to it - "Contents" alone only covers the mirror.',
+            );
+        }
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    private function pulls(string $path): array
+    {
+        $response = $this->request()->get($this->url($path));
+
+        $this->refusedForScope($response);
+
+        return $response->throw()->json();
     }
 
     public function deleteBranch(string $branch): void

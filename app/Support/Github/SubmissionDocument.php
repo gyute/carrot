@@ -46,9 +46,23 @@ class SubmissionDocument
         return 'submission/'.$this->submission->ulid;
     }
 
+    /**
+     * A tool's name, not its slug or its ULID: this is the line a reviewer
+     * reads in a list of pull requests. Tool names are not personal data -
+     * the rule about what stays out of the repository is about people.
+     */
     public function title(): string
     {
-        return "{$this->submission->action->value} {$this->slug()}";
+        $what = ucfirst($this->submission->action->value);
+
+        return "{$what} {$this->name()}";
+    }
+
+    private function name(): string
+    {
+        $name = $this->submission->payload['name'] ?? $this->tool()?->name;
+
+        return is_string($name) && $name !== '' ? $name : $this->slug();
     }
 
     /**

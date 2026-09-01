@@ -6,7 +6,6 @@ use App\Enums\SubmissionStatus;
 use App\Models\ToolSubmission;
 use App\Support\Github\GitHub;
 use App\Support\Github\SubmissionDocument;
-use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -21,17 +20,28 @@ use Illuminate\Foundation\Queue\Queueable;
  * an error - the approval already happened, and MirrorToolToRepo writes the
  * published state to the branch regardless.
  */
-class SyncSubmissionPullRequest implements ShouldBeUniqueUntilProcessing, ShouldQueue
+class SyncSubmissionPullRequest implements ShouldQueue
 {
     use Queueable;
 
     public int $tries = 5;
 
-    public function __construct(public string $ulid) {}
-
-    public function uniqueId(): string
+    /**
+     * Dispatched only once the surrounding transaction commits.
+     *
+     * ApproveSubmission saves the tool twice inside one transaction, so the
+     * unique lock would be taken twice; the second insert fails on the
+     * duplicate key, and Postgres treats one failed statement as the end of
+     * the whole transaction - catching the exception does not bring it back.
+     * Waiting for the commit also means the job never reads a row that is
+     * about to be rolled back.
+     *
+     * Set here rather than as a property default: the Queueable trait already
+     * declares it without one, and PHP calls differing defaults a conflict.
+     */
+    public function __construct(public string $ulid)
     {
-        return $this->ulid;
+        $this->afterCommit = true;
     }
 
     /**

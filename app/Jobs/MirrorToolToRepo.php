@@ -5,7 +5,6 @@ namespace App\Jobs;
 use App\Models\Tool;
 use App\Support\Github\GitHub;
 use App\Support\Github\ToolDocument;
-use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -18,27 +17,32 @@ use Illuminate\Foundation\Queue\Queueable;
  * to. Re-reading also settles ordering for free - ToolController@update syncs
  * tags after saving the row, and by the time this runs both are in.
  */
-class MirrorToolToRepo implements ShouldBeUniqueUntilProcessing, ShouldQueue
+class MirrorToolToRepo implements ShouldQueue
 {
     use Queueable;
 
     public int $tries = 5;
 
     /**
+     * Dispatched only once the surrounding transaction commits, so the job
+     * never reads a row that is about to be rolled back.
+     *
+     * Set here rather than as a property default: the Queueable trait already
+     * declares it without one, and PHP calls differing defaults a conflict.
+     *
+     * There is deliberately no unique lock. ShouldBeUnique takes one at
+     * dispatch, inside whatever transaction is open, and ApproveSubmission
+     * saves a tool twice in one - the second lock insert fails on the
+     * duplicate key, Postgres ends the transaction, and every approval fails.
+     * The job is idempotent anyway: a second run finds the tree unchanged and
+     * writes nothing, which is all the lock was saving.
+     *
      * The slug travels with the ULID because a purged tool has no row left to
      * read it from, and the directory still has to go.
      */
-    public function __construct(public string $ulid, public string $slug) {}
-
-    /**
-     * A burst of changes to one tool collapses into one write. The lock is
-     * released when the job starts rather than when it finishes: a change
-     * made while a write is in flight has to queue another one, or the
-     * mirror would stop at the state it happened to read.
-     */
-    public function uniqueId(): string
+    public function __construct(public string $ulid, public string $slug)
     {
-        return $this->ulid;
+        $this->afterCommit = true;
     }
 
     /**
