@@ -73,7 +73,7 @@ php artisan db:seed --force
 | `CATALOG_REQUESTS`                                    | `/tools/requests` の開発チームへの依頼窓口。off にすると画面ごと消えます                                      |
 | `PASSKEYS_USER_HANDLE_SECRET`                         | 既定は `APP_KEY`。`APP_KEY` を回す可能性があるなら固定値を別に設定してください                                |
 | `LOG_CHANNEL`                                         | システム画面が tail するチャンネル。`daily` や独自パスにも追随します                                          |
-| `GITHUB_REPOSITORY` / `GITHUB_TOKEN`                  | 公開済みツールを private リポジトリにミラーします。空ならオフで、呼び出しもキュー投入も起きません             |
+| `GITHUB_REPOSITORY` / `GITHUB_TOKEN`                  | ミラー先の private リポジトリを `owner/name` で指定します。空ならオフで、呼び出しは起きません                 |
 
 ## 構成
 

@@ -230,3 +230,20 @@ test('the system screen names a missing branch before any tool changes', functio
             ->where('status.mirror.ok', false)
             ->where('status.mirror.message', 'GitHub: the repository has no branch named `mian`. Create it - a repository with no commits has none - or point GITHUB_BRANCH at one that exists.'));
 });
+
+test('a repository name without an owner is named as such, not left as a 404', function () {
+    // Built first: the test queue runs jobs inline, so the mirror would fire
+    // on create and throw before the expectation below could catch it.
+    $tool = Tool::factory()->create();
+
+    config(['github.repository' => 'mirror', 'github.token' => 'ghp_test']);
+
+    // No call is made: the answer is in the configuration, and GitHub would
+    // only have said "Not Found", which reads like a missing repository or a
+    // bad token rather than the typo it is.
+    expect(app(GitHub::class)->check())
+        ->toBe(['ok' => false, 'message' => 'GITHUB_REPOSITORY は owner/name の形式で指定してください（現在: mirror）。']);
+
+    expect(fn () => (new MirrorToolToRepo($tool->ulid, $tool->slug))->handle(app(GitHub::class)))
+        ->toThrow(RuntimeException::class, 'has to be owner/name');
+});

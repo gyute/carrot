@@ -26,6 +26,10 @@
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>
+        <!-- The mirror stays off unless a test turns it on: a suite that
+             read the real credentials could write to the real repository. -->
+        <env name="GITHUB_REPOSITORY" value=""/>
+        <env name="GITHUB_TOKEN" value=""/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

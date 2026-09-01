@@ -73,7 +73,7 @@ php artisan db:seed --force
 | `CATALOG_REQUESTS`                                    | `/tools/requests`의 개발팀 의뢰 창구. 끄면 화면째 사라집니다                                               |
 | `PASSKEYS_USER_HANDLE_SECRET`                         | 기본값은 `APP_KEY`. `APP_KEY`를 교체할 일이 있다면 별도 고정값을 지정하세요                                |
 | `LOG_CHANNEL`                                         | 시스템 화면이 tail 하는 채널. `daily`나 커스텀 경로도 따라갑니다                                           |
-| `GITHUB_REPOSITORY` / `GITHUB_TOKEN`                  | 공개된 툴을 private 저장소에 미러링합니다. 비우면 꺼짐 — 호출도 큐 투입도 없습니다                         |
+| `GITHUB_REPOSITORY` / `GITHUB_TOKEN`                  | 미러 대상 private 저장소를 `owner/name` 으로 지정합니다. 비우면 꺼짐 — 호출이 없습니다                     |
 
 ## 구조
 

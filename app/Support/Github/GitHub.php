@@ -93,6 +93,12 @@ class GitHub
     {
         $repository = (string) config('github.repository');
 
+        // A name without an owner reaches GitHub as a 404, which reads like a
+        // missing repository or a bad token rather than the typo it is.
+        if (! preg_match('#^[^/\s]+/[^/\s]+$#', $repository)) {
+            return ['ok' => false, 'message' => "GITHUB_REPOSITORY は owner/name の形式で指定してください（現在: {$repository}）。"];
+        }
+
         try {
             $repo = $this->request()->get($this->url(''))->throw()->json();
         } catch (\Throwable $e) {
@@ -181,8 +187,8 @@ class GitHub
     {
         $repository = (string) config('github.repository');
 
-        if ($repository === '') {
-            throw new RuntimeException('GITHUB_REPOSITORY is not set.');
+        if (! preg_match('#^[^/\s]+/[^/\s]+$#', $repository)) {
+            throw new RuntimeException("GitHub: GITHUB_REPOSITORY has to be owner/name, not `{$repository}`.");
         }
 
         $base = config('github.api_url').'/repos/'.$repository;

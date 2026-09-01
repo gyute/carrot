@@ -71,7 +71,7 @@ values worth a second look:
 | `CATALOG_REQUESTS`                                    | The request queue at `/tools/requests`, for a tool that does not exist yet. Off and the screens are gone           |
 | `PASSKEYS_USER_HANDLE_SECRET`                         | Defaults to `APP_KEY`. Set it to its own fixed value if `APP_KEY` will ever be rotated, or passkeys stop resolving |
 | `LOG_CHANNEL`                                         | The system screen tails whichever channel this names, so a `daily` or custom path is followed, not assumed         |
-| `GITHUB_REPOSITORY` / `GITHUB_TOKEN`                  | Mirror every published tool to a private repository. Blank means off - nothing is called and nothing is queued     |
+| `GITHUB_REPOSITORY` / `GITHUB_TOKEN`                  | `owner/name` of a private repository every published tool is mirrored to. Blank means off - nothing is called      |
 
 ## Layout
 
