@@ -11,4 +11,12 @@ enum ToolStatus: string
 {
     case Running = 'running';
     case Deprecated = 'deprecated';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Running => '稼働中',
+            self::Deprecated => '非推奨',
+        };
+    }
 }

@@ -5,7 +5,7 @@ import ToolIcon from '@/components/tool-icon';
 import type { TagGroup } from '@/components/tool-tag-filter';
 import ToolTagFilter from '@/components/tool-tag-filter';
 import ToolsNav from '@/components/tools-nav';
-import { STATUS_LABELS, STATUS_STYLES, toolAccent } from '@/lib/tool-presets';
+import { STATUS_STYLES, toolAccent } from '@/lib/tool-presets';
 import type { ToolStatus } from '@/lib/tool-presets';
 import { cn } from '@/lib/utils';
 
@@ -18,6 +18,7 @@ type CatalogTool = {
     icon: string;
     accent: string;
     status: ToolStatus;
+    statusLabel: string;
     /** Null when the card leads nowhere: deprecated, or a kind with no screen yet. */
     href: string | null;
     /** Tag values per filter group; a group the tool has no value for is empty. */
@@ -183,7 +184,7 @@ export default function ToolsIndex({ tools, tagGroups }: Props) {
                                             STATUS_STYLES[tool.status],
                                         )}
                                     >
-                                        {STATUS_LABELS[tool.status]}
+                                        {tool.statusLabel}
                                     </span>
                                 </span>
 

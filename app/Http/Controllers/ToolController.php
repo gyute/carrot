@@ -39,6 +39,15 @@ class ToolController extends Controller
         'department' => '所属',
     ];
 
+    /**
+     * The catalog shows a status a tool cannot hold: `pending` is a submission
+     * that has no tool row yet, so it has no ToolStatus case to ask.
+     */
+    private function statusLabel(string $status): string
+    {
+        return $status === 'pending' ? '承認待ち' : ToolStatus::from($status)->label();
+    }
+
     public function __construct(
         private SubmissionPresenter $presenter,
         private ToolRunPresenter $runPresenter,
@@ -182,6 +191,7 @@ class ToolController extends Controller
             'icon' => (string) ($payload['icon'] ?? 'wrench'),
             'accent' => (string) ($payload['accent'] ?? 'slate'),
             'status' => 'pending',
+            'statusLabel' => $this->statusLabel('pending'),
             'href' => route('tools.submissions.show', $submission, absolute: false),
             'tags' => [
                 'status' => ['pending'],
@@ -205,6 +215,7 @@ class ToolController extends Controller
             'icon' => $tool->icon,
             'accent' => $tool->accent,
             'status' => $tool->status->value,
+            'statusLabel' => $tool->status->label(),
             'href' => $this->href($tool),
             'tags' => $this->tagsOf($tool),
         ];
@@ -272,7 +283,13 @@ class ToolController extends Controller
                 'key' => $key,
                 'label' => $label,
                 'options' => collect($counts)
-                    ->map(fn (int $count, string $value): array => ['value' => $value, 'count' => $count])
+                    ->map(fn (int $count, string $value): array => [
+                        'value' => $value,
+                        // Status values are stored in English; category and
+                        // department are already the words people typed.
+                        'label' => $key === 'status' ? $this->statusLabel($value) : $value,
+                        'count' => $count,
+                    ])
                     ->values()
                     ->all(),
             ];

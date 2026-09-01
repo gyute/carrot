@@ -48,15 +48,15 @@ test('tag groups carry counts, with status first', function () {
         ->assertInertia(fn ($page) => $page
             ->where('tagGroups.0.key', 'status')
             ->where('tagGroups.0.options', [
-                ['value' => 'running', 'count' => 2],
-                ['value' => 'deprecated', 'count' => 1],
+                ['value' => 'running', 'label' => '稼働中', 'count' => 2],
+                ['value' => 'deprecated', 'label' => '非推奨', 'count' => 1],
             ])
             ->where('tagGroups.1.key', 'category')
-            ->where('tagGroups.1.options', [['value' => 'データ', 'count' => 2]])
+            ->where('tagGroups.1.options', [['value' => 'データ', 'label' => 'データ', 'count' => 2]])
             ->where('tagGroups.2.key', 'department')
             ->where('tagGroups.2.options', [
-                ['value' => '総務', 'count' => 1],
-                ['value' => '開発', 'count' => 2],
+                ['value' => '総務', 'label' => '総務', 'count' => 1],
+                ['value' => '開発', 'label' => '開発', 'count' => 2],
             ])
         );
 });
@@ -136,4 +136,21 @@ test('a deprecated tool offers no run form', function () {
     $this->actingAs(User::factory()->create())
         ->get(route('tools.show', $tool))
         ->assertInertia(fn ($page) => $page->where('can.run', false));
+});
+
+test('the catalog labels every status in Japanese, filter included', function () {
+    Tool::factory()->create(['name' => 'Live']);
+    Tool::factory()->deprecated()->create(['name' => 'Old']);
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('tools.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('tools.0.statusLabel', '稼働中')
+            ->where('tools.1.statusLabel', '非推奨')
+            ->where('tagGroups.0.key', 'status')
+            ->where('tagGroups.0.options.0.value', 'running')
+            ->where('tagGroups.0.options.0.label', '稼働中')
+            ->where('tagGroups.0.options.1.label', '非推奨')
+        );
 });

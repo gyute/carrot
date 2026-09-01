@@ -23,7 +23,6 @@ import { formatDateTime, formatTimestamp } from '@/lib/format';
 import {
     KIND_LABELS,
     NETWORK_LABELS,
-    STATUS_LABELS,
     STATUS_STYLES,
     SUBMISSION_STATUS_STYLES,
     toolAccent,
@@ -279,7 +278,7 @@ export default function ToolShow({
                         </h1>
                         <StatusPill
                             value={tool.status}
-                            label={STATUS_LABELS[tool.status]}
+                            label={tool.statusLabel}
                             styles={STATUS_STYLES}
                         />
                         <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">

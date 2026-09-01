@@ -91,6 +91,7 @@ export type ToolDetail = {
     icon: string;
     accent: string;
     status: ToolStatus;
+    statusLabel: string;
     href: string | null;
     department: string | null;
     categories: string[];

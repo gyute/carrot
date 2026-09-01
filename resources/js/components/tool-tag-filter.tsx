@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils';
 
 export type TagOption = {
     value: string;
+    /** What the box says. Status values are stored in English. */
+    label: string;
     count: number;
 };
 
@@ -49,7 +51,7 @@ export default function ToolTagFilter({
         .map((group) => ({
             ...group,
             options: group.options.filter((option) =>
-                option.value.toLowerCase().includes(needle),
+                option.label.toLowerCase().includes(needle),
             ),
         }))
         .filter((group) => group.options.length > 0);
@@ -155,7 +157,7 @@ export default function ToolTagFilter({
                                                     }
                                                 />
                                                 <span className="grow truncate">
-                                                    {option.value}
+                                                    {option.label}
                                                 </span>
                                                 <span className="text-xs text-slate-400 tabular-nums">
                                                     {option.count}
