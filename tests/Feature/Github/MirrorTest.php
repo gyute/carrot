@@ -143,21 +143,30 @@ test('nothing is committed when the repository already matches', function () {
     Http::assertNotSent(fn ($request) => str_contains($request->url(), '/git/refs/heads/'));
 });
 
-test('a purged tool takes its directory with it', function () {
+test('a purged tool takes its directory with it, file by file', function () {
     mirrorOn();
 
-    (new MirrorToolToRepo('01gone', 'retired-tool'))->handle(app(GitHub::class));
+    // A directory cannot be dropped as one tree entry: a null sha on a tree
+    // comes back GitRPC::BadObjectState. Only blobs can be nulled, so the
+    // files under it are listed and dropped by name.
+    Http::fake(['*/git/trees/tree-base?recursive=1' => Http::response(['tree' => [
+        ['path' => 'README.md', 'type' => 'blob'],
+        ['path' => 'tools/01gone/tool.json', 'type' => 'blob'],
+        ['path' => 'tools/01gone/source.php', 'type' => 'blob'],
+        ['path' => 'tools/01stays/tool.json', 'type' => 'blob'],
+    ]])]);
+
+    (new MirrorToolToRepo('01gone', '01gone'))->handle(app(GitHub::class));
 
     Http::assertSent(function ($request) {
-        if (! str_contains($request->url(), '/git/trees')) {
+        if (! str_contains($request->url(), '/git/trees') || $request->method() !== 'POST') {
             return false;
         }
 
-        $entry = $request->data()['tree'][0];
+        $entries = collect($request->data()['tree']);
 
-        return $entry['path'] === 'tools/retired-tool'
-            && $entry['type'] === 'tree'
-            && $entry['sha'] === null;
+        return $entries->every(fn (array $e): bool => $e['type'] === 'blob' && $e['sha'] === null)
+            && $entries->pluck('path')->all() === ['tools/01gone/tool.json', 'tools/01gone/source.php'];
     });
 });
 

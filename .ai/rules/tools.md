@@ -33,7 +33,7 @@ That is deliberate. Eight code paths write to `tools` - ApproveSubmission, ToolC
 Three things that follow from it:
 - A query-builder `update()` writes rows without raising a model event. `RetireUser` saves each tool one at a time for exactly this reason - do not "optimise" it back into a bulk update.
 - No unique lock, on purpose. `ShouldBeUnique*` takes a cache lock at dispatch, inside whatever transaction is open; ApproveSubmission saves a tool twice in one, the second lock insert fails on the duplicate key, and Postgres ends the transaction there - every approval fails. Both jobs set `afterCommit` in their constructor instead (the Queueable trait declares the property without a default, so a class default is a fatal conflict). The jobs are idempotent anyway: a second run finds the tree unchanged and writes nothing.
-- A purged tool has no row left, so the job carries the slug as well as the ULID and removes the directory when the row is gone.
+- A purged tool has no row left, so the job carries the slug as well as the ULID and removes the directory when the row is gone. Removing it means listing the blobs under it and nulling each: a null sha on a *tree* entry is rejected as `GitRPC::BadObjectState`, however much the docs read like it should work.
 - 404 and 409 are not the same thing. 404 means the branch is missing from a repository that has others - a typo in GITHUB_BRANCH - and is refused, because starting a branch there buries the mistake. 409 means GitHub considers the repository empty, which no typo can produce, so the first commit is written. It goes through the Contents API: the Git Data API refuses even a blob until a repository has a commit.
 
 A tool's directory is its ULID, not its slug - the same identifier `/tools/{ulid}` uses, so a directory in the repository and a page in the portal are the same thing. Slugs would not do: `Str::slug` drops Japanese entirely, so every tool here would be `tool`, `tool-2`, `tool-3`.
@@ -50,6 +50,8 @@ GitHub is never in the way of an approval. The job is queued outside the transac
 Status, not events, for the reason the tool mirror is: withdrawing raises no event at all, and the five statuses are written from five different places.
 
 `SubmissionDocument` projects rather than reads - a create submission has no tool row yet - so the PR shows what the change would produce before anyone approves it. That is the whole point of the PR: the state mirror alone gives the history, but only a PR gives a diff to look at and somewhere for CI to run.
+
+GitHub is not read-your-writes here. A push that reads the branch it just moved can get the old sha back and fail the next update as "not a fast forward" - the job's retries with backoff are what absorb that, so do not make the ref update forced to paper over it.
 
 A ref that was just created is not always readable: `GET git/ref/heads/...` came back 404 for a branch the previous call had provably made. `branchFrom()` returns the sha it created the branch at and `commit()` takes it, so nothing reads back what it just wrote. `start()` does the same with the sha in the Contents API response.
 

@@ -64,9 +64,13 @@ class GitHub
             ];
         }
 
+        // A directory is not a thing the tree API can drop in one entry: a null
+        // sha on a tree entry comes back GitRPC::BadObjectState. Only blobs can
+        // be nulled, so the files under it are listed and dropped one by one.
         foreach ($remove as $path) {
-            // A null sha on a tree entry drops the whole directory.
-            $entries[] = ['path' => $path, 'mode' => '040000', 'type' => 'tree', 'sha' => null];
+            foreach ($this->blobsUnder($baseTree, $path) as $file) {
+                $entries[] = ['path' => $file, 'mode' => '100644', 'type' => 'blob', 'sha' => null];
+            }
         }
 
         if ($entries === []) {
@@ -147,6 +151,28 @@ class GitHub
             'name' => (string) config('github.committer.name'),
             'email' => (string) config('github.committer.email'),
         ];
+    }
+
+    /**
+     * The files under `$path` in `$tree`, so they can be dropped by name.
+     *
+     * @return array<int, string>
+     */
+    private function blobsUnder(string $tree, string $path): array
+    {
+        $prefix = rtrim($path, '/').'/';
+
+        /** @var array<int, array<string, mixed>> $entries */
+        $entries = $this->get("git/trees/{$tree}?recursive=1")['tree'] ?? [];
+
+        return array_values(array_map(
+            fn (array $entry): string => (string) $entry['path'],
+            array_filter(
+                $entries,
+                fn (array $entry): bool => ($entry['type'] ?? '') === 'blob'
+                    && str_starts_with((string) $entry['path'], $prefix),
+            ),
+        ));
     }
 
     /**
