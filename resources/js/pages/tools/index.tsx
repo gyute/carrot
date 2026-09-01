@@ -1,6 +1,6 @@
 import { Head, Link, useHttp } from '@inertiajs/react';
 import { ArrowUpRight, SearchX, X } from 'lucide-react';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ToolIcon from '@/components/tool-icon';
 import type { TagGroup } from '@/components/tool-tag-filter';
 import ToolTagFilter from '@/components/tool-tag-filter';
@@ -88,6 +88,7 @@ export default function ToolsIndex({ tools, tagGroups, savedFilters }: Props) {
     const settled = fingerprint(selected);
     const lastSaved = useRef(fingerprint(savedFilters ?? builtInDefault));
     const flush = useRef(() => {});
+    const [saveFailed, setSaveFailed] = useState(false);
 
     useEffect(() => {
         flush.current = () => {
@@ -96,7 +97,30 @@ export default function ToolsIndex({ tools, tagGroups, savedFilters }: Props) {
             }
 
             lastSaved.current = settled;
-            saver.put(saveFilters().url);
+
+            // A save that works says nothing: the boxes already show what the
+            // catalog will open with. Only a broken one is worth a line.
+            //
+            // Every failure has to go through a callback. A 422 does not
+            // reject - useHttp fills in `errors` and resolves - so a promise
+            // chain alone would report a rejected filter as saved.
+            const failed = () => {
+                setSaveFailed(true);
+                // Nothing is stored, so let the next change try again even if
+                // it lands back on the selection that just failed.
+                lastSaved.current = '';
+            };
+
+            saver
+                .put(saveFilters().url, {
+                    onSuccess: () => setSaveFailed(false),
+                    onError: failed,
+                    onHttpException: failed,
+                    onNetworkError: failed,
+                })
+                // Those last two report and then rethrow; they have been
+                // handled, so keep the rejection from going unhandled.
+                .catch(() => {});
         };
     });
 
@@ -160,8 +184,7 @@ export default function ToolsIndex({ tools, tagGroups, savedFilters }: Props) {
                         selected={selected}
                         onToggle={toggleTag}
                         onClear={clearTags}
-                        saving={saver.processing}
-                        justSaved={saver.recentlySuccessful}
+                        saveFailed={saveFailed}
                     />
                 }
             />

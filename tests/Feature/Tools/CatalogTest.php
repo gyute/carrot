@@ -219,9 +219,22 @@ test('a saved value whose tag is gone is dropped rather than hiding everything',
 test('the filter refuses a group the catalog does not offer', function () {
     $user = User::factory()->create();
 
+    // The catalog saves over XHR, so a refusal reaches it as 422 with the
+    // errors in the body - not as a redirect carrying them in the session.
     $this->actingAs($user)
-        ->put(route('tools.filters.save'), ['filters' => ['nonsense' => ['x']]])
-        ->assertSessionHasErrors('filters');
+        ->putJson(route('tools.filters.save'), ['filters' => ['nonsense' => ['x']]])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('filters');
+
+    expect($user->fresh()->catalog_filters)->toBeNull();
+});
+
+test('the filter refuses a value longer than the column should carry', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->putJson(route('tools.filters.save'), ['filters' => ['category' => [str_repeat('あ', 61)]]])
+        ->assertUnprocessable();
 
     expect($user->fresh()->catalog_filters)->toBeNull();
 });

@@ -1,4 +1,4 @@
-import { Check, Filter, Loader2, Search, X } from 'lucide-react';
+import { Filter, Search, TriangleAlert, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -23,9 +23,8 @@ type Props = {
     selected: Record<string, string[]>;
     onToggle: (groupKey: string, value: string) => void;
     onClear: () => void;
-    /** Ticks are kept as this person's default automatically; these report that. */
-    saving: boolean;
-    justSaved: boolean;
+    /** Ticks are kept automatically; a working save says nothing, a broken one does. */
+    saveFailed: boolean;
 };
 
 /**
@@ -38,8 +37,7 @@ export default function ToolTagFilter({
     selected,
     onToggle,
     onClear,
-    saving,
-    justSaved,
+    saveFailed,
 }: Props) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState('');
@@ -193,20 +191,12 @@ export default function ToolTagFilter({
                             </button>
                         </div>
 
-                        <p className="mt-1 flex items-center gap-1 text-[11px] text-slate-400">
-                            {saving ? (
-                                <Loader2 className="size-3 animate-spin" />
-                            ) : (
-                                justSaved && (
-                                    <Check className="size-3 text-emerald-600" />
-                                )
-                            )}
-                            {saving
-                                ? '保存中…'
-                                : justSaved
-                                  ? '既定として保存しました'
-                                  : '次回もこの絞り込みで開きます'}
-                        </p>
+                        {saveFailed && (
+                            <p className="mt-1 flex items-center gap-1 text-[11px] text-rose-700">
+                                <TriangleAlert className="size-3" />
+                                この絞り込みを保存できませんでした
+                            </p>
+                        )}
                     </div>
                 </div>
             )}
