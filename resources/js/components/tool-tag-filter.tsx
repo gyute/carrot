@@ -1,4 +1,4 @@
-import { Filter, Search, X } from 'lucide-react';
+import { Check, Filter, Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -23,6 +23,11 @@ type Props = {
     selected: Record<string, string[]>;
     onToggle: (groupKey: string, value: string) => void;
     onClear: () => void;
+    /** Keep the current ticks as this person's default. */
+    onSaveDefault: () => void;
+    /** True while that is in flight, or when the ticks are already the saved default. */
+    savingDefault: boolean;
+    isDefault: boolean;
 };
 
 /**
@@ -35,6 +40,9 @@ export default function ToolTagFilter({
     selected,
     onToggle,
     onClear,
+    onSaveDefault,
+    savingDefault,
+    isDefault,
 }: Props) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState('');
@@ -170,20 +178,34 @@ export default function ToolTagFilter({
                         )}
                     </div>
 
-                    <div className="flex items-center justify-between border-t border-slate-100 px-3 py-2 text-xs">
-                        <span className="text-slate-500">
-                            {selectedCount > 0
-                                ? `${selectedCount} 件選択中`
-                                : '未選択'}
-                        </span>
+                    <div className="border-t border-slate-100 px-3 py-2 text-xs">
+                        <div className="flex items-center justify-between">
+                            <span className="text-slate-500">
+                                {selectedCount > 0
+                                    ? `${selectedCount} 件選択中`
+                                    : '未選択'}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={onClear}
+                                disabled={selectedCount === 0}
+                                className="inline-flex items-center gap-1 font-medium text-slate-500 transition hover:text-slate-900 disabled:pointer-events-none disabled:opacity-40"
+                            >
+                                <X className="size-3" />
+                                クリア
+                            </button>
+                        </div>
+
                         <button
                             type="button"
-                            onClick={onClear}
-                            disabled={selectedCount === 0}
-                            className="inline-flex items-center gap-1 font-medium text-slate-500 transition hover:text-slate-900 disabled:pointer-events-none disabled:opacity-40"
+                            onClick={onSaveDefault}
+                            disabled={savingDefault || isDefault}
+                            className="mt-1.5 inline-flex w-full items-center justify-center gap-1 rounded-md py-1 font-medium text-sky-700 transition hover:bg-sky-50 disabled:pointer-events-none disabled:text-slate-400"
                         >
-                            <X className="size-3" />
-                            クリア
+                            <Check className="size-3" />
+                            {isDefault
+                                ? '既定の絞り込みです'
+                                : 'この絞り込みを既定にする'}
                         </button>
                     </div>
                 </div>

@@ -106,8 +106,12 @@ row in the `tools` table.
 - **Kinds**: `link` opens a URL (external https or a portal path), `embed`
   frames an external https page inside the tool's own screen, `script` runs a
   script in the sandbox.
-- The catalog filters on status, category and 所属; deprecated tools stay for
-  reference but are hidden until their status is ticked.
+- The catalog filters on status, category and 所属. Nothing is hidden by a rule
+  the screen does not show: the filter opens with every status but 非推奨
+  ticked, so deprecated tools stay for reference one box away. 「この絞り込みを
+  既定にする」 keeps the current ticks on the account (`users.catalog_filters`),
+  and a saved value whose tag was since renamed or merged is dropped rather
+  than left to hide the whole catalog.
 - **Requests** (`tool_requests`, 依頼): somebody who cannot build a tool
   describes what they need and the development team triages it - open →
   accepted → in progress → delivered, or declined / duplicate / withdrawn. A

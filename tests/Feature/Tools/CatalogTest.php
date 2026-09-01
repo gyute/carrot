@@ -154,3 +154,74 @@ test('the catalog labels every status in Japanese, filter included', function ()
             ->where('tagGroups.0.options.1.label', '非推奨')
         );
 });
+
+test('the catalog hands over no saved filter until one is kept', function () {
+    Tool::factory()->create();
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('tools.index'))
+        ->assertInertia(fn ($page) => $page->where('savedFilters', null));
+});
+
+test('a person keeps the current filter as their default', function () {
+    $user = User::factory()->create();
+    Tool::factory()->create(['department' => '開発']);
+    Tool::factory()->deprecated()->create();
+
+    $this->actingAs($user)
+        ->put(route('tools.filters.save'), ['filters' => [
+            'status' => ['running', 'deprecated'],
+            'department' => ['開発'],
+        ]])
+        ->assertRedirect();
+
+    // Stored in a fixed group and value order, so one selection is one value.
+    expect($user->fresh()->catalog_filters)
+        ->toBe(['status' => ['deprecated', 'running'], 'department' => ['開発']]);
+
+    $this->actingAs($user)
+        ->get(route('tools.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('savedFilters.status', ['deprecated', 'running'])
+            ->where('savedFilters.department', ['開発'])
+        );
+});
+
+test('an empty filter is a choice, not the absence of one', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->put(route('tools.filters.save'), ['filters' => []])
+        ->assertRedirect();
+
+    expect($user->fresh()->catalog_filters)->toBe([]);
+
+    $this->actingAs($user)
+        ->get(route('tools.index'))
+        ->assertInertia(fn ($page) => $page->where('savedFilters', []));
+});
+
+test('a saved value whose tag is gone is dropped rather than hiding everything', function () {
+    $user = User::factory()->create(['catalog_filters' => [
+        'status' => ['running'],
+        'category' => ['廃止されたタグ'],
+    ]]);
+    Tool::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('tools.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('savedFilters.status', ['running'])
+            ->where('savedFilters.category', [])
+        );
+});
+
+test('the filter refuses a group the catalog does not offer', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->put(route('tools.filters.save'), ['filters' => ['nonsense' => ['x']]])
+        ->assertSessionHasErrors('filters');
+
+    expect($user->fresh()->catalog_filters)->toBeNull();
+});

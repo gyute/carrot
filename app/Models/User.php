@@ -26,6 +26,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string $email
  * @property UserRole $role
  * @property string|null $department
+ * @property array<string, list<string>>|null $catalog_filters
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $two_factor_secret
@@ -73,6 +74,7 @@ class User extends Authenticatable implements PasskeyUser
             'role' => UserRole::class,
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
+            'catalog_filters' => 'array',
         ];
     }
 

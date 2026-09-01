@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth'])->group(function () {
     Route::get('tools', [ToolController::class, 'index'])->name('tools.index');
 
+    // Static, so it comes before `tools/{tool}` like the others below.
+    Route::put('tools/filters', [ToolController::class, 'saveFilters'])->name('tools.filters.save');
+
     // Requests to register or change a tool. The static paths come before
     // `tools/{tool}` so "submissions" is never read as a tool ULID.
     Route::middleware('feature:submissions')->group(function () {

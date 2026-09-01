@@ -60,6 +60,7 @@ class RetireUser
                 'two_factor_confirmed_at' => null,
                 'email_verified_at' => null,
                 'department' => null,
+                'catalog_filters' => null,
                 'role' => UserRole::Member,
             ])->save();
 

@@ -1,6 +1,6 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { ArrowUpRight, SearchX, X } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import ToolIcon from '@/components/tool-icon';
 import type { TagGroup } from '@/components/tool-tag-filter';
 import ToolTagFilter from '@/components/tool-tag-filter';
@@ -8,6 +8,7 @@ import ToolsNav from '@/components/tools-nav';
 import { STATUS_STYLES, toolAccent } from '@/lib/tool-presets';
 import type { ToolStatus } from '@/lib/tool-presets';
 import { cn } from '@/lib/utils';
+import { save as saveFilters } from '@/routes/tools/filters';
 
 type CatalogTool = {
     ulid: string;
@@ -28,21 +29,66 @@ type CatalogTool = {
 type Props = {
     tools: CatalogTool[];
     tagGroups: TagGroup[];
+    /** What this person keeps as their default, or null if they never saved one. */
+    savedFilters: Record<string, string[]> | null;
 };
 
-/**
- * Deprecated tools stay in the catalog for reference but are hidden until the
- * visitor asks for them by ticking the status.
- */
-function isShownByDefault(tool: CatalogTool): boolean {
-    return tool.status !== 'deprecated';
+/** Two selections are the same filter whatever order the boxes were ticked in. */
+function fingerprint(selected: Record<string, string[]>): string {
+    return JSON.stringify(
+        Object.entries(selected)
+            .map(([key, values]) => [key, [...values].sort()] as const)
+            .filter(([, values]) => values.length > 0)
+            .sort(([a], [b]) => a.localeCompare(b)),
+    );
 }
 
-export default function ToolsIndex({ tools, tagGroups }: Props) {
+export default function ToolsIndex({ tools, tagGroups, savedFilters }: Props) {
     const GROUP_LABELS = new Map(
         tagGroups.map(({ key, label }) => [key, label] as const),
     );
-    const [selected, setSelected] = useState<Record<string, string[]>>({});
+    const OPTION_LABELS = new Map(
+        tagGroups.flatMap(({ key, options }) =>
+            options.map(
+                (option) => [`${key}/${option.value}`, option.label] as const,
+            ),
+        ),
+    );
+
+    // Deprecated tools stay in the catalog for reference, so the status filter
+    // opens with every other status ticked rather than hiding them by a rule
+    // the screen never shows. What is ticked is the whole truth.
+    const builtInDefault = useMemo(
+        () => ({
+            status: (
+                tagGroups.find(({ key }) => key === 'status')?.options ?? []
+            )
+                .map(({ value }) => value)
+                .filter((value) => value !== 'deprecated'),
+        }),
+        [tagGroups],
+    );
+
+    const [selected, setSelected] = useState<Record<string, string[]>>(
+        () => savedFilters ?? builtInDefault,
+    );
+    const [savingDefault, setSavingDefault] = useState(false);
+
+    const isDefault =
+        fingerprint(selected) === fingerprint(savedFilters ?? builtInDefault);
+
+    const saveDefault = () => {
+        setSavingDefault(true);
+
+        router.put(
+            saveFilters().url,
+            { filters: selected },
+            {
+                preserveScroll: true,
+                onFinish: () => setSavingDefault(false),
+            },
+        );
+    };
 
     const toggleTag = (groupKey: string, value: string) => {
         setSelected((current) => {
@@ -58,27 +104,24 @@ export default function ToolsIndex({ tools, tagGroups }: Props) {
     const clearTags = () => setSelected({});
 
     // A group with nothing ticked is ignored; within a group the ticks are OR,
-    // and a tool has to clear every filtered group. Deprecated tools only
-    // appear once their status is ticked explicitly.
-    const statusFiltered = (selected.status ?? []).length > 0;
-    const visibleTools = tools.filter(
-        (tool) =>
-            (statusFiltered || isShownByDefault(tool)) &&
-            tagGroups.every(({ key }) => {
-                const values = selected[key] ?? [];
+    // and a tool has to clear every filtered group.
+    const visibleTools = tools.filter((tool) =>
+        tagGroups.every(({ key }) => {
+            const values = selected[key] ?? [];
 
-                return (
-                    values.length === 0 ||
-                    (tool.tags[key] ?? []).some((value) =>
-                        values.includes(value),
-                    )
-                );
-            }),
+            return (
+                values.length === 0 ||
+                (tool.tags[key] ?? []).some((value) => values.includes(value))
+            );
+        }),
     );
-    const defaultCount = tools.filter(isShownByDefault).length;
 
     const activeTags = tagGroups.flatMap(({ key }) =>
-        (selected[key] ?? []).map((value) => ({ groupKey: key, value })),
+        (selected[key] ?? []).map((value) => ({
+            groupKey: key,
+            value,
+            label: OPTION_LABELS.get(`${key}/${value}`) ?? value,
+        })),
     );
 
     return (
@@ -97,6 +140,9 @@ export default function ToolsIndex({ tools, tagGroups }: Props) {
                         selected={selected}
                         onToggle={toggleTag}
                         onClear={clearTags}
+                        onSaveDefault={saveDefault}
+                        savingDefault={savingDefault}
+                        isDefault={isDefault}
                     />
                 }
             />
@@ -109,21 +155,21 @@ export default function ToolsIndex({ tools, tagGroups }: Props) {
                 <span className="ml-auto text-xs text-slate-400 tabular-nums">
                     {activeTags.length > 0
                         ? `${visibleTools.length} / ${tools.length} 件`
-                        : `${defaultCount} 件`}
+                        : `${tools.length} 件`}
                 </span>
             </div>
 
             {activeTags.length > 0 && (
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                    {activeTags.map(({ groupKey, value }) => (
+                    {activeTags.map(({ groupKey, value, label }) => (
                         <button
                             key={`${groupKey}/${value}`}
                             type="button"
                             onClick={() => toggleTag(groupKey, value)}
-                            title={`${GROUP_LABELS.get(groupKey)}「${value}」を解除`}
+                            title={`${GROUP_LABELS.get(groupKey)}「${label}」を解除`}
                             className="inline-flex items-center gap-1 rounded-full bg-sky-50 py-0.5 pr-1.5 pl-2.5 text-xs font-medium text-sky-800 ring-1 ring-sky-200 transition hover:bg-sky-100"
                         >
-                            {value}
+                            {label}
                             <X className="size-3 text-sky-500" />
                         </button>
                     ))}

@@ -7,6 +7,7 @@ use App\Enums\SubmissionAction;
 use App\Enums\SubmissionStatus;
 use App\Enums\ToolKind;
 use App\Enums\ToolStatus;
+use App\Http\Requests\Tools\CatalogFilterRequest;
 use App\Http\Requests\Tools\ToolMetadataRequest;
 use App\Models\Tool;
 use App\Models\ToolSubmission;
@@ -70,10 +71,57 @@ class ToolController extends Controller
 
         $entries = $tools->concat($pending)->sortBy('name', SORT_NATURAL)->values();
 
+        $tagGroups = $this->tagGroups($entries->all());
+
         return Inertia::render('tools/index', [
             'tools' => $entries->all(),
-            'tagGroups' => $this->tagGroups($entries->all()),
+            'tagGroups' => $tagGroups,
+            'savedFilters' => $this->savedFilters($request->user(), $tagGroups),
         ]);
+    }
+
+    /**
+     * The filter this person kept, with values that no longer exist dropped:
+     * a category can be renamed or merged away, and a filter naming one would
+     * silently hide the whole catalog. Null means they never saved one, which
+     * the screen tells apart from a saved empty filter.
+     *
+     * @param  array<int, array{key: string, label: string, options: array<int, array{value: string, label: string, count: int}>}>  $tagGroups
+     * @return array<string, list<string>>|null
+     */
+    private function savedFilters(User $user, array $tagGroups): ?array
+    {
+        if ($user->catalog_filters === null) {
+            return null;
+        }
+
+        $known = [];
+
+        foreach ($tagGroups as $group) {
+            $known[$group['key']] = array_column($group['options'], 'value');
+        }
+
+        $filters = [];
+
+        foreach ($user->catalog_filters as $key => $values) {
+            $filters[$key] = array_values(array_intersect($values, $known[$key] ?? []));
+        }
+
+        return $filters;
+    }
+
+    /**
+     * Keep the current filter as this person's default. An empty filter is a
+     * choice - see everything, deprecated tools included - so it is stored
+     * rather than treated as "never saved".
+     */
+    public function saveFilters(CatalogFilterRequest $request): RedirectResponse
+    {
+        $request->user()->forceFill(['catalog_filters' => $request->filters()])->save();
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'この絞り込みを既定にしました。']);
+
+        return back();
     }
 
     /**
@@ -254,7 +302,7 @@ class ToolController extends Controller
      * component expects. Groups with no values are dropped.
      *
      * @param  array<int, array{tags: array<string, array<int, string>>}>  $entries
-     * @return array<int, array{key: string, label: string, options: array<int, array{value: string, count: int}>}>
+     * @return array<int, array{key: string, label: string, options: array<int, array{value: string, label: string, count: int}>}>
      */
     private function tagGroups(array $entries): array
     {

@@ -8,7 +8,11 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 test('retiring keeps what the person did and removes what was theirs', function () {
-    $leaver = User::factory()->create(['department' => '営業', 'name' => '森']);
+    $leaver = User::factory()->create([
+        'department' => '営業',
+        'name' => '森',
+        'catalog_filters' => ['department' => ['営業']],
+    ]);
     $successor = User::factory()->manager('営業')->create();
     $tool = Tool::factory()->create(['owner_id' => $leaver->id]);
     $submission = ToolSubmission::factory()->approved()->create(['user_id' => $leaver->id, 'tool_id' => $tool->id]);
@@ -23,7 +27,8 @@ test('retiring keeps what the person did and removes what was theirs', function 
         ->and($retired->name)->toBe(RetireUser::NAME)
         ->and($retired->username)->not->toBe('森')
         ->and($retired->email)->toEndWith('@invalid')
-        ->and($retired->two_factor_secret)->toBeNull();
+        ->and($retired->two_factor_secret)->toBeNull()
+        ->and($retired->catalog_filters)->toBeNull();
 
     // What the organisation needs to read back survives, and still names someone.
     expect($submission->fresh()->user->name)->toBe(RetireUser::NAME)
