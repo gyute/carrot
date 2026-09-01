@@ -34,15 +34,8 @@ class GitHub
     {
         $branch = (string) config('github.branch');
 
-        // Null on a repository with no commits yet - the one somebody just
-        // created for this - and the first write starts its history.
         $head = $this->head($branch);
-        $baseTree = $head === null ? null : (string) $this->get("git/commits/{$head}")['tree']['sha'];
-
-        // Nothing to remove from a repository that holds nothing.
-        if ($head === null && $write === []) {
-            return null;
-        }
+        $baseTree = (string) $this->get("git/commits/{$head}")['tree']['sha'];
 
         $entries = [];
 
@@ -67,10 +60,7 @@ class GitHub
             return null;
         }
 
-        $tree = (string) $this->post('git/trees', array_filter([
-            'base_tree' => $baseTree,
-            'tree' => $entries,
-        ], fn (mixed $value): bool => $value !== null))['sha'];
+        $tree = (string) $this->post('git/trees', ['base_tree' => $baseTree, 'tree' => $entries])['sha'];
 
         // Nothing to say: the repository already holds exactly this.
         if ($tree === $baseTree) {
@@ -80,18 +70,10 @@ class GitHub
         $commit = (string) $this->post('git/commits', [
             'message' => $message,
             'tree' => $tree,
-            // No parents makes it a root commit, which is what an empty
-            // repository needs.
-            'parents' => $head === null ? [] : [$head],
+            'parents' => [$head],
             'author' => $this->committer(),
             'committer' => $this->committer(),
         ])['sha'];
-
-        if ($head === null) {
-            $this->post('git/refs', ['ref' => "refs/heads/{$branch}", 'sha' => $commit]);
-
-            return $commit;
-        }
 
         // Not forced: if the branch moved while this was being built the call
         // fails and the job runs again against the new head.
@@ -148,30 +130,25 @@ class GitHub
     }
 
     /**
-     * The commit the branch points at, or null when the repository has no
-     * commits at all and the first write has to start its history.
+     * The commit the branch points at.
      *
-     * A missing branch is not the same thing as a new repository, and the two
-     * arrive as the same 404. If the repository has other branches then
-     * GITHUB_BRANCH names one that is not there - a typo, or a default branch
-     * called something else - and starting an orphan branch would bury the
-     * mistake in a place nobody looks. That is worth failing over.
+     * A missing branch is the operator's to fix, not the mirror's: creating
+     * one would mean writing structure into somebody else's repository, and a
+     * typo in GITHUB_BRANCH would quietly get a branch of its own that nobody
+     * ever looks at. A repository nobody has pushed to yet reads the same way
+     * and wants the same answer - initialise it.
      */
-    private function head(string $branch): ?string
+    private function head(string $branch): string
     {
         $response = $this->request()->get($this->url("git/ref/heads/{$branch}"));
 
-        if ($response->status() !== 404) {
-            return (string) $response->throw()->json()['object']['sha'];
-        }
-
-        if ($this->get('git/matching-refs/heads/') !== []) {
+        if ($response->status() === 404) {
             throw new RuntimeException(
-                "GitHub: the repository has no branch named `{$branch}`. Set GITHUB_BRANCH to one that exists.",
+                "GitHub: the repository has no branch named `{$branch}`. Create it - a repository with no commits has none - or point GITHUB_BRANCH at one that exists.",
             );
         }
 
-        return null;
+        return (string) $response->throw()->json()['object']['sha'];
     }
 
     /**

@@ -34,6 +34,7 @@ Three things that follow from it:
 - A query-builder `update()` writes rows without raising a model event. `RetireUser` saves each tool one at a time for exactly this reason - do not "optimise" it back into a bulk update.
 - `ShouldBeUniqueUntilProcessing`, not `ShouldBeUnique`: the lock has to release when the write starts, or a change made mid-write is dropped and the mirror stops at a stale state.
 - A purged tool has no row left, so the job carries the slug as well as the ULID and removes the directory when the row is gone.
+- A missing branch is refused, never created. Setting a repository up belongs to whoever owns it, and creating one would turn a typo in GITHUB_BRANCH into a branch nobody ever looks at.
 
 Nothing personal is committed. `ToolDocument` writes ULIDs for owner/requester/endorser/approver and leaves the department out. Git only adds: a name committed once cannot be taken back, which would undo retiring a person rather than deleting them (`.ai/rules/app.md`).
 

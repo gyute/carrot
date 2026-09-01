@@ -194,55 +194,7 @@ test('the system screen says whether the mirror is on and reachable', function (
             ->where('status.mirror.repository', 'acme/carrot-tools'));
 });
 
-test('a repository with no commits yet gets its history started', function () {
-    $tool = Tool::factory()->create(['slug' => 'first', 'source' => null]);
-
-    config([
-        'github.repository' => 'acme/carrot-tools',
-        'github.token' => 'ghp_test',
-        'github.branch' => 'main',
-        'github.path' => 'tools',
-    ]);
-
-    Http::fake([
-        // No refs at all: nobody has committed to it.
-        '*/git/ref/heads/main' => Http::response(status: 404),
-        '*/git/matching-refs/heads/' => Http::response([]),
-        '*/git/blobs' => Http::response(['sha' => 'blob-sha']),
-        '*/git/trees' => Http::response(['sha' => 'tree-new']),
-        '*/git/commits' => Http::response(['sha' => 'commit-sha']),
-        '*/git/refs' => Http::response(['ref' => 'refs/heads/main']),
-    ]);
-
-    (new MirrorToolToRepo($tool->ulid, $tool->slug))->handle(app(GitHub::class));
-
-    // No base tree to build on, and a root commit rather than a child.
-    Http::assertSent(fn ($request) => str_contains($request->url(), '/git/trees')
-        && ! array_key_exists('base_tree', $request->data()));
-    Http::assertSent(fn ($request) => str_contains($request->url(), '/git/commits')
-        && $request->method() === 'POST'
-        && $request->data()['parents'] === []);
-
-    // The branch is created, not moved.
-    Http::assertSent(fn ($request) => $request->method() === 'POST'
-        && str_ends_with($request->url(), '/git/refs')
-        && $request->data()['ref'] === 'refs/heads/main');
-});
-
-test('purging against an empty repository asks for nothing', function () {
-    config(['github.repository' => 'acme/carrot-tools', 'github.token' => 'ghp_test', 'github.branch' => 'main']);
-
-    Http::fake([
-        '*/git/ref/heads/main' => Http::response(status: 404),
-        '*/git/matching-refs/heads/' => Http::response([]),
-    ]);
-
-    (new MirrorToolToRepo('01gone', 'never-existed'))->handle(app(GitHub::class));
-
-    Http::assertSentCount(2);
-});
-
-test('a branch that is simply missing is a configuration error, not a new repository', function () {
+test('a branch that is not there is refused, not created', function () {
     $tool = Tool::factory()->create();
 
     config([
@@ -251,16 +203,15 @@ test('a branch that is simply missing is a configuration error, not a new reposi
         'github.branch' => 'mian',
     ]);
 
-    Http::fake([
-        '*/git/ref/heads/mian' => Http::response(status: 404),
-        // The repository has history; the configured branch is a typo.
-        '*/git/matching-refs/heads/' => Http::response([['ref' => 'refs/heads/main']]),
-    ]);
+    Http::fake(['*/git/ref/heads/mian' => Http::response(status: 404)]);
 
+    // A repository with no commits reads the same way, and wants the same
+    // answer: setting one up is the operator's job, not the mirror's.
     expect(fn () => (new MirrorToolToRepo($tool->ulid, $tool->slug))->handle(app(GitHub::class)))
         ->toThrow(RuntimeException::class, 'no branch named `mian`');
 
-    // Nothing was written on the way to finding out.
+    // It asked one question and wrote nothing.
+    Http::assertSentCount(1);
     Http::assertNotSent(fn ($request) => $request->method() !== 'GET');
 });
 
@@ -271,12 +222,11 @@ test('the system screen names a missing branch before any tool changes', functio
     Http::fake([
         '*/repos/acme/carrot-tools' => Http::response(['private' => true, 'permissions' => ['push' => true]]),
         '*/git/ref/heads/mian' => Http::response(status: 404),
-        '*/git/matching-refs/heads/' => Http::response([['ref' => 'refs/heads/main']]),
     ]);
 
     $this->actingAs(User::factory()->admin()->create())
         ->get(route('admin.system.index'))
         ->assertInertia(fn ($page) => $page
             ->where('status.mirror.ok', false)
-            ->where('status.mirror.message', 'GitHub: the repository has no branch named `mian`. Set GITHUB_BRANCH to one that exists.'));
+            ->where('status.mirror.message', 'GitHub: the repository has no branch named `mian`. Create it - a repository with no commits has none - or point GITHUB_BRANCH at one that exists.'));
 });
