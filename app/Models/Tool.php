@@ -37,7 +37,6 @@ use Illuminate\Support\Carbon;
  * @property string|null $source
  * @property string|null $source_hash
  * @property string|null $version
- * @property string|null $mirror_commit_sha
  * @property int|null $requested_by
  * @property int|null $endorsed_by
  * @property int|null $approved_by
@@ -55,7 +54,7 @@ use Illuminate\Support\Carbon;
  */
 #[Fillable([
     'ulid', 'slug', 'kind', 'name', 'summary', 'description', 'icon', 'accent', 'status',
-    'owner_id', 'department', 'config', 'source', 'source_hash', 'version', 'mirror_commit_sha',
+    'owner_id', 'department', 'config', 'source', 'source_hash', 'version',
     'requested_by', 'endorsed_by', 'approved_by', 'approved_submission_id', 'published_at', 'deprecated_at',
 ])]
 class Tool extends Model
