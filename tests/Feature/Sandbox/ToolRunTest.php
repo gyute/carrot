@@ -71,7 +71,12 @@ test('inputs are validated against the tool schema and unknown keys dropped', fu
         ->post(route('tools.runs.store', $tool), ['inputs' => ['day' => '2026-08-27', 'mode' => 'fast', 'n' => '3', 'extra' => 'no']])
         ->assertRedirect();
 
-    expect(ToolRun::query()->sole()->inputs)->toBe(['day' => '2026-08-27', 'mode' => 'fast', 'n' => '3'])
+    // jsonb does not keep the key order it was handed, so sort before an
+    // identity comparison.
+    $inputs = ToolRun::query()->sole()->inputs;
+    ksort($inputs);
+
+    expect($inputs)->toBe(['day' => '2026-08-27', 'mode' => 'fast', 'n' => '3'])
         ->and($this->runner->lastSpec()?->runtime)->toBe('shell');
 });
 

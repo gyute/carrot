@@ -10,4 +10,5 @@ Before planning or editing, find the row whose globs match the file's path and r
 | ** | .ai/rules/general.md |
 | resources/** | .ai/rules/resources.md |
 | app/Sandbox/** | .ai/rules/sandbox.md |
+| tests/** | .ai/rules/tests.md |
 | app/Http/Controllers/Tools/** | .ai/rules/tools.md |

@@ -132,8 +132,12 @@ test('a script needs a runtime and source within the size limit', function () {
         ]))
         ->assertSessionDoesntHaveErrors();
 
-    expect(ToolSubmission::query()->sole()->payload['config']['inputs'][0])
-        ->toBe(['key' => 'day', 'label' => '日付', 'type' => 'text', 'required' => true, 'options' => null]);
+    // jsonb does not keep the key order it was handed, so sort before an
+    // identity comparison.
+    $input = ToolSubmission::query()->sole()->payload['config']['inputs'][0];
+    ksort($input);
+
+    expect($input)->toBe(['key' => 'day', 'label' => '日付', 'options' => null, 'required' => true, 'type' => 'text']);
 });
 
 test('only the requester edits, submits or withdraws their draft', function () {

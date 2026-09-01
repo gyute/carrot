@@ -212,7 +212,7 @@ npm run types:check  # tsc
 npm run lint         # eslint
 ```
 
-CI는 push와 pull request마다 전부 실행합니다(`composer setup` 다음
+CI는 push와 pull request마다 Postgres 18 서비스를 상대로 전부 실행합니다(`composer setup` 다음
 `composer ci:check`, PHP 8.4 / Node 22).
 
 ### 테스트가 지키는 것
@@ -231,4 +231,14 @@ HTTP와 Inertia props를 두드리기 때문에 라우트·정책·화면 props�
 
 두 스위트는 환경이 없으면 자동으로 건너뜁니다. `BubblewrapRunnerTest`는 `bwrap`
 설치가, `DockerRunnerTest`는 `SANDBOX_DOCKER_TESTS=1`과 동작하는 Docker가
-필요합니다. 나머지는 인메모리 SQLite를 상대로 어디서든 돌아갑니다.
+필요합니다. 나머지는 `carrot_test` 데이터베이스를 상대로 돌아갑니다. 이 DB는
+`docker compose up -d`가 볼륨을 처음 만들 때 `carrot`과 함께 생성합니다. 그
+전부터 있던 볼륨이라면 직접 만드세요.
+
+```bash
+docker exec carrot-pgsql psql -U carrot -d carrot -c 'CREATE DATABASE carrot_test OWNER carrot'
+```
+
+운영이 Postgres라 테스트도 Postgres에서 돌립니다. SQLite는 text 컬럼에서도
+JSON을 그냥 읽어주기 때문에, Postgres가 `operator does not exist: text ->> unknown`
+으로 거부하는 쿼리가 계속 통과했고 실제로 버그 하나를 놓쳤습니다.

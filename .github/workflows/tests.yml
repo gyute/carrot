@@ -13,6 +13,23 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
+    # The suite runs against Postgres because production does. SQLite accepts
+    # SQL that Postgres rejects, and a green run on it proved nothing.
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: carrot
+          POSTGRES_USER: carrot
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U carrot -d carrot"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -31,11 +48,23 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Create the test database
+        run: PGPASSWORD=secret psql -h 127.0.0.1 -U carrot -d carrot -c 'CREATE DATABASE carrot_test OWNER carrot'
+
       - name: Setup Application
         run: composer setup
         env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: ':memory:'
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: '5432'
+          DB_DATABASE: carrot
+          DB_USERNAME: carrot
+          DB_PASSWORD: secret
 
       - name: Run CI Checks
         run: composer ci:check
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: '5432'
+          DB_USERNAME: carrot
+          DB_PASSWORD: secret

@@ -217,7 +217,7 @@ npm run lint         # eslint
 ```
 
 CI runs all of it on every push and pull request - `composer setup` then
-`composer ci:check`, on PHP 8.4 and Node 22.
+`composer ci:check`, on PHP 8.4 and Node 22 against a Postgres 18 service.
 
 ### What the tests cover
 
@@ -237,4 +237,14 @@ and a page prop are all held down at once.
 Two suites are opt-in and skip unless the tooling is there:
 `BubblewrapRunnerTest` needs `bwrap` installed, and `DockerRunnerTest` needs
 `SANDBOX_DOCKER_TESTS=1` and a working Docker. Everything else runs anywhere,
-against an in-memory SQLite database.
+against the `carrot_test` database, which `docker compose up -d` creates
+alongside `carrot` the first time it builds the volume. On a volume that
+predates it:
+
+```bash
+docker exec carrot-pgsql psql -U carrot -d carrot -c 'CREATE DATABASE carrot_test OWNER carrot'
+```
+
+The suite runs on Postgres because production does, and SQLite let a bug
+through: it reads JSON out of a text column happily, so a query Postgres
+rejects with `operator does not exist: text ->> unknown` passed every run.

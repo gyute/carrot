@@ -214,7 +214,7 @@ npm run types:check  # tsc
 npm run lint         # eslint
 ```
 
-CI は push と pull request のたびに全部を実行します（`composer setup` のあと
+CI は push と pull request のたびに Postgres 18 サービスを相手に全部を実行します（`composer setup` のあと
 `composer ci:check`、PHP 8.4 / Node 22）。
 
 ### テストが守っているもの
@@ -234,4 +234,15 @@ HTTP と Inertia の props を叩くので、ルート・ポリシー・画面�
 
 2 つのスイートは環境がなければ自動でスキップされます。`BubblewrapRunnerTest` は
 `bwrap` の導入が、`DockerRunnerTest` は `SANDBOX_DOCKER_TESTS=1` と動作する Docker が
-必要です。それ以外はインメモリの SQLite に対してどこでも走ります。
+必要です。それ以外は `carrot_test` データベースに対して走ります。これは
+`docker compose up -d` がボリュームを最初に作るときに `carrot` と一緒に作ります。
+それ以前からあるボリュームの場合は手で作ってください。
+
+```bash
+docker exec carrot-pgsql psql -U carrot -d carrot -c 'CREATE DATABASE carrot_test OWNER carrot'
+```
+
+本番が Postgres なのでテストも Postgres で走ります。SQLite は text
+カラムからも JSON を読んでしまうため、Postgres が
+`operator does not exist: text ->> unknown` で撥ねるクエリが通り続け、
+実際にバグを 1 件見逃しました。
