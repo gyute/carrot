@@ -18,6 +18,7 @@ use App\Support\Presenters\ToolRunPresenter;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -111,17 +112,18 @@ class ToolController extends Controller
     }
 
     /**
-     * Keep the current filter as this person's default. An empty filter is a
-     * choice - see everything, deprecated tools included - so it is stored
-     * rather than treated as "never saved".
+     * Keep the current filter as this person's default. The catalog saves on
+     * every change, so this answers a standalone request rather than a visit:
+     * no redirect, no props, nothing for the screen to re-render.
+     *
+     * An empty filter is a choice - see everything, deprecated tools included -
+     * so it is stored rather than treated as "never saved".
      */
-    public function saveFilters(CatalogFilterRequest $request): RedirectResponse
+    public function saveFilters(CatalogFilterRequest $request): HttpResponse
     {
         $request->user()->forceFill(['catalog_filters' => $request->filters()])->save();
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'この絞り込みを既定にしました。']);
-
-        return back();
+        return response()->noContent();
     }
 
     /**

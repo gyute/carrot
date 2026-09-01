@@ -163,7 +163,7 @@ test('the catalog hands over no saved filter until one is kept', function () {
         ->assertInertia(fn ($page) => $page->where('savedFilters', null));
 });
 
-test('a person keeps the current filter as their default', function () {
+test('the catalog saves the filter a person is looking at', function () {
     $user = User::factory()->create();
     Tool::factory()->create(['department' => '開発']);
     Tool::factory()->deprecated()->create();
@@ -173,7 +173,7 @@ test('a person keeps the current filter as their default', function () {
             'status' => ['running', 'deprecated'],
             'department' => ['開発'],
         ]])
-        ->assertRedirect();
+        ->assertNoContent();
 
     // Stored in a fixed group and value order, so one selection is one value.
     expect($user->fresh()->catalog_filters)
@@ -192,7 +192,7 @@ test('an empty filter is a choice, not the absence of one', function () {
 
     $this->actingAs($user)
         ->put(route('tools.filters.save'), ['filters' => []])
-        ->assertRedirect();
+        ->assertNoContent();
 
     expect($user->fresh()->catalog_filters)->toBe([]);
 

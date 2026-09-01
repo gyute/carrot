@@ -1,4 +1,4 @@
-import { Check, Filter, Search, X } from 'lucide-react';
+import { Check, Filter, Loader2, Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -23,11 +23,9 @@ type Props = {
     selected: Record<string, string[]>;
     onToggle: (groupKey: string, value: string) => void;
     onClear: () => void;
-    /** Keep the current ticks as this person's default. */
-    onSaveDefault: () => void;
-    /** True while that is in flight, or when the ticks are already the saved default. */
-    savingDefault: boolean;
-    isDefault: boolean;
+    /** Ticks are kept as this person's default automatically; these report that. */
+    saving: boolean;
+    justSaved: boolean;
 };
 
 /**
@@ -40,9 +38,8 @@ export default function ToolTagFilter({
     selected,
     onToggle,
     onClear,
-    onSaveDefault,
-    savingDefault,
-    isDefault,
+    saving,
+    justSaved,
 }: Props) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState('');
@@ -196,17 +193,20 @@ export default function ToolTagFilter({
                             </button>
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={onSaveDefault}
-                            disabled={savingDefault || isDefault}
-                            className="mt-1.5 inline-flex w-full items-center justify-center gap-1 rounded-md py-1 font-medium text-sky-700 transition hover:bg-sky-50 disabled:pointer-events-none disabled:text-slate-400"
-                        >
-                            <Check className="size-3" />
-                            {isDefault
-                                ? '既定の絞り込みです'
-                                : 'この絞り込みを既定にする'}
-                        </button>
+                        <p className="mt-1 flex items-center gap-1 text-[11px] text-slate-400">
+                            {saving ? (
+                                <Loader2 className="size-3 animate-spin" />
+                            ) : (
+                                justSaved && (
+                                    <Check className="size-3 text-emerald-600" />
+                                )
+                            )}
+                            {saving
+                                ? '保存中…'
+                                : justSaved
+                                  ? '既定として保存しました'
+                                  : '次回もこの絞り込みで開きます'}
+                        </p>
                     </div>
                 </div>
             )}

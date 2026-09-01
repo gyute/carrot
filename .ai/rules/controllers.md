@@ -16,3 +16,8 @@ The status filter opens with every status but `deprecated` ticked, computed on t
 `users.catalog_filters` (jsonb, nullable) holds what a person kept via 「この絞り込みを既定にする」. Null means never saved and falls back to that default; `[]` means they saved "show everything" - keep the two apart.
 ToolController::savedFilters() drops saved values that no longer appear in the tag groups. A category can be renamed or merged, and a filter naming a tag nobody has would otherwise hide the whole catalog. It drops them from the response only; the stored value is left alone, so a value comes back if its tag does.
 Status values are stored in English and labelled from ToolStatus::label(); the server sends `statusLabel` on the tool and `label` on every filter option, matching SubmissionSummary/ToolRunSummary/ToolRequest. Never add a second label map in TypeScript.
+
+## The catalog saves its filter through useHttp, not a visit
+tools.filters.save answers with 204 and no props: it is reached from `useHttp` (Inertia v3), so nothing re-renders and the catalog does not reload while someone is ticking boxes. Do not turn it back into a redirect - the screen never navigates here.
+The selection lives in the request's own data (`saver.data.filters`), not a second useState, so a save always sends what is on screen. Saving is debounced by SAVE_DELAY_MS and skipped when the fingerprint is unchanged, and a second effect flushes on unmount - ticking a box then opening a tool is well inside the delay, and that tick must not be the one that is lost.
+The lint rule react-hooks/refs forbids assigning to a ref during render; keep the flush closure fresh inside an effect with no dependency array.

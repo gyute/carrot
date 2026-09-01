@@ -1,6 +1,6 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, useHttp } from '@inertiajs/react';
 import { ArrowUpRight, SearchX, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import ToolIcon from '@/components/tool-icon';
 import type { TagGroup } from '@/components/tool-tag-filter';
 import ToolTagFilter from '@/components/tool-tag-filter';
@@ -32,6 +32,9 @@ type Props = {
     /** What this person keeps as their default, or null if they never saved one. */
     savedFilters: Record<string, string[]> | null;
 };
+
+/** Long enough that ticking several boxes in a row is one request. */
+const SAVE_DELAY_MS = 600;
 
 /** Two selections are the same filter whatever order the boxes were ticked in. */
 function fingerprint(selected: Record<string, string[]>): string {
@@ -69,26 +72,43 @@ export default function ToolsIndex({ tools, tagGroups, savedFilters }: Props) {
         [tagGroups],
     );
 
-    const [selected, setSelected] = useState<Record<string, string[]>>(
-        () => savedFilters ?? builtInDefault,
-    );
-    const [savingDefault, setSavingDefault] = useState(false);
+    // The request's own data is the selection, so a save always sends what is
+    // on screen - no second copy of the state to keep in step.
+    const saver = useHttp<{ filters: Record<string, string[]> }>({
+        filters: savedFilters ?? builtInDefault,
+    });
+    const selected = saver.data.filters;
 
-    const isDefault =
-        fingerprint(selected) === fingerprint(savedFilters ?? builtInDefault);
+    const setSelected = (
+        update: (current: Record<string, string[]>) => Record<string, string[]>,
+    ) => saver.setData('filters', update(saver.data.filters));
 
-    const saveDefault = () => {
-        setSavingDefault(true);
+    // Saved on a delay so ticking three boxes is one request, and never on the
+    // first render: arriving at the page is not a choice to save anything.
+    const settled = fingerprint(selected);
+    const lastSaved = useRef(fingerprint(savedFilters ?? builtInDefault));
+    const flush = useRef(() => {});
 
-        router.put(
-            saveFilters().url,
-            { filters: selected },
-            {
-                preserveScroll: true,
-                onFinish: () => setSavingDefault(false),
-            },
-        );
-    };
+    useEffect(() => {
+        flush.current = () => {
+            if (settled === lastSaved.current) {
+                return;
+            }
+
+            lastSaved.current = settled;
+            saver.put(saveFilters().url);
+        };
+    });
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => flush.current(), SAVE_DELAY_MS);
+
+        return () => window.clearTimeout(timer);
+    }, [settled]);
+
+    // Ticking a box and opening a tool straight after is well inside the delay,
+    // and that tick must not be the one that gets lost.
+    useEffect(() => () => flush.current(), []);
 
     const toggleTag = (groupKey: string, value: string) => {
         setSelected((current) => {
@@ -101,7 +121,7 @@ export default function ToolsIndex({ tools, tagGroups, savedFilters }: Props) {
         });
     };
 
-    const clearTags = () => setSelected({});
+    const clearTags = () => setSelected(() => ({}));
 
     // A group with nothing ticked is ignored; within a group the ticks are OR,
     // and a tool has to clear every filtered group.
@@ -140,9 +160,8 @@ export default function ToolsIndex({ tools, tagGroups, savedFilters }: Props) {
                         selected={selected}
                         onToggle={toggleTag}
                         onClear={clearTags}
-                        onSaveDefault={saveDefault}
-                        savingDefault={savingDefault}
-                        isDefault={isDefault}
+                        saving={saver.processing}
+                        justSaved={saver.recentlySuccessful}
                     />
                 }
             />

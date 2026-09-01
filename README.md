@@ -108,10 +108,11 @@ row in the `tools` table.
   script in the sandbox.
 - The catalog filters on status, category and 所属. Nothing is hidden by a rule
   the screen does not show: the filter opens with every status but 非推奨
-  ticked, so deprecated tools stay for reference one box away. 「この絞り込みを
-  既定にする」 keeps the current ticks on the account (`users.catalog_filters`),
-  and a saved value whose tag was since renamed or merged is dropped rather
-  than left to hide the whole catalog.
+  ticked, so deprecated tools stay for reference one box away. Ticks are kept
+  on the account (`users.catalog_filters`) as they are made - debounced, and
+  flushed if the page is left first - so the catalog opens the way it was left.
+  A saved value whose tag was since renamed or merged is dropped rather than
+  left to hide the whole catalog.
 - **Requests** (`tool_requests`, 依頼): somebody who cannot build a tool
   describes what they need and the development team triages it - open →
   accepted → in progress → delivered, or declined / duplicate / withdrawn. A
