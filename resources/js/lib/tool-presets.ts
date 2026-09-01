@@ -56,7 +56,13 @@ export const KIND_LABELS: Record<ToolKind, string> = {
     script: 'スクリプト',
 };
 
-/** Status pill styling. Values are shown in English, as stored. */
+/** The catalog pill. `pending` is a tool that exists only as a submission. */
+export const STATUS_LABELS: Record<ToolStatus, string> = {
+    running: '稼働中',
+    pending: '承認待ち',
+    deprecated: '非推奨',
+};
+
 export const STATUS_STYLES: Record<ToolStatus, string> = {
     running: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
     pending: 'bg-amber-50 text-amber-700 ring-amber-200',

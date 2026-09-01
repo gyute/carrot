@@ -5,7 +5,7 @@ import ToolIcon from '@/components/tool-icon';
 import type { TagGroup } from '@/components/tool-tag-filter';
 import ToolTagFilter from '@/components/tool-tag-filter';
 import ToolsNav from '@/components/tools-nav';
-import { STATUS_STYLES, toolAccent } from '@/lib/tool-presets';
+import { STATUS_LABELS, STATUS_STYLES, toolAccent } from '@/lib/tool-presets';
 import type { ToolStatus } from '@/lib/tool-presets';
 import { cn } from '@/lib/utils';
 
@@ -183,7 +183,7 @@ export default function ToolsIndex({ tools, tagGroups }: Props) {
                                             STATUS_STYLES[tool.status],
                                         )}
                                     >
-                                        {tool.status}
+                                        {STATUS_LABELS[tool.status]}
                                     </span>
                                 </span>
 
